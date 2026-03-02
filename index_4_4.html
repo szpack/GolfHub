@@ -1,0 +1,1787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Golf Overlay Tool v4.4</title>
+<style>
+:root {
+  --mg:#1B5E3B; --gold:#B8962E; --bg:#0d1117; --s1:#161b22; --s2:#21262d;
+  --bd:#30363d; --t1:#e6edf3; --t2:#8b949e; --t3:#484f58;
+  --red:#C0392B; --blue:#1a5bb5; --ghi:#00e676;
+  /* v4.4 Delta color system */
+  --dc-p2:#7c3aed;   /* ≤-2: purple */
+  --dc-m1:#C0392B;   /* -1: red */
+  --dc-0:#1a5bb5;    /* 0: blue */
+  --dc-p1:#2e7d32;   /* +1: green */
+  --dc-p2c:#9e9e9e;  /* +2: light gray */
+  --dc-p3:#555;      /* +3: dark gray */
+  --dc-p4:#111;      /* ≥+4: black */
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t1);display:flex;flex-direction:column}
+
+/* ── HEADER ── */
+#hdr{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--s1);border-bottom:1px solid var(--bd);flex-shrink:0;flex-wrap:nowrap}
+.logo{font-family:Impact,'Arial Black',sans-serif;font-size:16px;letter-spacing:1px;color:var(--gold);white-space:nowrap;flex-shrink:0}
+.logo span{color:#fff}
+.logo-meta{font-size:9px;color:var(--t3);margin-left:4px;white-space:nowrap;flex-shrink:0;line-height:1}
+#hdr .sp{flex:1}
+#lang-toggle{display:flex;border:1px solid var(--bd);border-radius:5px;overflow:hidden;flex-shrink:0}
+.lang-btn{padding:0 9px;height:28px;border:none;background:transparent;color:var(--t2);font:600 11px/1 inherit;cursor:pointer}
+.lang-btn.active{background:var(--s2);color:var(--t1)}
+/* v4.4: ratio as color blocks */
+#ratio-group{display:flex;gap:3px;flex-shrink:0}
+.ratio-btn{height:28px;padding:0 10px;border-radius:5px;border:1px solid var(--bd);background:var(--s2);color:var(--t2);font:700 11px/1 inherit;cursor:pointer}
+.ratio-btn.active{background:var(--mg);border-color:var(--mg);color:#fff}
+#btn-settings{height:28px;padding:0 10px;border-radius:5px;border:1px solid var(--bd);background:var(--s2);color:var(--t2);font:600 11px/1 inherit;cursor:pointer;flex-shrink:0}
+#btn-new{height:32px;padding:0 14px;border-radius:6px;border:2px solid #c0392b;background:#7d1a1a;color:#ffc;font:700 12px/1 inherit;cursor:pointer;flex-shrink:0;letter-spacing:.5px}
+#btn-new:active{background:#5c1414}
+select,input[type=text],input[type=number]{background:var(--s2);border:1px solid var(--bd);color:var(--t1);border-radius:6px;padding:5px 9px;font:13px/1 inherit;outline:none;height:34px}
+select:focus,input:focus{border-color:#2ea043}
+
+/* ── MAIN ── */
+#main{display:grid;grid-template-columns:1fr 320px;flex:1;overflow:hidden}
+
+/* ── LEFT ── */
+#left{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--bd)}
+#preview{flex:1;position:relative;overflow:hidden;background:#111}
+#bg-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none;z-index:1}
+#cv{position:absolute;z-index:3;cursor:move}
+#bg-file-cover{position:absolute;inset:0;z-index:2;opacity:0;cursor:pointer;width:100%;height:100%}
+#upload-hint{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;pointer-events:none}
+#upload-hint .uh-box{border:2px dashed var(--bd);border-radius:10px;padding:20px 28px;display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--t3);font-size:13px;text-align:center;background:rgba(0,0,0,.3);backdrop-filter:blur(2px)}
+#upload-hint .uh-box .ic{font-size:28px}
+#upload-hint.hidden{display:none}
+
+/* toolbar */
+#ptool{display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--s1);border-top:1px solid var(--bd);flex-shrink:0;flex-wrap:nowrap}
+#player-wrap{display:flex;align-items:center;gap:4px;flex:1;min-width:0}
+#player-wrap label{font-size:11px;color:var(--t2);white-space:nowrap;flex-shrink:0}
+#inp-player{flex:1;min-width:50px;max-width:140px;height:30px;font-size:12px}
+#inp-course{flex:1;min-width:50px;max-width:140px;height:30px;font-size:12px}
+/* v4.4: resolution blocks */
+#res-group{display:flex;gap:2px;flex-shrink:0}
+.res-btn{height:30px;padding:0 8px;border-radius:4px;border:1px solid var(--bd);background:var(--s2);color:var(--t2);font:600 11px/1 inherit;cursor:pointer}
+.res-btn.active{background:var(--mg);border-color:var(--mg);color:#fff}
+/* opacity slider in toolbar */
+#overlay-opacity-wrap{display:flex;align-items:center;gap:4px;flex-shrink:0}
+#overlay-opacity-wrap label{font-size:10px;color:var(--t3);white-space:nowrap}
+#overlay-opacity{width:60px;accent-color:var(--mg)}
+/* background button */
+#btn-bg{height:30px;padding:0 8px;border-radius:4px;border:1px solid var(--bd);background:var(--s2);color:var(--t2);font:600 11px/1 inherit;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.exp-btn-wrap{position:relative;flex-shrink:0}
+#btn-export{height:32px;padding:0 12px;border-radius:6px;border:1px solid var(--mg);background:var(--mg);color:#fff;font:700 11px/1 inherit;cursor:pointer;white-space:nowrap}
+#btn-export:active{background:#237a4d}
+#exp-status{position:absolute;right:-6px;top:-6px;width:18px;height:18px;border-radius:50%;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;pointer-events:none}
+#exp-status.ok{background:#1a5e1a;color:#6f6;opacity:1}
+#exp-status.err{background:#5e1a1a;color:#f88;opacity:1}
+/* hidden bg file input */
+#bg-file-input{display:none}
+
+/* ── NAV ── */
+#nav{background:var(--s1);border-top:1px solid var(--bd);flex-shrink:0;padding:4px 6px 3px}
+#nav-rows{display:flex;flex-direction:column;gap:2px}
+.nav-row{display:flex;gap:2px;align-items:center}
+.hcard{flex:0 0 auto;width:50px;height:50px;border-radius:6px;border:2px solid transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;user-select:none;position:relative;transition:transform .1s}
+.hcard:active{transform:scale(.93)}
+.hcard.active{border-color:var(--ghi)!important;box-shadow:0 0 0 1px var(--ghi)}
+.hcard .hn{font-size:8px;font-weight:700;opacity:.7;margin-bottom:1px}
+.hcard .hp{font-size:8px;opacity:.5}
+.hcard .hs{font-size:13px;font-weight:800}
+.hcard.active::after{content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--ghi)}
+/* Delta card classes using new color system */
+.hc-purple{background:#7c3aed;color:#fff}
+.hc-red{background:#C0392B;color:#fff}
+.hc-blue{background:#1a5bb5;color:#fff}
+.hc-green{background:#2e7d32;color:#fff}
+.hc-lg{background:#9e9e9e;color:#fff}
+.hc-g2{background:#555;color:#fff}
+.hc-g3{background:#222;color:#aaa}
+.hc-empty{background:#1c2330;color:#3a4a5a;border:1px solid #2a3545!important}
+/* stat cards */
+.stat-card{flex:0 0 auto;width:46px;height:50px;border-radius:6px;background:#1a2233;border:1px solid #2a3545;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;margin-left:2px;cursor:default;user-select:none}
+.stat-card .sc-lbl{font-size:9px;font-weight:700;color:var(--gold);letter-spacing:.5px}
+.stat-card .sc-val{font-size:9px;color:var(--t2);text-align:center;line-height:1.4}
+.stat-card .sc-num{font-size:12px;font-weight:700;color:var(--t1)}
+#nav-footer{display:flex;align-items:center;gap:5px;margin-top:3px}
+.mode-wrap{display:flex;flex-direction:column;gap:2px}
+.mode-btn{padding:2px 8px;border-radius:4px;border:1px solid var(--bd);background:transparent;color:var(--t2);font:700 10px/1.4 inherit;cursor:pointer}
+.mode-btn.active{background:var(--mg);color:#fff;border-color:var(--mg)}
+.hbtn{height:30px;padding:0 10px;border-radius:5px;border:1px solid var(--bd);background:var(--s2);color:var(--t1);font:600 11px/1 inherit;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.hbtn:active{background:var(--bd)}
+
+/* ── RIGHT PANEL ── */
+#right{display:flex;flex-direction:column;overflow-y:auto;background:var(--s1)}
+#right::-webkit-scrollbar{width:4px}
+#right::-webkit-scrollbar-thumb{background:var(--bd)}
+/* Hole hero banner */
+#hole-banner{padding:10px 12px 7px;background:linear-gradient(135deg,#1a2e1a 0%,#0e1a0e 100%);border-bottom:1px solid #1e3a1e;flex-shrink:0}
+#hole-hero{display:flex;align-items:baseline;gap:8px;margin-bottom:3px}
+#hole-num-big{font-family:Impact,'Arial Black',sans-serif;font-size:32px;color:#fff;line-height:1;letter-spacing:1px}
+#hole-par-big{font-size:16px;font-weight:800;color:var(--gold);letter-spacing:.5px}
+#statusbar{font-size:10px;color:var(--t3);font-family:'Courier New',monospace;display:flex;gap:6px;align-items:center}
+#ls-ok{color:#2ea043}
+.sec{padding:8px 12px;border-bottom:1px solid var(--bd)}
+.stitle{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);margin-bottom:6px}
+/* par */
+.par-grp{display:flex;gap:4px}
+.par-btn{width:38px;height:34px;border-radius:5px;border:1px solid var(--bd);background:var(--s2);color:var(--t1);font:700 13px/1 inherit;cursor:pointer}
+.par-btn.active{background:var(--mg);border-color:var(--mg);color:#fff}
+/* dist row */
+.dist-row{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;margin-top:6px}
+.dist-row label{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--t2);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.dist-row input[type=checkbox]{width:14px;height:14px;accent-color:var(--mg);flex-shrink:0}
+.dist-row input[type=number]{width:64px;height:28px;flex-shrink:0;font-size:12px}
+.dist-unit{font-size:10px;color:var(--t3);white-space:nowrap;flex-shrink:0}
+.dist-divider{width:1px;height:18px;background:var(--bd);margin:0 2px;flex-shrink:0}
+.total-label{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--t2);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.total-label input{width:14px;height:14px;accent-color:var(--mg)}
+
+/* ── FINAL SCORE — v4.4 redesign ── */
+#delta-section{padding:10px 12px;border-bottom:1px solid var(--bd);border-left:3px solid var(--mg)}
+#delta-section .stitle{color:var(--mg);opacity:.8}
+#delta-display{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+#delta-val-btn{
+  flex:1;height:58px;border-radius:10px;
+  border:2px solid var(--mg);background:var(--s2);
+  color:var(--t1);font:800 28px/1 inherit;/* v4.4: larger font */
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:background .1s,border-color .1s;
+  letter-spacing:.5px;position:relative;
+}
+#delta-val-btn:active{background:var(--bd)}
+#delta-val-btn.unfilled{border-color:var(--mg);border-style:dashed;color:var(--mg)}
+#delta-val-btn .score-hint{font-size:12px;font-weight:500;color:var(--t2);opacity:.7}
+.delta-adj-col{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+.delta-adj-btn{width:38px;height:27px;border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--t1);font:700 16px/1 inherit;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.delta-adj-btn:active{background:var(--bd)}
+#gross-disp{font-size:10px;color:var(--t3);margin-top:2px}
+/* next hole inline with +/- */
+#btn-next-hole-inline{height:58px;padding:0 12px;border-radius:8px;border:1px solid var(--bd);background:var(--s2);color:var(--t1);font:600 11px/1.3 inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;white-space:nowrap}
+#btn-next-hole-inline .nhi-icon{font-size:16px}
+#btn-next-hole-inline:active{background:var(--bd)}
+
+/* shot nav */
+.shot-nav{display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.shot-nav-btn{flex:1;height:44px;border-radius:8px;border:1px solid var(--bd);background:var(--s2);color:var(--t1);font:700 12px/1 inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;transition:background .1s}
+.shot-nav-btn:active{background:var(--bd)}
+.shot-nav-btn:disabled{opacity:.3;cursor:not-allowed}
+.shot-info-box{flex:1;text-align:center;font-family:'Courier New',monospace;font-size:14px;color:var(--gold);font-weight:700}
+/* type buttons */
+.type-row{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px}
+.tbtn{padding:5px 8px;border-radius:5px;border:1px solid var(--bd);background:var(--s2);color:var(--t2);font:700 10px/1 inherit;cursor:pointer;min-height:30px;white-space:nowrap}
+.tbtn.active{background:var(--mg);color:#fff;border-color:var(--mg)}
+.auto-badge{font-size:9px;padding:1px 5px;border-radius:3px;background:#2a3a2a;color:#5c8c5c;border:1px solid #3a5a3a;margin-left:4px;vertical-align:middle}
+/* options */
+.opt-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:12px}
+.opt-row input[type=checkbox]{accent-color:var(--mg);width:14px;height:14px}
+.opt-sub{margin-left:20px;display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;font-size:12px}
+
+/* ── DELTA PICKER — v4.4 anchored popover ── */
+#picker-popover{
+  display:none;position:fixed;z-index:500;
+  background:var(--s1);border:1px solid var(--bd);
+  border-radius:12px;width:240px;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+}
+#picker-popover.show{display:block}
+#picker-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 6px}
+#picker-header h3{font-size:13px;font-weight:700}
+#picker-close{background:none;border:none;color:var(--t2);font-size:22px;cursor:pointer;line-height:1;padding:2px 6px}
+#picker-scroll{height:200px;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none}
+#picker-scroll::-webkit-scrollbar{display:none}
+.picker-item{height:40px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;cursor:pointer;scroll-snap-align:start;color:var(--t2);border-radius:6px;margin:1px 10px;transition:background .1s,color .1s}
+.picker-item:active{opacity:.7}
+/* picker item delta colors */
+.pi-purple{background:var(--dc-p2);color:#fff}
+.pi-red{background:var(--dc-m1);color:#fff}
+.pi-blue{background:var(--dc-0);color:#fff}
+.pi-green{background:var(--dc-p1);color:#fff}
+.pi-lg{background:var(--dc-p2c);color:#333}
+.pi-dg{background:var(--dc-p3);color:#fff}
+.pi-bk{background:var(--dc-p4);color:#aaa}
+.pi-clear{color:var(--t3);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+#picker-cancel{width:calc(100% - 20px);margin:6px 10px 10px;height:38px;border-radius:7px;border:1px solid var(--bd);background:var(--s2);color:var(--t1);font:600 13px/1 inherit;cursor:pointer}
+#picker-backdrop{display:none;position:fixed;inset:0;z-index:499}
+#picker-backdrop.show{display:block}
+
+/* ── SETTINGS DRAWER ── */
+#sd-overlay{display:none;position:fixed;inset:0;z-index:399;background:rgba(0,0,0,.5)}
+#sd-overlay.show{display:block}
+#settings-drawer{position:fixed;top:0;right:0;width:290px;height:100%;background:var(--s1);border-left:1px solid var(--bd);z-index:400;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column}
+#settings-drawer.open{transform:translateX(0)}
+#sdh{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--bd);flex-shrink:0}
+#sdh h2{font-size:14px;font-weight:700}
+#sd-close{background:none;border:none;color:var(--t2);font-size:22px;cursor:pointer;line-height:1;padding:2px 6px}
+#sd-body{overflow-y:auto;flex:1;padding:12px}
+.sd-sec{margin-bottom:14px}
+.sd-sec-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--t3);margin-bottom:7px}
+.sd-row{display:flex;align-items:center;gap:7px;margin-bottom:6px;font-size:12px;color:var(--t2)}
+.sd-row label{flex:1;cursor:pointer}
+input[type=range]{accent-color:var(--mg);flex:1}
+.sd-btn{width:100%;height:34px;border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--t1);font:600 12px/1 inherit;cursor:pointer;margin-bottom:5px}
+.sd-btn:active{background:var(--bd)}
+
+/* ── NEW ROUND MODAL ── */
+#newround-modal{display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.72);align-items:center;justify-content:center}
+#newround-modal.show{display:flex}
+.modal-box{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:20px;min-width:260px;max-width:360px;width:90%}
+.modal-box h3{margin-bottom:12px;font-size:15px}
+.modal-box .opt-row{font-size:13px;margin-bottom:7px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.mbtn{height:36px;padding:0 14px;border-radius:6px;border:1px solid var(--bd);background:var(--s2);color:var(--t1);font:600 13px/1 inherit;cursor:pointer}
+.mbtn.prim{background:var(--mg);border-color:var(--mg);color:#fff}
+
+/* ── MINI TOAST ── */
+#mini-toast{position:fixed;bottom:16px;right:16px;background:rgba(20,30,20,.9);color:#cfc;padding:6px 12px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:9999;max-width:240px;border:1px solid #2a4a2a}
+#mini-toast.show{opacity:1}
+#mini-toast.err-toast{background:rgba(40,10,10,.9);color:#faa;border-color:#4a1a1a}
+
+/* ── SCORECARD OVERLAY draggable ── */
+/* no extra CSS needed beyond canvas-drawn */
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  #main{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  #left{height:50vw;min-height:160px}
+  #right{overflow-y:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="hdr">
+  <div class="logo">⛳ GOLF <span>OVERLAY</span></div>
+  <span class="logo-meta">v4.4<br>golf.tool</span>
+  <span class="sp"></span>
+  <div id="lang-toggle">
+    <button class="lang-btn active" data-lang="en" onclick="setLang('en')">🇺🇸 EN</button>
+    <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">🇨🇳 中文</button>
+  </div>
+  <!-- v4.4: ratio as color blocks in header -->
+  <div id="ratio-group">
+    <button class="ratio-btn active" data-ratio="16:9" onclick="setRatio('16:9')">16:9</button>
+    <button class="ratio-btn" data-ratio="9:16" onclick="setRatio('9:16')">9:16</button>
+    <button class="ratio-btn" data-ratio="1:1" onclick="setRatio('1:1')">1:1</button>
+  </div>
+  <button id="btn-settings" onclick="openSettings()">⚙</button>
+  <button id="btn-new" onclick="openNewRound()">New…</button>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="left">
+    <div id="preview">
+      <img id="bg-img" style="display:none;opacity:.45">
+      <input type="file" id="bg-file-cover" accept="image/*">
+      <canvas id="cv"></canvas>
+      <div id="upload-hint">
+        <div class="uh-box">
+          <div class="ic">🖼</div>
+          <div id="hint-main">Click to upload background / Drop image here</div>
+          <div id="hint-sub" style="font-size:10px;color:var(--t3)">Preview only — not included in export</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toolbar v4.4 -->
+    <div id="ptool">
+      <div id="player-wrap">
+        <label for="inp-player" id="player-lbl">🏌️</label>
+        <input type="text" id="inp-player" placeholder="PLAYER" maxlength="20">
+        <label for="inp-course" id="course-lbl" style="font-size:11px;color:var(--t2)">⛳</label>
+        <input type="text" id="inp-course" placeholder="COURSE" maxlength="24">
+      </div>
+      <span class="sp"></span>
+      <!-- resolution blocks -->
+      <div id="res-group">
+        <button class="res-btn active" data-res="2160" onclick="setRes(this)">4K</button>
+        <button class="res-btn" data-res="1440" onclick="setRes(this)">1440P</button>
+        <button class="res-btn" data-res="1080" onclick="setRes(this)">1080P</button>
+      </div>
+      <!-- overlay opacity -->
+      <div id="overlay-opacity-wrap">
+        <label id="lbl-opa">Opacity</label>
+        <input type="range" id="overlay-opacity" min="0" max="100" value="100">
+        <span id="overlay-opacity-val" style="width:32px;font-size:10px;color:var(--t2)">100%</span>
+      </div>
+      <!-- background button -->
+      <button id="btn-bg" onclick="document.getElementById('bg-file-input').click()">📷 <span id="bg-btn-lbl">Background</span></button>
+      <input type="file" id="bg-file-input" accept="image/*">
+      <div class="exp-btn-wrap">
+        <button id="btn-export">🖼 <span id="export-btn-txt">Create Overlay PNG</span></button>
+        <div id="exp-status"></div>
+      </div>
+    </div>
+
+    <!-- Scorecard Nav -->
+    <div id="nav">
+      <div id="nav-rows">
+        <div class="nav-row" id="nav-row1"></div>
+        <div class="nav-row" id="nav-row2"></div>
+      </div>
+      <div id="nav-footer">
+        <!-- v4.4: To Par / Gross stacked on right -->
+        <span class="sp" style="flex:1"></span>
+        <div class="mode-wrap">
+          <button class="mode-btn" id="mode-tp" onclick="setMode('topar')">To Par</button>
+          <button class="mode-btn" id="mode-gr" onclick="setMode('gross')">Gross</button>
+        </div>
+        <button class="hbtn" id="btn-next-hole">Next Hole →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div id="right">
+    <!-- Hole hero -->
+    <div id="hole-banner">
+      <div id="hole-hero">
+        <span id="hole-num-big">HOLE 1</span>
+        <span id="hole-par-big">PAR 4</span>
+      </div>
+      <div id="statusbar">
+        <span id="ls-ok">LS✓</span>
+        <span id="status-txt">Ready</span>
+      </div>
+    </div>
+
+    <!-- Par + Dist + Total -->
+    <div class="sec">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:0">
+        <span id="par-lbl" style="font-size:11px;color:var(--t2)">Par</span>
+        <div class="par-grp">
+          <button class="par-btn" id="par3" onclick="setPar(3)">3</button>
+          <button class="par-btn" id="par4" onclick="setPar(4)">4</button>
+          <button class="par-btn" id="par5" onclick="setPar(5)">5</button>
+        </div>
+      </div>
+      <div class="dist-row">
+        <label id="dist-chk-label"><input type="checkbox" id="chk-dist"> <span id="dist-lbl">To Pin</span></label>
+        <input type="number" id="inp-dist" placeholder="—" min="0" max="999" style="width:64px;height:28px" onfocus="this.select()">
+        <span class="dist-unit" id="dist-unit">Yards</span>
+        <div class="dist-divider"></div>
+        <label class="total-label"><input type="checkbox" id="chk-total"> <span id="total-lbl">Total Disp</span></label>
+      </div>
+    </div>
+
+    <!-- Final Score — v4.4 redesign -->
+    <div id="delta-section">
+      <div class="stitle" id="delta-section-title">Final Score (Delta)</div>
+      <div id="delta-display">
+        <button id="delta-val-btn" class="unfilled" onclick="openPicker(event)">
+          <span id="delta-main-txt">—</span>
+          <span class="score-hint" id="delta-hint-txt">SET SCORE</span>
+        </button>
+        <!-- +/- buttons -->
+        <div class="delta-adj-col">
+          <button class="delta-adj-btn" id="btn-delta-plus" onclick="adjDelta(+1)">+</button>
+          <button class="delta-adj-btn" id="btn-delta-minus" onclick="adjDelta(-1)">−</button>
+        </div>
+        <!-- next hole button to right of + -->
+        <button id="btn-next-hole-inline" onclick="gotoNextHole()">
+          <div class="nhi-icon">→</div>
+          <div id="nhi-lbl" style="font-size:9px;opacity:.7">NEXT</div>
+        </button>
+      </div>
+      <div id="gross-disp"></div>
+    </div>
+
+    <!-- Shot -->
+    <div class="sec">
+      <div class="stitle" id="shot-section-title">Shot <span id="type-mode-badge" class="auto-badge">AUTO</span></div>
+      <div class="shot-nav">
+        <button class="shot-nav-btn" id="btn-prev">◀ PREV</button>
+        <div class="shot-info-box" id="shot-info">— / —</div>
+        <button class="shot-nav-btn" id="btn-next">NEXT ▶</button>
+      </div>
+      <div id="type-row1" class="type-row"></div>
+      <div id="type-row2" class="type-row"></div>
+    </div>
+
+    <!-- Display Options -->
+    <div class="sec">
+      <div class="stitle" id="options-title">Display Options</div>
+      <div class="opt-row"><input type="checkbox" id="chk-shot" checked><label for="chk-shot" id="lbl-shot">Shot Overlay</label></div>
+      <div class="opt-row"><input type="checkbox" id="chk-score"><label for="chk-score" id="lbl-score">Scorecard Overlay</label></div>
+      <div class="opt-sub" id="score-sub" style="display:none">
+        <label><input type="radio" name="scr" value="front9"> <span id="lbl-front9">Front 9</span></label>
+        <label><input type="radio" name="scr" value="back9"> <span id="lbl-back9">Back 9</span></label>
+        <label><input type="radio" name="scr" value="18" checked> <span id="lbl-18h">18 Holes</span></label>
+      </div>
+      <!-- v4.4: Background button also here -->
+      <div class="opt-row" style="margin-top:6px">
+        <button style="height:28px;padding:0 10px;border-radius:5px;border:1px solid var(--bd);background:var(--s2);color:var(--t2);font:600 11px/1 inherit;cursor:pointer" onclick="document.getElementById('bg-file-input').click()" id="bg-btn2">📷 <span id="bg-btn2-lbl">Background</span></button>
+      </div>
+    </div>
+    <div style="height:20px;flex-shrink:0"></div>
+  </div>
+</div>
+
+<!-- DELTA PICKER POPOVER (anchored) -->
+<div id="picker-backdrop" onclick="closePicker()"></div>
+<div id="picker-popover">
+  <div id="picker-header">
+    <h3 id="picker-title">Final Score (Delta)</h3>
+    <button id="picker-close" onclick="closePicker()">×</button>
+  </div>
+  <div id="picker-scroll"></div>
+  <div style="padding:2px 0 0">
+    <button id="picker-cancel" onclick="closePicker()">Cancel</button>
+  </div>
+</div>
+
+<!-- SETTINGS DRAWER -->
+<div id="sd-overlay" onclick="closeSettings()"></div>
+<div id="settings-drawer">
+  <div id="sdh">
+    <h2 id="sd-title">⚙ Settings</h2>
+    <button id="sd-close" onclick="closeSettings()">×</button>
+  </div>
+  <div id="sd-body">
+    <div class="sd-sec">
+      <div class="sd-sec-title" id="sd-bg-title">Background Image</div>
+      <div class="sd-row">
+        <label id="sd-opacity-lbl">Opacity</label>
+        <input type="range" id="bg-opacity" min="0" max="100" value="45">
+        <span id="bg-opacity-val" style="width:32px;text-align:right">45%</span>
+      </div>
+      <button class="sd-btn" id="sd-clear-bg">🗑 Clear Background (restore default)</button>
+    </div>
+    <div class="sd-sec">
+      <div class="sd-sec-title" id="sd-sz-title">Safe Zone</div>
+      <div class="sd-row">
+        <label id="sd-sz-lbl" for="chk-sz">Show safe zone guides</label>
+        <input type="checkbox" id="chk-sz" style="accent-color:var(--mg)">
+      </div>
+      <div class="sd-row">
+        <label id="sd-sz-size-lbl">Zone size</label>
+        <select id="sz-size" style="height:28px;font-size:12px">
+          <option value="5">5% Action Safe</option>
+          <option value="10">10% Title Safe</option>
+          <option value="both">Both</option>
+        </select>
+      </div>
+    </div>
+    <div class="sd-sec">
+      <div class="sd-sec-title" id="sd-par-title">Course Par</div>
+      <button class="sd-btn" onclick="resetAllPars()">Reset all to Par 4</button>
+    </div>
+    <div class="sd-sec">
+      <div class="sd-sec-title" id="sd-export-title">Export Info</div>
+      <div style="font-size:11px;color:var(--t2)">Default: 4K • Transparent background</div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW ROUND MODAL -->
+<div id="newround-modal">
+  <div class="modal-box">
+    <h3 id="nr-title">🏌️ New Round</h3>
+    <div class="opt-row"><input type="checkbox" id="m-scores" checked><label for="m-scores" id="nr-clear-scores">Clear this round's scores</label></div>
+    <div class="opt-row"><input type="checkbox" id="m-pars"><label for="m-pars" id="nr-reset-pars">Reset course Par to 4 (all holes)</label></div>
+    <div class="modal-actions">
+      <button class="mbtn" onclick="closeNewRound()" id="nr-cancel">Cancel</button>
+      <button class="mbtn prim" onclick="doNewRound()" id="nr-confirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div id="mini-toast"></div>
+
+<script>
+// ============================================================
+// SHOT OVERLAY FONT STACK
+// ============================================================
+const SF = `ui-sans-serif,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Helvetica,Arial,sans-serif`;
+
+// ============================================================
+// CANVAS / OVERLAY CONSTANTS
+// ============================================================
+const SHOT_W=475, SHOT_H=128, ROW1=44, ROW2=42, ROW3=42, COL_W=143, RPAD=11;
+
+// ============================================================
+// v4.4 GLOBAL DELTA COLOR SYSTEM
+// ============================================================
+function deltaColorHex(d){
+  if(d===null||d===undefined) return '#888';
+  if(d<=-2) return '#7c3aed'; // purple
+  if(d===-1) return '#C0392B'; // red
+  if(d===0)  return '#1a5bb5'; // blue
+  if(d===1)  return '#2e7d32'; // green
+  if(d===2)  return '#9e9e9e'; // light gray
+  if(d===3)  return '#555555'; // dark gray
+  return '#111111'; // ≥+4 black
+}
+function deltaColorText(d){
+  if(d===null||d===undefined) return '#888';
+  if(d===2) return '#fff'; // lg still needs readable text
+  return '#fff';
+}
+function deltaCardClass(d){
+  if(d===null) return 'hc-empty';
+  if(d<=-2) return 'hc-purple';
+  if(d===-1) return 'hc-red';
+  if(d===0)  return 'hc-blue';
+  if(d===1)  return 'hc-green';
+  if(d===2)  return 'hc-lg';
+  if(d===3)  return 'hc-g2';
+  return 'hc-g3';
+}
+function pickerClass(d){
+  if(d<=-2) return 'pi-purple';
+  if(d===-1) return 'pi-red';
+  if(d===0)  return 'pi-blue';
+  if(d===1)  return 'pi-green';
+  if(d===2)  return 'pi-lg';
+  if(d===3)  return 'pi-dg';
+  return 'pi-bk';
+}
+
+// ============================================================
+// I18N
+// ============================================================
+const STRINGS = {
+  en:{
+    holeHero:h=>`HOLE ${h}`, parLabel:p=>`PAR ${p}`,
+    hintMain:'Click to upload background / Drop image here',
+    hintSub:'Preview only — not included in export',
+    distLabel:'To Pin', distUnit:'Yards',
+    totalLabel:'Total Disp',
+    clearHole:'Clear', clearHoleDone:'Hole cleared',
+    finalScore:'Final Score (Delta)',
+    setScore:'SET SCORE',
+    shotSection:'Shot', optionsTitle:'Display Options',
+    shotOverlay:'Shot Overlay', scorecardOverlay:'Scorecard Overlay',
+    front9:'Front 9', back9:'Back 9', h18:'18 Holes',
+    nextHole:'Next Hole →', topar:'To Par', gross:'Gross',
+    sdTitle:'⚙ Settings', sdBg:'Background Image', sdOpacity:'Opacity',
+    sdClearBg:'🗑 Clear Background (restore default)',
+    sdSz:'Safe Zone', sdSzLbl:'Show safe zone guides', sdSzSize:'Zone size',
+    sdPar:'Course Par', sdParReset:'Reset all to Par 4',
+    sdExport:'Export Info',
+    nrTitle:'🏌️ New Round', nrClearScores:"Clear this round's scores",
+    nrResetPars:'Reset course Par to 4 (all holes)',
+    nrCancel:'Cancel', nrConfirm:'Confirm',
+    pickerTitle:'Final Score (Delta)', pickerCancel:'Cancel',
+    exportBtn:'🖼 Create Overlay PNG',
+    bgBtn:'Background', opaLbl:'Opacity',
+    nextHoleShort:'NEXT',
+    // canvas
+    toeOff:'TEE SHOT', approach:'APPROACH', chip:'CHIP', putt:'PUTT',
+    forBirdie:'FOR BIRDIE', forPar:'FOR PAR', forBogey:'FOR BOGEY',
+    forDouble:'FOR DOUBLE', forTriple:'FOR TRIPLE+',
+    pickerRows:d=>{
+      if(d==='clear') return 'Clear';
+      if(d<=-4) return d+'  (Condor+)';
+      if(d===-3) return '-3  (Albatross)';
+      if(d===-2) return '-2  (Eagle)';
+      if(d===-1) return '-1  (Birdie)';
+      if(d===0) return '0  (Par)';
+      if(d===1) return '+1  (Bogey)';
+      if(d===2) return '+2  (Double)';
+      if(d===3) return '+3  (Triple)';
+      return (d>0?'+':'')+d;
+    },
+    grossDisp:(g,p,d)=>`Gross: ${g} (par${p}${d>=0?'+':''}${d})`,
+    statusBar:(h,p,d,si,g,m)=>`H${h}·P${p}·${d}·Shot ${si}/${g}·${m}`,
+    typeTee:'Tee Off', typeAppr:'Approach', typeChip:'Chipping', typePutt:'Putt',
+    typeFB:'For Birdie', typeFP:'For Par', typeFBo:'For Bogey',
+    toPinLabel:'TO PIN', ydsLabel:'YDS',
+    albatross:'ALBATROSS', eagle:'EAGLE', birdie:'BIRDIE', par:'PAR',
+    bogey:'BOGEY', double:'DOUBLE', triple:'TRIPLE+',
+  },
+  zh:{
+    holeHero:h=>`第 ${h} 洞`, parLabel:p=>`标准杆 ${p}`,
+    hintMain:'点击上传背景图 / 拖拽图片到此处',
+    hintSub:'仅用于预览，不参与导出',
+    distLabel:'距旗杆', distUnit:'码',
+    totalLabel:'总杆显示',
+    clearHole:'清空', clearHoleDone:'本洞已清空',
+    finalScore:'本洞成绩 (Delta)',
+    setScore:'设置成绩',
+    shotSection:'击球', optionsTitle:'显示选项',
+    shotOverlay:'Shot Overlay', scorecardOverlay:'计分卡',
+    front9:'前9洞', back9:'后9洞', h18:'全18洞',
+    nextHole:'下一洞 →', topar:'To Par', gross:'Gross',
+    sdTitle:'⚙ 设置', sdBg:'背景图', sdOpacity:'透明度',
+    sdClearBg:'🗑 清除背景（恢复默认）',
+    sdSz:'安全区', sdSzLbl:'显示安全区虚线', sdSzSize:'区域大小',
+    sdPar:'球场标准杆', sdParReset:'全部重置为 Par 4',
+    sdExport:'导出参数',
+    nrTitle:'🏌️ 清空本轮', nrClearScores:'清空本轮成绩',
+    nrResetPars:'重置全部球场标准杆（恢复 Par 4）',
+    nrCancel:'取消', nrConfirm:'确认',
+    pickerTitle:'本洞成绩 (Delta)', pickerCancel:'取消',
+    exportBtn:'🖼 生成角标PNG',
+    bgBtn:'背景', opaLbl:'透明度',
+    nextHoleShort:'下一洞',
+    toeOff:'开球', approach:'攻果岭', chip:'切杆', putt:'推杆',
+    forBirdie:'抓鸟推', forPar:'保帕推', forBogey:'保柏忌推',
+    forDouble:'保双推', forTriple:'保三+推',
+    pickerRows:d=>{
+      if(d==='clear') return '清除';
+      if(d<=-4) return d+'（飞鸟+）';
+      if(d===-3) return '-3  信天翁';
+      if(d===-2) return '-2  老鹰';
+      if(d===-1) return '-1  小鸟';
+      if(d===0) return '0  标准杆';
+      if(d===1) return '+1  柏忌';
+      if(d===2) return '+2  双柏忌';
+      if(d===3) return '+3  三柏忌';
+      return (d>0?'+':'')+d;
+    },
+    grossDisp:(g,p,d)=>`总杆: ${g}（标准杆${p}${d>=0?'+':''}${d}）`,
+    statusBar:(h,p,d,si,g,m)=>`第${h}洞·P${p}·${d}·第${si}杆/${g}·${m}`,
+    typeTee:'开球', typeAppr:'攻果岭', typeChip:'切杆', typePutt:'推杆',
+    typeFB:'抓鸟推', typeFP:'保帕推', typeFBo:'保柏忌推',
+    toPinLabel:'距旗杆', ydsLabel:'码',
+    albatross:'信天翁', eagle:'老鹰', birdie:'小鸟', par:'标准杆',
+    bogey:'柏忌', double:'双柏忌', triple:'三柏忌+',
+  }
+};
+
+let LANG = 'en';
+function T(key,...args){
+  const s=STRINGS[LANG], v=s[key];
+  if(typeof v==='function') return v(...args);
+  return v??key;
+}
+
+function setLang(l){
+  LANG=l; S.lang=l;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===l));
+  applyLang(); render(); scheduleSave();
+}
+
+function applyLang(){
+  const get=id=>document.getElementById(id);
+  get('hint-main').textContent=T('hintMain');
+  get('hint-sub').textContent=T('hintSub');
+  get('dist-lbl').textContent=T('distLabel');
+  get('dist-unit').textContent=T('distUnit');
+  get('total-lbl').textContent=T('totalLabel');
+  get('delta-section-title').textContent=T('finalScore');
+  get('shot-section-title').innerHTML=T('shotSection')+' <span id="type-mode-badge" class="auto-badge">AUTO</span>';
+  get('options-title').textContent=T('optionsTitle');
+  get('lbl-shot').textContent=T('shotOverlay');
+  get('lbl-score').textContent=T('scorecardOverlay');
+  get('lbl-front9').textContent=T('front9');
+  get('lbl-back9').textContent=T('back9');
+  get('lbl-18h').textContent=T('h18');
+  get('btn-next-hole').textContent=T('nextHole');
+  get('mode-tp').textContent=T('topar');
+  get('mode-gr').textContent=T('gross');
+  get('sd-title').textContent=T('sdTitle');
+  get('sd-bg-title').textContent=T('sdBg');
+  get('sd-opacity-lbl').textContent=T('sdOpacity');
+  get('sd-clear-bg').textContent=T('sdClearBg');
+  get('sd-sz-title').textContent=T('sdSz');
+  get('sd-sz-lbl').textContent=T('sdSzLbl');
+  get('sd-par-title').textContent=T('sdPar');
+  get('sd-export-title').textContent=T('sdExport');
+  get('nr-title').textContent=T('nrTitle');
+  get('nr-clear-scores').textContent=T('nrClearScores');
+  get('nr-reset-pars').textContent=T('nrResetPars');
+  get('nr-cancel').textContent=T('nrCancel');
+  get('nr-confirm').textContent=T('nrConfirm');
+  get('picker-title').textContent=T('pickerTitle');
+  get('picker-cancel').textContent=T('pickerCancel');
+  get('export-btn-txt').textContent=LANG==='zh'?'生成角标PNG':'Create Overlay PNG';
+  get('bg-btn-lbl').textContent=T('bgBtn');
+  const b2l=get('bg-btn2-lbl'); if(b2l) b2l.textContent=T('bgBtn');
+  const nhil=get('nhi-lbl'); if(nhil) nhil.textContent=T('nextHoleShort');
+  const lopa=get('lbl-opa'); if(lopa) lopa.textContent=T('opaLbl');
+  buildTypeButtons();
+  buildDeltaBtn();
+}
+
+// ============================================================
+// DATA MODEL
+// ============================================================
+const DEFAULT_BG = './bkimg.jpeg';
+const LS_KEY = 'golf_v44';
+
+function defState(){
+  return{
+    playerName:'PLAYER', courseName:'', currentHole:0, displayMode:'topar',
+    ratio:'16:9', showShot:true, showScore:false, scoreRange:'18',
+    showTotal:false, showDist:false,
+    exportRes:2160, bgOpacity:0.45, overlayOpacity:1.0,
+    safeZone:false, szSize:'10', lang:'en',
+    userBg: null,
+    overlayPos:{
+      '16:9':{x:0.73,y:0.05},
+      '9:16':{x:0.55,y:0.05},
+      '1:1': {x:0.65,y:0.05}
+    },
+    scorecardPos:{
+      '16:9':{x:0.10,y:0.83},
+      '9:16':{x:0.05,y:0.83},
+      '1:1': {x:0.08,y:0.83}
+    },
+    // Per-hole To Pin stored per shot index
+    holes:Array.from({length:18},()=>({par:4,delta:null,shots:[],shotIndex:0,manualTypes:{},toPins:{}}))
+  };
+}
+
+let S = defState();
+
+let saveTimer;
+function scheduleSave(){ clearTimeout(saveTimer); saveTimer=setTimeout(doSave,350); }
+function doSave(){
+  try{
+    const forStorage={...S,userBg:null};
+    localStorage.setItem(LS_KEY,JSON.stringify(forStorage));
+    if(S.userBg){
+      try{ localStorage.setItem(LS_KEY+'_bg',S.userBg); } catch(e){}
+    } else {
+      localStorage.removeItem(LS_KEY+'_bg');
+    }
+    document.getElementById('ls-ok').textContent='LS✓';
+    document.getElementById('ls-ok').style.color='#2ea043';
+  } catch(e){
+    document.getElementById('ls-ok').textContent='LS✗';
+    document.getElementById('ls-ok').style.color='#f88';
+  }
+}
+
+function loadSaved(){
+  try{
+    const raw=localStorage.getItem(LS_KEY);
+    if(!raw) return;
+    const saved=JSON.parse(raw);
+    S=Object.assign(defState(),saved);
+    if(!S.overlayPos||typeof S.overlayPos['16:9']!=='object') S.overlayPos=defState().overlayPos;
+    if(!S.scorecardPos||typeof S.scorecardPos['16:9']!=='object') S.scorecardPos=defState().scorecardPos;
+    S.holes=Array.from({length:18},(_,i)=>Object.assign(
+      {par:4,delta:null,shots:[],shotIndex:0,manualTypes:{},toPins:{}},
+      saved.holes?.[i]||{}
+    ));
+    LANG=S.lang||'en';
+    const bgData=localStorage.getItem(LS_KEY+'_bg');
+    S.userBg=bgData||null;
+    if(S.overlayOpacity===undefined) S.overlayOpacity=1.0;
+    if(S.exportRes===undefined) S.exportRes=2160;
+    if(!S.courseName) S.courseName='';
+  } catch(e){ console.warn('loadSaved error',e); }
+}
+
+// ============================================================
+// BACKGROUND MANAGEMENT
+// ============================================================
+function applyBg(){
+  const img=document.getElementById('bg-img');
+  const hint=document.getElementById('upload-hint');
+  if(S.userBg){
+    img.src=S.userBg; img.style.display='block'; img.style.opacity=S.bgOpacity;
+    hint.classList.add('hidden');
+  } else {
+    img.src=DEFAULT_BG; img.style.display='block'; img.style.opacity=S.bgOpacity;
+    hint.classList.add('hidden');
+    img.onerror=()=>{ img.style.display='none'; hint.classList.remove('hidden'); img.onerror=null; };
+  }
+}
+
+function setBgFile(file){
+  if(!file||!file.type.startsWith('image/')) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{ S.userBg=ev.target.result; applyBg(); scheduleSave(); };
+  reader.readAsDataURL(file);
+}
+
+function clearBg(){ S.userBg=null; applyBg(); scheduleSave(); closeSettings(); }
+
+// ============================================================
+// HELPERS
+// ============================================================
+function curHole(){ return S.holes[S.currentHole]; }
+function getGross(h){ return h.delta===null?null:h.par+h.delta; }
+function totalDelta(){ return S.holes.reduce((a,h)=>a+(h.delta??0),0); }
+function totalGross(){ return S.holes.reduce((a,h)=>a+h.par+(h.delta??0),0); }
+// v4.4: Even = 0 (never 'E')
+function fmtDelta(d){ return d===0?'0':d>0?'+'+d:String(d); }
+function fmtDeltaDisplay(d){ return d===0?'0':d>0?'+'+d:String(d); }
+
+function deltaLabel(d){
+  if(d===null) return '—';
+  const map={'-3':T('albatross'),'-2':T('eagle'),'-1':T('birdie'),'0':T('par'),'1':T('bogey'),'2':T('double'),'3':T('triple')};
+  return (map[String(d)]||(d>0?'+'+d:String(d))).toUpperCase();
+}
+function shotTypeLabel(t){
+  const map={TEE:T('toeOff'),APPR:T('approach'),CHIP:T('chip'),PUTT:T('putt'),FOR_BIRDIE:T('forBirdie'),FOR_PAR:T('forPar'),FOR_BOGEY:T('forBogey'),FOR_DOUBLE:T('forDouble'),FOR_TRIPLE:T('forTriple')};
+  return (map[t]||t||'').toUpperCase();
+}
+function autoType(h,idx){
+  const gross=getGross(h);
+  if(!gross) return 'TEE';
+  if(idx===0) return 'TEE';
+  if(idx===gross-1){
+    if(h.delta<=-1) return 'FOR_BIRDIE';
+    if(h.delta===0) return 'FOR_PAR';
+    if(h.delta===1) return 'FOR_BOGEY';
+    if(h.delta===2) return 'FOR_DOUBLE';
+    return 'FOR_TRIPLE';
+  }
+  if(idx===1&&h.par>=4) return 'APPR';
+  return 'CHIP';
+}
+
+function totalBadgeColor(){
+  const td=totalDelta();
+  return deltaColorHex(td);
+}
+
+function miniToast(msg,isErr){
+  const t=document.getElementById('mini-toast');
+  t.textContent=msg; t.classList.remove('err-toast');
+  if(isErr) t.classList.add('err-toast');
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),isErr?2500:1800);
+}
+
+// ============================================================
+// MUTATIONS
+// ============================================================
+function setPar(v){ curHole().par=v; reconcileShots(curHole()); render(); scheduleSave(); }
+
+function setDelta(d){
+  const h=curHole();
+  h.delta=d; h.manualTypes={};
+  reconcileShots(h);
+  // After setting delta, jump shotIndex to last shot
+  const gross=getGross(h);
+  if(gross && gross>0) h.shotIndex=gross-1; else h.shotIndex=0;
+  render(); scheduleSave();
+}
+
+// v4.4: +/- adjustment with init-to-0 on first press
+function adjDelta(inc){
+  const h=curHole();
+  if(h.delta===null){
+    // First press: initialize to 0, don't execute the +/-
+    h.delta=0;
+    reconcileShots(h);
+    const gross=getGross(h);
+    if(gross&&gross>0) h.shotIndex=gross-1; else h.shotIndex=0;
+  } else {
+    const newD=h.delta+inc;
+    if(newD<-6||newD>12) return;
+    h.delta=newD;
+    h.manualTypes={};
+    reconcileShots(h);
+    const gross=getGross(h);
+    if(gross&&gross>0) h.shotIndex=gross-1; else h.shotIndex=0;
+  }
+  render(); scheduleSave();
+}
+
+function reconcileShots(h){
+  const gross=getGross(h);
+  if(gross===null){ h.shots=[]; h.shotIndex=0; return; }
+  while(h.shots.length>gross) h.shots.pop();
+  while(h.shots.length<gross) h.shots.push({type:null,toPin:null});
+  if(h.shotIndex>=gross) h.shotIndex=gross-1;
+  if(h.shotIndex<0) h.shotIndex=0;
+  h.shots.forEach((s,i)=>{ if(!s.type) s.type=autoType(h,i); });
+}
+
+// v4.4: clearHole clears delta, shots, AND per-shot toPins
+function clearHole(){
+  const h=curHole();
+  h.delta=null; h.shots=[]; h.shotIndex=0; h.manualTypes={};
+  h.toPins={}; // clear per-shot toPin
+  render(); scheduleSave();
+}
+
+function setMode(m){ S.displayMode=m; render(); scheduleSave(); }
+
+function prevShot(){
+  const h=curHole();
+  if(h.delta===null||h.shotIndex<=0) return;
+  h.shotIndex--;
+  render(); scheduleSave();
+}
+function nextShot(){
+  const h=curHole();
+  const g=getGross(h);
+  if(!g||h.shotIndex>=g-1) return;
+  h.shotIndex++;
+  render(); scheduleSave();
+}
+
+function setShotType(type){
+  const h=curHole();
+  if(h.delta===null) return;
+  if(!h.shots[h.shotIndex]) h.shots[h.shotIndex]={type:null,toPin:null};
+  h.shots[h.shotIndex].type=type;
+  h.manualTypes[h.shotIndex]=true;
+  render(); scheduleSave();
+}
+
+// v4.4: per-shot To Pin stored in h.toPins[shotIndex]
+function getShotToPin(h, idx){
+  return h.toPins?.[idx]??null;
+}
+function setShotToPin(val){
+  const h=curHole();
+  if(!h.toPins) h.toPins={};
+  h.toPins[h.shotIndex]=val;
+  // also update main distance as the current shot's
+  h.distance=val;
+  redrawOnly(); scheduleSave();
+}
+
+function resetAllPars(){ S.holes.forEach(h=>h.par=4); render(); scheduleSave(); closeSettings(); }
+
+function gotoNextHole(){
+  for(let i=1;i<=18;i++){
+    const idx=(S.currentHole+i)%18;
+    if(S.holes[idx].delta===null){ S.currentHole=idx; render(); scheduleSave(); return; }
+  }
+  S.currentHole=(S.currentHole+1)%18; render(); scheduleSave();
+}
+
+function setRatio(r){
+  S.ratio=r;
+  document.querySelectorAll('.ratio-btn').forEach(b=>b.classList.toggle('active',b.dataset.ratio===r));
+  render(); scheduleSave();
+}
+
+function setRes(btn){
+  S.exportRes=parseInt(btn.dataset.res)||2160;
+  document.querySelectorAll('.res-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  scheduleSave();
+}
+
+// ============================================================
+// CANVAS ENGINE
+// ============================================================
+let cvEl, dpr=1, cvCssW=0, cvCssH=0;
+let dragging=null, dragStart={};
+const SNAP_PX=10;
+
+function getCanvasCssDims(){
+  const area=document.getElementById('preview');
+  const aw=area.clientWidth||800, ah=area.clientHeight||450;
+  let cw,ch;
+  if(S.ratio==='16:9'){ch=ah;cw=ah*(16/9);if(cw>aw){cw=aw;ch=aw*(9/16);}}
+  else if(S.ratio==='9:16'){cw=aw;ch=aw*(16/9);if(ch>ah){ch=ah;cw=ah*(9/16);}}
+  else{const s=Math.min(aw,ah);cw=s;ch=s;}
+  return{w:Math.floor(cw),h:Math.floor(ch)};
+}
+
+function initCanvas(){
+  cvEl=document.getElementById('cv');
+  dpr=window.devicePixelRatio||1;
+  cvEl.addEventListener('mousedown',onDragStart);
+  window.addEventListener('mousemove',onDragMove);
+  window.addEventListener('mouseup',onDragEnd);
+  cvEl.addEventListener('touchstart',onTouchStart,{passive:false});
+  window.addEventListener('touchmove',onTouchMove,{passive:false});
+  window.addEventListener('touchend',onDragEnd);
+}
+
+function evPt(e){
+  if(e.touches&&e.touches.length) return{x:e.touches[0].clientX,y:e.touches[0].clientY};
+  if(e.changedTouches&&e.changedTouches.length) return{x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY};
+  return{x:e.clientX,y:e.clientY};
+}
+
+function snapPos(px,py,ow,oh){
+  const sz=0.10;
+  const sx=cvCssW*sz,sy=cvCssH*sz,ex=cvCssW*(1-sz),ey=cvCssH*(1-sz);
+  if(Math.abs(px-sx)<SNAP_PX) px=sx;
+  if(Math.abs(px+ow-ex)<SNAP_PX) px=ex-ow;
+  if(Math.abs(py-sy)<SNAP_PX) py=sy;
+  if(Math.abs(py+oh-ey)<SNAP_PX) py=ey-oh;
+  return{x:Math.max(0,Math.min(cvCssW-1,px)),y:Math.max(0,Math.min(cvCssH-1,py))};
+}
+
+function onDragStart(e){
+  const pt=evPt(e);
+  const rect=cvEl.getBoundingClientRect();
+  const mx=(pt.x-rect.left)/rect.width*cvCssW;
+  const my=(pt.y-rect.top)/rect.height*cvCssH;
+  const scale=cvCssW/1920;
+  if(S.showShot&&curHole().delta!==null){
+    const pos=S.overlayPos[S.ratio];
+    const ox=pos.x*cvCssW,oy=pos.y*cvCssH;
+    if(mx>=ox&&mx<=ox+SHOT_W*scale&&my>=oy&&my<=oy+SHOT_H*scale){
+      dragging='overlay'; dragStart={mx,my,ox,oy}; e.preventDefault(); return;
+    }
+  }
+  if(S.showScore){
+    const pos=S.scorecardPos[S.ratio];
+    const sx2=pos.x*cvCssW,sy2=pos.y*cvCssH;
+    const sw=getSCWidth(scale),sh=getSCHeight(scale);
+    if(mx>=sx2&&mx<=sx2+sw&&my>=sy2&&my<=sy2+sh){
+      dragging='scorecard'; dragStart={mx,my,ox:sx2,oy:sy2}; e.preventDefault();
+    }
+  }
+}
+function onDragMove(e){
+  if(!dragging) return; e.preventDefault();
+  const pt=evPt(e);
+  const rect=cvEl.getBoundingClientRect();
+  const mx=(pt.x-rect.left)/rect.width*cvCssW;
+  const my=(pt.y-rect.top)/rect.height*cvCssH;
+  const dx=mx-dragStart.mx,dy=my-dragStart.my;
+  const scale=cvCssW/1920;
+  if(dragging==='overlay'){
+    const sn=snapPos(dragStart.ox+dx,dragStart.oy+dy,SHOT_W*scale,SHOT_H*scale);
+    S.overlayPos[S.ratio]={x:sn.x/cvCssW,y:sn.y/cvCssH};
+  } else {
+    const sw=getSCWidth(scale),sh=getSCHeight(scale);
+    const sn=snapPos(dragStart.ox+dx,dragStart.oy+dy,sw,sh);
+    S.scorecardPos[S.ratio]={x:sn.x/cvCssW,y:sn.y/cvCssH};
+  }
+  redrawOnly(); scheduleSave();
+}
+function onDragEnd(){ dragging=null; }
+function onTouchStart(e){ if(e.touches.length===1) onDragStart(e); }
+function onTouchMove(e){ if(e.touches.length===1) onDragMove(e); }
+
+// ── RENDER ──
+function render(){
+  dpr=window.devicePixelRatio||1;
+  const dims=getCanvasCssDims();
+  cvCssW=dims.w; cvCssH=dims.h;
+  cvEl.width=Math.round(dims.w*dpr);
+  cvEl.height=Math.round(dims.h*dpr);
+  cvEl.style.width=dims.w+'px';
+  cvEl.style.height=dims.h+'px';
+  const area=document.getElementById('preview');
+  cvEl.style.left=((area.clientWidth-dims.w)/2)+'px';
+  cvEl.style.top=((area.clientHeight-dims.h)/2)+'px';
+  redrawOnly();
+  buildHoleNav();
+  buildDeltaBtn();
+  buildTypeButtons();
+  updateRightPanel();
+}
+
+function redrawOnly(){
+  const ctx=cvEl.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,cvCssW,cvCssH);
+  // Apply overlay opacity
+  ctx.save();
+  ctx.globalAlpha=S.overlayOpacity??1;
+  drawOverlays(ctx,cvCssW,cvCssH,false);
+  ctx.restore();
+}
+
+// ── DRAW OVERLAYS ──
+function drawOverlays(ctx,w,h,forExport){
+  if(forExport){
+    // transparent background only (no black bg option per v4.4 spec)
+  }
+  if(S.safeZone) drawSafeZone(ctx,w,h);
+  const scale=w/1920;
+  if(S.showShot&&curHole().delta!==null){
+    const pos=S.overlayPos[S.ratio];
+    drawShotOverlay(ctx,pos.x*w,pos.y*h,scale);
+  }
+  if(S.showScore){
+    const pos=S.scorecardPos[S.ratio];
+    drawScorecardOverlay(ctx,pos.x*w,pos.y*h,scale);
+  }
+}
+
+function drawSafeZone(ctx,w,h){
+  ctx.save(); ctx.setLineDash([6,5]); ctx.lineWidth=1;
+  if(S.szSize==='5'||S.szSize==='both'){const p=0.05;ctx.strokeStyle='rgba(255,220,0,.35)';ctx.strokeRect(w*p,h*p,w*(1-2*p),h*(1-2*p));}
+  if(S.szSize==='10'||S.szSize==='both'){const p=0.10;ctx.strokeStyle='rgba(255,160,0,.4)';ctx.strokeRect(w*p,h*p,w*(1-2*p),h*(1-2*p));}
+  ctx.restore();
+}
+
+// ── SHOT OVERLAY — v4.4 ──
+function drawShotOverlay(ctx,X,Y,scale){
+  const h=curHole();
+  const W=SHOT_W*scale, H=SHOT_H*scale;
+  const r1=ROW1*scale, r2=ROW2*scale, r3=ROW3*scale;
+  const colW=COL_W*scale, rpad=RPAD*scale;
+
+  ctx.save();
+  rrect(ctx,X,Y,W,H,4*scale); ctx.clip();
+
+  // BG panels
+  ctx.fillStyle='#1B5E3B'; ctx.fillRect(X,Y,colW,H);       // left green
+  ctx.fillStyle='#F8F8F8'; ctx.fillRect(X+colW,Y,W-colW,H); // right light
+  ctx.fillStyle='#1B5E3B'; ctx.fillRect(X+colW,Y+r1,W-colW,r2); // row2 green
+
+  // ── LEFT: hole number ──
+  ctx.fillStyle='#fff';
+  ctx.font=`900 ${Math.round(52*scale)}px ${SF}`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(String(S.currentHole+1),X+colW/2,Y+H*0.42);
+
+  // PAR label
+  ctx.fillStyle='rgba(255,255,255,0.55)';
+  ctx.font=`700 ${Math.round(12*scale)}px ${SF}`;
+  ctx.fillText('PAR',X+colW/2,Y+H-26*scale);
+
+  // PAR number
+  ctx.fillStyle='#B8962E';
+  ctx.font=`800 ${Math.round(30*scale)}px ${SF}`;
+  ctx.fillText(String(h.par),X+colW/2,Y+H-8*scale);
+
+  // ── ROW1: player name ──
+  const rx=X+colW+rpad, rW=W-colW-2*rpad;
+  let nameMaxW=rW, totalBadgeW=0;
+  if(S.showTotal){ totalBadgeW=64*scale; nameMaxW=rW-totalBadgeW-8*scale; }
+
+  ctx.fillStyle='#111';
+  ctx.font=`700 ${Math.round(17*scale)}px ${SF}`;
+  ctx.textAlign='left'; ctx.textBaseline='middle';
+  let name=(S.playerName||'PLAYER').toUpperCase();
+  while(ctx.measureText(name).width>nameMaxW&&name.length>1) name=name.slice(0,-1);
+  if(name!==(S.playerName||'PLAYER').toUpperCase()) name=name.slice(0,-1)+'…';
+  ctx.fillText(name,rx,Y+r1/2);
+
+  // Total badge
+  if(S.showTotal){
+    const td=totalDelta(), tg=totalGross();
+    const bColor=totalBadgeColor();
+    const bTxt=S.displayMode==='topar'?fmtDeltaDisplay(td):String(tg);
+    const bx=X+W-rpad-totalBadgeW, by=Y+6*scale, bh=r1-12*scale;
+    rrect(ctx,bx,by,totalBadgeW,bh,2*scale); ctx.fillStyle=bColor; ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.font=`800 ${Math.round(14*scale)}px ${SF}`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(bTxt,bx+totalBadgeW/2,by+bh/2);
+  }
+
+  // ── ROW2: progress squares RIGHT-ALIGNED ──
+  const gross=getGross(h), si=h.shotIndex;
+  const sqSz=22*scale, sqGap=5*scale;
+  const totalSqW=gross*(sqSz+sqGap)-sqGap;
+  const sqStartX=X+W-rpad-totalSqW;
+  const sqCY=Y+r1+r2/2;
+
+  for(let i=0;i<gross;i++){
+    const bx=sqStartX+i*(sqSz+sqGap), by=sqCY-sqSz/2;
+    const isCur=i===si, isPast=i<si;
+    if(isCur){
+      rrect(ctx,bx,by,sqSz,sqSz,3*scale); ctx.fillStyle='#fff'; ctx.fill();
+      ctx.fillStyle='#1B5E3B';
+    } else if(isPast){
+      rrect(ctx,bx,by,sqSz,sqSz,3*scale); ctx.fillStyle='rgba(255,255,255,.25)'; ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.8)';
+    } else {
+      rrect(ctx,bx,by,sqSz,sqSz,3*scale); ctx.fillStyle='rgba(255,255,255,.10)'; ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.3)';
+    }
+    ctx.font=`700 ${Math.round(12*scale)}px ${SF}`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(String(i+1),bx+sqSz/2,sqCY);
+  }
+
+  // GOLD DIVIDER between Row2 and Row3
+  const divY=Y+r1+r2;
+  ctx.save();
+  ctx.setLineDash([]);
+  ctx.strokeStyle='#B8962E';
+  ctx.lineWidth=Math.max(1,1*scale);
+  ctx.beginPath(); ctx.moveTo(X+colW,divY); ctx.lineTo(X+W,divY); ctx.stroke();
+  ctx.restore();
+
+  // ── ROW3: Three-column layout (v4.4 spec) ──
+  // Left: To Pin   |   Center: Shot type   |   Right: Result
+  const r3y=divY;
+  const r3h=r3;
+  const midX=X+colW+rW/2; // center of right panel
+
+  // LEFT: To Pin for current shot
+  const shotToPin=getShotToPin(h,si);
+  if(S.showDist){
+    const lbl=T('toPinLabel');
+    const distVal=shotToPin!==null?String(shotToPin):'—';
+    const unit=shotToPin!==null?T('ydsLabel'):'';
+
+    ctx.fillStyle='rgba(0,0,0,0.4)';
+    ctx.font=`600 ${Math.round(9*scale)}px ${SF}`;
+    ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.fillText(lbl,rx,r3y+3*scale);
+
+    ctx.fillStyle='#111';
+    ctx.font=`700 ${Math.round(16*scale)}px ${SF}`;
+    ctx.textBaseline='bottom';
+    ctx.fillText(distVal,rx,r3y+r3h-4*scale);
+
+    if(unit){
+      const dw=ctx.measureText(distVal).width;
+      ctx.fillStyle='rgba(0,0,0,0.38)';
+      ctx.font=`600 ${Math.round(9*scale)}px ${SF}`;
+      ctx.fillText(unit,rx+dw+2*scale,r3y+r3h-4*scale);
+    }
+  }
+
+  // CENTER: Shot type (always centered, never overlaps)
+  const isLast=si===gross-1;
+  const shotTxt=isLast?'':shotTypeLabel(h.shots[si]?.type);
+  if(shotTxt){
+    ctx.font=`700 ${Math.round(12*scale)}px ${SF}`;
+    const stw=ctx.measureText(shotTxt).width;
+    const sbW=stw+16*scale, sbH=20*scale;
+    const sbx=midX-sbW/2, sby=r3y+(r3h-sbH)/2;
+    rrect(ctx,sbx,sby,sbW,sbH,2*scale);
+    ctx.fillStyle='rgba(255,255,255,0.92)'; ctx.fill();
+    ctx.fillStyle='#222';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(shotTxt,midX,r3y+r3h/2);
+  }
+
+  // RIGHT: Result (last shot) with delta color
+  if(isLast){
+    const resultTxt=deltaLabel(h.delta);
+    ctx.font=`700 ${Math.round(12*scale)}px ${SF}`;
+    const rtw=ctx.measureText(resultTxt).width;
+    const rbW=Math.max(rtw+18*scale, 60*scale), rbH=20*scale;
+    const rbx=X+W-rpad-rbW, rby=r3y+(r3h-rbH)/2;
+    rrect(ctx,rbx,rby,rbW,rbH,2*scale);
+    ctx.fillStyle=deltaColorHex(h.delta); ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(resultTxt,rbx+rbW/2,rby+rbH/2);
+  }
+
+  // Row1/Row2 divider
+  ctx.strokeStyle='rgba(200,200,200,0.6)'; ctx.lineWidth=Math.max(.5,.5*scale);
+  ctx.beginPath(); ctx.moveTo(X+colW,Y+r1); ctx.lineTo(X+W,Y+r1); ctx.stroke();
+
+  ctx.restore();
+}
+
+// ── SCORECARD OVERLAY — v4.4 ──
+function getSCRange(){ return S.scoreRange==='front9'?[0,9]:S.scoreRange==='back9'?[9,18]:[0,18]; }
+function getSCWidth(scale){
+  const[s,e]=getSCRange(); const count=e-s;
+  // v4.4: height +30% → width also slightly increased
+  return(60+count*44+64)*scale;
+}
+// v4.4: height +30% of v4.3 (92 * 1.3 ≈ 120)
+function getSCHeight(scale){ return 120*scale; }
+
+function drawScorecardOverlay(ctx,X,Y,scale){
+  const[start,end]=getSCRange(), count=end-start;
+  const labelW=60*scale, colW=44*scale, totalW=64*scale;
+  // v4.4: +30% taller
+  const hdrH=34*scale, rowH=43*scale;
+  const W=labelW+count*colW+totalW, H=hdrH+rowH*2;
+
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,0.3)'; ctx.shadowBlur=8*scale; ctx.shadowOffsetY=2*scale;
+  rrect(ctx,X,Y,W,H,7*scale);
+  ctx.fillStyle='#F2F2F2'; ctx.fill();
+  ctx.shadowColor='transparent';
+  rrect(ctx,X,Y,W,H,7*scale); ctx.clip();
+
+  // Header
+  ctx.fillStyle='#1B5E3B'; ctx.fillRect(X,Y,W,hdrH);
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  ctx.font=`700 ${Math.round(11*scale)}px ${SF}`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('HOLE',X+labelW/2,Y+hdrH/2);
+  for(let i=0;i<count;i++){
+    const hi=start+i;
+    ctx.fillStyle=hi===S.currentHole?'#B8962E':'rgba(255,255,255,.75)';
+    ctx.font=`700 ${Math.round(11*scale)}px ${SF}`;
+    ctx.fillText(String(hi+1),X+labelW+i*colW+colW/2,Y+hdrH/2);
+  }
+  ctx.fillStyle='rgba(255,255,255,.8)';
+  ctx.font=`700 ${Math.round(11*scale)}px ${SF}`;
+  ctx.fillText('TOT',X+W-totalW/2,Y+hdrH/2);
+
+  // PAR row
+  const parY=Y+hdrH;
+  ctx.fillStyle='#EAF0EA'; ctx.fillRect(X,parY,W,rowH);
+  ctx.strokeStyle='rgba(180,190,180,0.4)'; ctx.lineWidth=0.5;
+  for(let i=0;i<=count;i++){
+    const lx=X+labelW+i*colW;
+    ctx.beginPath(); ctx.moveTo(lx,parY); ctx.lineTo(lx,parY+rowH); ctx.stroke();
+  }
+  ctx.fillStyle='rgba(0,0,0,0.4)';
+  ctx.font=`600 ${Math.round(11*scale)}px ${SF}`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('PAR',X+labelW/2,parY+rowH/2);
+  let parTot=0;
+  for(let i=0;i<count;i++){
+    const h=S.holes[start+i]; parTot+=h.par;
+    ctx.fillStyle='#2a5e2a';
+    ctx.font=`700 ${Math.round(14*scale)}px ${SF}`;
+    ctx.fillText(String(h.par),X+labelW+i*colW+colW/2,parY+rowH/2);
+  }
+  ctx.fillStyle='#1B5E3B';
+  ctx.font=`800 ${Math.round(14*scale)}px ${SF}`;
+  ctx.fillText(String(parTot),X+W-totalW/2,parY+rowH/2);
+
+  // SCORE row
+  const scY=parY+rowH;
+  ctx.fillStyle='#FFFFFF'; ctx.fillRect(X,scY,W,rowH);
+  ctx.strokeStyle='rgba(180,190,180,0.4)';
+  for(let i=0;i<=count;i++){
+    const lx=X+labelW+i*colW;
+    ctx.beginPath(); ctx.moveTo(lx,scY); ctx.lineTo(lx,scY+rowH); ctx.stroke();
+  }
+  ctx.strokeStyle='rgba(180,190,180,0.5)'; ctx.lineWidth=0.5;
+  ctx.beginPath(); ctx.moveTo(X,parY+rowH); ctx.lineTo(X+W,parY+rowH); ctx.stroke();
+
+  ctx.fillStyle='rgba(0,0,0,0.35)';
+  ctx.font=`600 ${Math.round(11*scale)}px ${SF}`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('SCORE',X+labelW/2,scY+rowH/2);
+
+  for(let i=0;i<count;i++){
+    const h=S.holes[start+i], cx=X+labelW+i*colW+colW/2;
+    if(h.delta===null){
+      ctx.fillStyle='rgba(0,0,0,0.2)';
+      ctx.font=`400 ${Math.round(13*scale)}px ${SF}`;
+      ctx.fillText('—',cx,scY+rowH/2);
+    } else {
+      const bW=30*scale, bH=24*scale;
+      rrect(ctx,cx-bW/2,scY+rowH/2-bH/2,bW,bH,3*scale);
+      ctx.fillStyle=deltaColorHex(h.delta); ctx.fill();
+      ctx.fillStyle='#fff';
+      ctx.font=`800 ${Math.round(12*scale)}px ${SF}`;
+      // v4.4: Even = 0
+      const txt=S.displayMode==='topar'?fmtDeltaDisplay(h.delta):String(h.par+h.delta);
+      ctx.fillText(txt,cx,scY+rowH/2);
+    }
+  }
+  // Totals
+  const td=S.holes.slice(start,end).reduce((a,h)=>a+(h.delta??0),0);
+  const tg=S.holes.slice(start,end).reduce((a,h)=>a+h.par+(h.delta??0),0);
+  ctx.fillStyle='#111';
+  ctx.font=`800 ${Math.round(14*scale)}px ${SF}`;
+  ctx.fillText(S.displayMode==='topar'?fmtDeltaDisplay(td):String(tg),X+W-totalW/2,scY+rowH/2);
+
+  // v4.4: No current hole triangle per spec ("不显示当前洞角标")
+
+  // Outer border
+  ctx.strokeStyle='rgba(27,94,59,0.3)'; ctx.lineWidth=1;
+  rrect(ctx,X,Y,W,H,7*scale); ctx.stroke();
+
+  ctx.restore();
+}
+
+function rrect(ctx,x,y,w,h,r){
+  r=Math.min(r,w/2,h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+// ============================================================
+// EXPORT — v4.4
+// ============================================================
+function doExport(){
+  const res=S.exportRes||2160;
+  let expW,expH;
+  if(S.ratio==='16:9'){expW=Math.round(res*16/9);expH=res;}
+  else if(S.ratio==='9:16'){expW=Math.round(res*9/16);expH=res;}
+  else{expW=res;expH=res;}
+
+  let offscreen;
+  try{ offscreen=document.createElement('canvas'); offscreen.width=expW; offscreen.height=expH; }
+  catch(err){ showExpStatus(false); return; }
+
+  const ctx=offscreen.getContext('2d');
+  // v4.4: overlayOpacity also applied on export
+  ctx.save();
+  ctx.globalAlpha=S.overlayOpacity??1;
+  drawOverlays(ctx,expW,expH,true);
+  ctx.restore();
+
+  const h=curHole();
+  const stype=(h.shots[h.shotIndex]?.type||'shot').toLowerCase().replace('_','-');
+  const fname=`hole${String(S.currentHole+1).padStart(2,'0')}_shot${String(h.shotIndex+1).padStart(2,'0')}_${stype}_${res}p.png`;
+
+  try{
+    offscreen.toBlob(blob=>{
+      if(!blob){ showExpStatus(false,'toBlob null'); return; }
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url; a.download=fname;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url),4000);
+      showExpStatus(true);
+    },'image/png');
+  } catch(err){
+    try{
+      const url=offscreen.toDataURL('image/png');
+      const a=document.createElement('a');
+      a.href=url; a.download=fname;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      showExpStatus(true);
+    } catch(e2){ showExpStatus(false,e2.message); }
+  }
+}
+
+function showExpStatus(ok,errMsg){
+  const el=document.getElementById('exp-status');
+  el.className=''; el.textContent=ok?'✓':'!';
+  el.classList.add(ok?'ok':'err');
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>el.className='',ok?1000:2000);
+  if(!ok&&errMsg) console.error('Export failed:',errMsg);
+}
+
+// ============================================================
+// UI BUILD
+// ============================================================
+function buildHoleNav(){
+  const f9P=S.holes.slice(0,9).reduce((a,h)=>a+h.par,0);
+  const f9G=S.holes.slice(0,9).reduce((a,h)=>a+h.par+(h.delta??0),0);
+  const b9P=S.holes.slice(9,18).reduce((a,h)=>a+h.par,0);
+  const b9G=S.holes.slice(9,18).reduce((a,h)=>a+h.par+(h.delta??0),0);
+
+  ['nav-row1','nav-row2'].forEach((id,row)=>{
+    const cont=document.getElementById(id); cont.innerHTML='';
+    for(let i=row*9;i<row*9+9;i++){
+      const h=S.holes[i];
+      const card=document.createElement('div');
+      card.className='hcard '+deltaCardClass(h.delta);
+      if(i===S.currentHole) card.classList.add('active');
+      // v4.4: Even = 0
+      let sc='—';
+      if(h.delta!==null) sc=S.displayMode==='topar'?fmtDeltaDisplay(h.delta):String(h.par+h.delta);
+      card.innerHTML=`<div class="hn">${i+1}</div><div class="hp">P${h.par}</div><div class="hs">${sc}</div>`;
+      card.onclick=()=>{
+        S.currentHole=i;
+        // v4.4: if filled -> jump to last shot; else shotIndex=0
+        const ch=S.holes[i];
+        if(ch.delta!==null){
+          const g=getGross(ch);
+          if(g&&g>0) ch.shotIndex=g-1;
+        } else {
+          ch.shotIndex=0;
+        }
+        render(); scheduleSave();
+      };
+      cont.appendChild(card);
+    }
+    if(row===0){
+      cont.appendChild(makeStatCard('F',f9P,f9G));
+    } else {
+      cont.appendChild(makeStatCard('B',b9P,b9G));
+      cont.appendChild(makeStatCard('T',f9P+b9P,f9G+b9G));
+    }
+  });
+}
+
+function makeStatCard(lbl,par,gross){
+  const el=document.createElement('div');
+  el.className='stat-card';
+  el.innerHTML=`<div class="sc-lbl">${lbl}</div><div class="sc-val"><span style="color:var(--gold);font-size:9px">${par}</span><br><span class="sc-num">${gross}</span></div>`;
+  return el;
+}
+
+function buildDeltaBtn(){
+  const h=curHole();
+  const btn=document.getElementById('delta-val-btn');
+  const mainTxt=document.getElementById('delta-main-txt');
+  const hintTxt=document.getElementById('delta-hint-txt');
+
+  if(h.delta===null){
+    btn.className='unfilled'; btn.style.cssText='';
+    mainTxt.textContent='—';
+    hintTxt.textContent=T('setScore'); hintTxt.style.display='';
+  } else {
+    const d=h.delta;
+    const bg=deltaColorHex(d);
+    btn.className='';
+    btn.style.background=bg; btn.style.color='#fff'; btn.style.borderColor=bg;
+    // v4.4: display 0 not E
+    mainTxt.textContent=fmtDeltaDisplay(d);
+    hintTxt.style.display='none';
+  }
+}
+
+const ACTION_TYPES=[
+  {type:'TEE',labelKey:'typeTee'},
+  {type:'APPR',labelKey:'typeAppr'},
+  {type:'CHIP',labelKey:'typeChip'},
+  {type:'PUTT',labelKey:'typePutt'},
+];
+const CONTEXT_TYPES=[
+  {type:'FOR_BIRDIE',labelKey:'typeFB'},
+  {type:'FOR_PAR',labelKey:'typeFP'},
+  {type:'FOR_BOGEY',labelKey:'typeFBo'},
+];
+
+function buildTypeButtons(){
+  const h=curHole();
+  const curType=h.delta!==null?(h.shots[h.shotIndex]?.type||''):'';
+  ['type-row1','type-row2'].forEach((id,ri)=>{
+    const row=document.getElementById(id); row.innerHTML='';
+    (ri===0?ACTION_TYPES:CONTEXT_TYPES).forEach(({type,labelKey})=>{
+      const btn=document.createElement('button');
+      btn.className='tbtn'+(curType===type?' active':'');
+      btn.dataset.type=type; btn.textContent=T(labelKey);
+      btn.onclick=()=>setShotType(type);
+      row.appendChild(btn);
+    });
+  });
+}
+
+function updateRightPanel(){
+  const h=curHole(), idx=S.currentHole, gross=getGross(h);
+  document.getElementById('hole-num-big').textContent=T('holeHero',idx+1);
+  document.getElementById('hole-par-big').textContent=T('parLabel',h.par);
+  [3,4,5].forEach(p=>document.getElementById('par'+p).classList.toggle('active',h.par===p));
+  // v4.4: To Pin shows per-shot value; no default value
+  const shotToPin=getShotToPin(h,h.shotIndex);
+  const distInput=document.getElementById('inp-dist');
+  distInput.value=shotToPin!==null?shotToPin:'';
+  distInput.placeholder='—';
+  document.getElementById('chk-dist').checked=S.showDist;
+  document.getElementById('chk-total').checked=S.showTotal;
+  document.getElementById('gross-disp').textContent=gross!==null?T('grossDisp',gross,h.par,h.delta):'';
+  buildDeltaBtn();
+  const hasDelta=h.delta!==null;
+  document.getElementById('btn-prev').disabled=!hasDelta;
+  document.getElementById('btn-next').disabled=!hasDelta;
+  document.getElementById('shot-info').textContent=hasDelta&&gross?`${h.shotIndex+1} / ${gross}`:'— / —';
+  const isManual=hasDelta&&h.manualTypes[h.shotIndex];
+  const badge=document.getElementById('type-mode-badge');
+  if(badge){badge.textContent=isManual?'MANUAL':'AUTO';badge.style.background=isManual?'#3a2a1a':'#2a3a2a';badge.style.color=isManual?'#c8843c':'#5c8c5c';badge.style.borderColor=isManual?'#6a4a2a':'#3a5a3a';}
+  document.getElementById('mode-tp').classList.toggle('active',S.displayMode==='topar');
+  document.getElementById('mode-gr').classList.toggle('active',S.displayMode==='gross');
+  document.getElementById('score-sub').style.display=S.showScore?'flex':'none';
+  const dStr=h.delta!==null?fmtDeltaDisplay(h.delta):'—';
+  document.getElementById('status-txt').textContent=T('statusBar',idx+1,h.par,dStr,h.shotIndex+1,gross||'?',S.displayMode.toUpperCase());
+}
+
+// ============================================================
+// DELTA PICKER — v4.4 anchored popover
+// ============================================================
+function buildPickerItems(){
+  const cont=document.getElementById('picker-scroll'); cont.innerHTML='';
+  const h=curHole();
+
+  // v4.4: "Clear" as first item before -3
+  const clearItem=document.createElement('div');
+  clearItem.className='picker-item pi-clear';
+  clearItem.textContent=T('pickerRows','clear');
+  clearItem.onclick=()=>{
+    clearHole();
+    closePicker();
+    miniToast(T('clearHoleDone'));
+  };
+  cont.appendChild(clearItem);
+
+  for(let d=-6;d<=12;d++){
+    const item=document.createElement('div');
+    item.className='picker-item';
+    item.textContent=T('pickerRows',d);
+    if(h.delta===d) item.classList.add(pickerClass(d));
+    item.onclick=()=>{ setDelta(d); closePicker(); };
+    cont.appendChild(item);
+  }
+
+  // Scroll to current or 0
+  setTimeout(()=>{
+    const target=h.delta??0;
+    // +1 offset because of Clear item
+    const idx=target+6+1;
+    const items=cont.querySelectorAll('.picker-item');
+    if(items[idx]) items[idx].scrollIntoView({block:'center',behavior:'instant'});
+  },40);
+}
+
+function openPicker(e){
+  buildPickerItems();
+  const pop=document.getElementById('picker-popover');
+  const bd=document.getElementById('picker-backdrop');
+  // Position popover anchored near the button
+  const btn=document.getElementById('delta-val-btn');
+  const rect=btn.getBoundingClientRect();
+  const pW=240, pH=300;
+  let left=rect.left;
+  let top=rect.bottom+6;
+  // clamp to viewport
+  if(left+pW>window.innerWidth) left=window.innerWidth-pW-8;
+  if(top+pH>window.innerHeight) top=rect.top-pH-6;
+  if(top<0) top=8;
+  pop.style.left=Math.max(4,left)+'px';
+  pop.style.top=top+'px';
+  pop.classList.add('show');
+  bd.classList.add('show');
+}
+
+function closePicker(){
+  document.getElementById('picker-popover').classList.remove('show');
+  document.getElementById('picker-backdrop').classList.remove('show');
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function openSettings(){ document.getElementById('settings-drawer').classList.add('open'); document.getElementById('sd-overlay').classList.add('show'); }
+function closeSettings(){ document.getElementById('settings-drawer').classList.remove('open'); document.getElementById('sd-overlay').classList.remove('show'); }
+
+// ============================================================
+// NEW ROUND
+// ============================================================
+function openNewRound(){ document.getElementById('newround-modal').style.display='flex'; }
+function closeNewRound(){ document.getElementById('newround-modal').style.display='none'; }
+function doNewRound(){
+  if(document.getElementById('m-scores').checked) S.holes.forEach(h=>{h.delta=null;h.shots=[];h.shotIndex=0;h.manualTypes={};h.toPins={};});
+  if(document.getElementById('m-pars').checked) S.holes.forEach(h=>h.par=4);
+  closeNewRound(); render(); scheduleSave();
+}
+
+// ============================================================
+// LONG PRESS
+// ============================================================
+function setupLongPress(btn,fn){
+  let t=null;
+  const start=()=>{ fn(); t=setInterval(fn,200); };
+  const stop=()=>{ clearInterval(t);t=null; };
+  btn.addEventListener('mousedown',start);
+  btn.addEventListener('touchstart',e=>{e.preventDefault();start();},{passive:false});
+  btn.addEventListener('mouseup',stop);
+  btn.addEventListener('mouseleave',stop);
+  btn.addEventListener('touchend',stop);
+}
+
+// ============================================================
+// WIRING
+// ============================================================
+function wireAll(){
+  // Export
+  document.getElementById('btn-export').onclick=doExport;
+
+  // Background file inputs
+  document.getElementById('bg-file-cover').addEventListener('change',e=>{
+    setBgFile(e.target.files[0]); e.target.value='';
+  });
+  document.getElementById('bg-file-input').addEventListener('change',e=>{
+    setBgFile(e.target.files[0]); e.target.value='';
+  });
+  // Drag & drop on preview
+  const pv=document.getElementById('preview');
+  pv.addEventListener('dragover',e=>e.preventDefault());
+  pv.addEventListener('drop',e=>{ e.preventDefault(); setBgFile(e.dataTransfer.files[0]); });
+
+  // Settings
+  document.getElementById('sd-clear-bg').onclick=clearBg;
+  document.getElementById('bg-opacity').oninput=e=>{
+    const v=parseInt(e.target.value)/100; S.bgOpacity=v;
+    document.getElementById('bg-opacity-val').textContent=e.target.value+'%';
+    const img=document.getElementById('bg-img'); if(img.src) img.style.opacity=v;
+    scheduleSave();
+  };
+  document.getElementById('chk-sz').onchange=e=>{ S.safeZone=e.target.checked; redrawOnly(); scheduleSave(); };
+  document.getElementById('sz-size').onchange=e=>{ S.szSize=e.target.value; redrawOnly(); scheduleSave(); };
+
+  // Overlay opacity slider (v4.4)
+  document.getElementById('overlay-opacity').oninput=e=>{
+    const v=parseInt(e.target.value)/100;
+    S.overlayOpacity=v;
+    document.getElementById('overlay-opacity-val').textContent=e.target.value+'%';
+    redrawOnly(); scheduleSave();
+  };
+
+  // Ratio — wired via onclick in HTML
+  // Player name
+  document.getElementById('inp-player').oninput=e=>{ S.playerName=e.target.value||'PLAYER'; redrawOnly(); scheduleSave(); };
+  // Course name
+  document.getElementById('inp-course').oninput=e=>{ S.courseName=e.target.value||''; scheduleSave(); };
+
+  // To Pin per-shot (v4.4)
+  document.getElementById('inp-dist').oninput=e=>{
+    const val=e.target.value===''?null:parseInt(e.target.value);
+    setShotToPin(isNaN(val)?null:val);
+  };
+  document.getElementById('inp-dist').onfocus=e=>{ e.target.select(); };
+  document.getElementById('chk-dist').onchange=e=>{ S.showDist=e.target.checked; redrawOnly(); scheduleSave(); };
+  document.getElementById('chk-total').onchange=e=>{ S.showTotal=e.target.checked; redrawOnly(); scheduleSave(); };
+
+  // Overlays
+  document.getElementById('chk-shot').onchange=e=>{ S.showShot=e.target.checked; redrawOnly(); scheduleSave(); };
+  document.getElementById('chk-score').onchange=e=>{
+    S.showScore=e.target.checked;
+    document.getElementById('score-sub').style.display=e.target.checked?'flex':'none';
+    redrawOnly(); scheduleSave();
+  };
+  document.querySelectorAll('[name=scr]').forEach(r=>r.onchange=()=>{ S.scoreRange=r.value; redrawOnly(); scheduleSave(); });
+
+  // Mode
+  document.getElementById('mode-tp').onclick=()=>setMode('topar');
+  document.getElementById('mode-gr').onclick=()=>setMode('gross');
+
+  // Shot nav
+  setupLongPress(document.getElementById('btn-prev'),prevShot);
+  setupLongPress(document.getElementById('btn-next'),nextShot);
+
+  // Next hole button (nav footer)
+  document.getElementById('btn-next-hole').onclick=gotoNextHole;
+
+  // Par
+  [3,4,5].forEach(p=>document.getElementById('par'+p).onclick=()=>setPar(p));
+
+  // Modals
+  document.getElementById('newround-modal').onclick=e=>{ if(e.target===document.getElementById('newround-modal')) closeNewRound(); };
+
+  // Keyboard
+  window.addEventListener('keydown',e=>{
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+    if(e.key==='ArrowRight'||e.key==='.') nextShot();
+    else if(e.key==='ArrowLeft'||e.key===',') prevShot();
+    else if(e.key.toLowerCase()==='h') gotoNextHole();
+  });
+  window.addEventListener('resize',()=>render());
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init(){
+  loadSaved();
+  initCanvas();
+  wireAll();
+
+  // Sync UI
+  // Ratio buttons
+  document.querySelectorAll('.ratio-btn').forEach(b=>b.classList.toggle('active',b.dataset.ratio===S.ratio));
+  // Res buttons
+  document.querySelectorAll('.res-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.res)===S.exportRes));
+  document.getElementById('inp-player').value=S.playerName||'';
+  document.getElementById('inp-course').value=S.courseName||'';
+  document.getElementById('chk-shot').checked=S.showShot;
+  document.getElementById('chk-score').checked=S.showScore;
+  document.getElementById('chk-total').checked=S.showTotal;
+  document.getElementById('chk-dist').checked=S.showDist;
+  document.getElementById('score-sub').style.display=S.showScore?'flex':'none';
+  document.querySelectorAll('[name=scr]').forEach(r=>r.checked=r.value===S.scoreRange);
+  document.getElementById('bg-opacity').value=Math.round(S.bgOpacity*100);
+  document.getElementById('bg-opacity-val').textContent=Math.round(S.bgOpacity*100)+'%';
+  document.getElementById('overlay-opacity').value=Math.round((S.overlayOpacity??1)*100);
+  document.getElementById('overlay-opacity-val').textContent=Math.round((S.overlayOpacity??1)*100)+'%';
+  document.getElementById('chk-sz').checked=!!S.safeZone;
+  document.getElementById('sz-size').value=S.szSize||'10';
+
+  // Language
+  LANG=S.lang||'en';
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===LANG));
+
+  applyLang();
+  applyBg();
+  render();
+}
+
+window.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
