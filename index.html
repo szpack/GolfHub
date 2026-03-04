@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Golf Overlay Tool v5.3.1</title>
+<link rel="stylesheet" href="css/overlay.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="hdr">
+  <div class="logo" id="logo-text">⛳ GOLF <span>OVERLAY</span></div>
+  <span class="logo-meta">v5.3.1<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
+  <span style="flex:1"></span>
+  <div id="lang-toggle">
+    <button class="lang-btn active" data-lang="en" onclick="setLang('en')">🇺🇸 EN</button>
+    <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">🇨🇳 中文</button>
+  </div>
+  <button id="btn-settings" onclick="openSettings()"><span>⚙️</span><span id="settings-lbl"> Settings</span></button>
+  <button id="btn-new" onclick="openNewRound()">New…</button>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="left">
+    <div id="preview">
+      <img id="bg-img" style="display:none;opacity:1">
+      <input type="file" id="bg-file-cover" accept="image/*">
+      <canvas id="cv"></canvas>
+      <div id="upload-hint">
+        <div class="uh-box">
+          <div class="ic">🖼</div>
+          <div id="hint-main">Click to upload background / Drop image here</div>
+          <div id="hint-sub" style="font-size:10px;color:var(--t3)">Preview only — not included in export</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- v4.5: Player/Course row + ratio buttons (no more ptool export area) -->
+    <div id="ptool">
+      <div id="player-wrap">
+        <label for="inp-player">🏌️</label>
+        <input type="text" id="inp-player" placeholder="PLAYER" maxlength="20"
+               onfocus="this.select()">
+        <label for="inp-course" style="font-size:12px;color:var(--t2);flex-shrink:0">⛳</label>
+        <input type="text" id="inp-course" placeholder="COURSE" maxlength="24"
+               onfocus="this.select()">
+      </div>
+      <!-- ratio buttons right-aligned on same row -->
+      <div id="ratio-group">
+        <button class="ratio-btn active" data-ratio="16:9" onclick="setRatio('16:9')">16:9</button>
+        <button class="ratio-btn" data-ratio="9:16" onclick="setRatio('9:16')">9:16</button>
+        <button class="ratio-btn" data-ratio="1:1" onclick="setRatio('1:1')">1:1</button>
+      </div>
+    </div>
+
+    <!-- Scorecard Nav — v4.6: rows aligned, To Par/Gross at same height -->
+    <div id="nav">
+      <div id="nav-outer">
+        <div id="nav-rows-col">
+          <div class="nav-row" id="nav-row1"></div>
+          <div class="nav-row" id="nav-row2"></div>
+        </div>
+        <div id="nav-footer">
+          <div class="mode-wrap">
+            <button class="mode-btn" id="mode-tp" onclick="setMode('topar')">To Par</button>
+            <button class="mode-btn" id="mode-gr" onclick="setMode('gross')">Gross</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div id="right">
+    <!-- Hole hero — no debug statusbar -->
+    <div id="hole-banner">
+      <div id="hole-hero">
+        <span id="hole-num-big">HOLE 1</span>
+        <span id="hole-par-big">PAR 4</span>
+      </div>
+    </div>
+
+    <!-- Par + Dist + Total -->
+    <div class="sec">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:0">
+        <span id="par-lbl" style="font-size:11px;color:var(--t2)">Par</span>
+        <div class="par-grp">
+          <button class="par-btn" id="par3" onclick="setPar(3)">3</button>
+          <button class="par-btn" id="par4" onclick="setPar(4)">4</button>
+          <button class="par-btn" id="par5" onclick="setPar(5)">5</button>
+        </div>
+      </div>
+      <div class="dist-row">
+        <span id="dist-lbl" style="font-size:12px;color:var(--t2);white-space:nowrap;flex-shrink:0"></span>
+        <input type="number" id="inp-dist" placeholder="" min="0" max="999" onfocus="this.select()" style="width:72px;height:34px;flex-shrink:0;font-size:14px">
+        <span class="dist-unit" id="dist-unit">yds</span>
+        <div class="dist-divider"></div>
+        <label class="total-label"><input type="checkbox" id="chk-total"> <span id="total-lbl">Total Disp</span></label>
+      </div>
+    </div>
+
+    <!-- Shot — v5.2: moved above Final Score -->
+    <div class="sec">
+      <div class="stitle" id="shot-section-title">Shot <span id="type-mode-badge" class="auto-badge">AUTO</span></div>
+      <div class="shot-nav">
+        <button class="shot-nav-btn" id="btn-prev">◀ PREV SHOT</button>
+        <div class="shot-info-box" id="shot-info">— / —</div>
+        <button class="shot-nav-btn" id="btn-next">NEXT SHOT ▶</button>
+      </div>
+      <div id="type-row1" class="type-row"></div>
+      <div id="type-row2" class="type-row"></div>
+    </div>
+
+    <!-- Final Score — v5.2: moved below Shot -->
+    <div id="delta-section">
+      <div class="stitle" id="delta-section-title">Final Score (Delta)</div>
+      <!-- v5.3.1: layout: [−] [blue delta] [+] [NEXT] -->
+      <div id="delta-display">
+        <button class="delta-adj-btn" id="btn-delta-minus" onclick="adjDelta(-1)">−</button>
+        <button id="delta-val-btn" class="unfilled" onclick="openPicker(event)">
+          <span id="delta-main-txt">—</span>
+          <span class="score-hint" id="delta-hint-txt" style="display:none"></span>
+        </button>
+        <button class="delta-adj-btn" id="btn-delta-plus" onclick="adjDelta(+1)">+</button>
+        <button id="btn-next-hole-inline" onclick="gotoNextHole()">
+          <div class="nhi-icon">→</div>
+          <div id="nhi-lbl">NEXT</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Export Section — v4.6: moved above Display Options -->
+    <div id="export-section">
+      <div class="stitle" id="export-title">Export</div>
+      <div class="res-group-inline">
+        <button class="res-btn active" data-res="2160" onclick="setRes(this)">4K</button>
+        <button class="res-btn" data-res="1440" onclick="setRes(this)">1440P</button>
+        <button class="res-btn" data-res="1080" onclick="setRes(this)">1080P</button>
+      </div>
+      <div class="opacity-row">
+        <label id="lbl-opa">Opacity</label>
+        <input type="range" id="overlay-opacity" min="0" max="100" value="100">
+        <span id="overlay-opacity-val">100%</span>
+      </div>
+      <div class="exp-btn-wrap">
+        <button id="btn-export" onclick="doExport()">
+          <span>🖼</span><span id="export-btn-txt">Create Overlay PNG</span>
+        </button>
+        <div id="exp-status"></div>
+      </div>
+    </div>
+
+    <!-- Display Options -->
+    <div class="sec">
+      <div class="stitle" id="options-title">Display Options</div>
+      <div class="opt-row">
+        <input type="checkbox" id="chk-shot" checked><label for="chk-shot" id="lbl-shot">Shot Overlay</label>
+        <span style="width:12px;flex-shrink:0"></span>
+        <input type="checkbox" id="chk-score"><label for="chk-score" id="lbl-score">Scorecard</label>
+      </div>
+      <div class="opt-sub" id="score-sub" style="display:none">
+        <label><input type="radio" name="scr" value="front9"> <span id="lbl-front9">Front 9</span></label>
+        <label><input type="radio" name="scr" value="back9"> <span id="lbl-back9">Back 9</span></label>
+        <label><input type="radio" name="scr" value="18" checked> <span id="lbl-18h">18 Holes</span></label>
+      </div>
+    </div>
+
+    <div style="height:20px;flex-shrink:0"></div>
+  </div>
+</div>
+
+<!-- DELTA PICKER POPOVER -->
+<div id="picker-backdrop" onclick="closePicker()"></div>
+<div id="picker-popover">
+  <div id="picker-header">
+    <h3 id="picker-title">Final Score</h3>
+    <button id="picker-close" onclick="closePicker()">×</button>
+  </div>
+  <div id="picker-scroll"></div>
+  <div style="padding:2px 0 0">
+    <button id="picker-cancel" onclick="closePicker()">Cancel</button>
+  </div>
+</div>
+
+<!-- SETTINGS DRAWER -->
+<div id="sd-overlay" onclick="closeSettings()"></div>
+<div id="settings-drawer">
+  <div id="sdh">
+    <h2 id="sd-title">⚙️ Settings</h2>
+    <button id="sd-close" onclick="closeSettings()">×</button>
+  </div>
+  <div id="sd-body">
+    <div class="sd-sec">
+      <div class="sd-sec-title" id="sd-bg-title">Background Image</div>
+      <div class="sd-row">
+        <label id="sd-opacity-lbl">BG Opacity</label>
+        <input type="range" id="bg-opacity" min="0" max="100" value="100">
+        <span id="bg-opacity-val" style="width:36px;text-align:right">100%</span>
+      </div>
+      <button class="sd-btn" id="sd-clear-bg">🗑 Clear Background (restore default)</button>
+      <button class="sd-btn" onclick="document.getElementById('bg-file-input').click()" id="bg-upload-btn">📷 Upload Background</button>
+      <input type="file" id="bg-file-input" accept="image/*">
+    </div>
+    <div class="sd-sec">
+      <div class="sd-sec-title" id="sd-sc-title">Scorecard Overlay</div>
+      <button class="sd-btn highlight" id="sd-reset-sc" onclick="resetScorecardPos()">↺ Reset Scorecard Position</button>
+    </div>
+    <div class="sd-sec">
+      <div class="sd-sec-title" id="sd-sz-title">Safe Zone</div>
+      <div class="sd-row">
+        <label id="sd-sz-lbl" for="chk-sz">Show safe zone guides</label>
+        <input type="checkbox" id="chk-sz" style="accent-color:var(--mg)">
+      </div>
+      <div class="sd-row">
+        <label id="sd-sz-size-lbl">Zone size</label>
+        <select id="sz-size" style="height:30px;font-size:12px">
+          <option value="5">5% Action Safe</option>
+          <option value="10">10% Title Safe</option>
+          <option value="both">Both</option>
+        </select>
+      </div>
+    </div>
+    <div class="sd-sec">
+      <div class="sd-sec-title" id="sd-par-title">Course Par</div>
+      <button class="sd-btn" onclick="resetAllPars()">Reset All to Par 4</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW ROUND MODAL -->
+<div id="newround-modal">
+  <div class="modal-box">
+    <h3 id="nr-title">🏌️ New Round</h3>
+    <div class="opt-row"><input type="checkbox" id="m-scores" checked><label for="m-scores" id="nr-clear-scores">Clear this round's scores</label></div>
+    <div class="opt-row"><input type="checkbox" id="m-pars"><label for="m-pars" id="nr-reset-pars">Reset course Par to 4 (all holes)</label></div>
+    <div class="modal-actions">
+      <button class="mbtn" onclick="closeNewRound()" id="nr-cancel">Cancel</button>
+      <button class="mbtn prim" onclick="doNewRound()" id="nr-confirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div id="mini-toast"></div>
+
+<script src="js/scoreboard.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
