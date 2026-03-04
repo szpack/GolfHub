@@ -117,6 +117,9 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v6.4.5 — 2026-03-05
+- 修复 To Pin 距离输入框显示上下箭头（CSS 隐藏 spinner，所有浏览器兼容）
+
 ### v6.4.4 — 2026-03-05
 - Export 区重新分组：Shots 组（Shot PNG + Hole Shots ZIP）/ Scorecard 组（Scorecard PNG + 18 SC ZIP）
 - ZIP 按钮为绿色主按钮，PNG 按钮为 outline 样式

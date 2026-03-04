@@ -120,6 +120,9 @@ select:focus,input:focus{border-color:#2ea043}
 .dist-row label{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--t2);cursor:pointer;white-space:nowrap;flex-shrink:0}
 .dist-row input[type=checkbox]{width:15px;height:15px;accent-color:var(--mg);flex-shrink:0}
 .dist-row input[type=number]{width:66px;height:34px;flex-shrink:0;font-size:13px}
+.dist-row input[type=number]::-webkit-outer-spin-button,
+.dist-row input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.dist-row input[type=number]{-moz-appearance:textfield}
 .dist-unit{font-size:11px;color:var(--t3);white-space:nowrap;flex-shrink:0}
 .dist-divider{width:1px;height:20px;background:var(--bd);margin:0 3px;flex-shrink:0}
 .total-label{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--t2);cursor:pointer;white-space:nowrap;flex-shrink:0}
