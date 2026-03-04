@@ -241,8 +241,8 @@ function drawScorecardOverlay(ctx,X,Y,scale){
       const scx=X+lx+subW/2;
       const txt=S.displayMode==='topar'?fmtDeltaDisplay(delta):String(parSub+delta);
       rrect(ctx,scx-subBW/2,scY+scoreRowH/2-subBH/2,subBW,subBH,4*scale);
-      ctx.fillStyle=deltaColorHex(delta); ctx.fill();
-      ctx.fillStyle='#fff';
+      ctx.fillStyle='#fff'; ctx.fill();
+      ctx.fillStyle='#111';
       ctx.font=`800 ${Math.round(subFontSz*0.95)}px ${SF}`;
       ctx.fillText(txt,scx,scY+scoreRowH/2);
     }

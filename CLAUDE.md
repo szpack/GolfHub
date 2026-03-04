@@ -83,3 +83,32 @@ GolfOverlay/
 - Canvas渲染基准宽度 1920px，所有绘制坐标通过 `scale = w/1920` 缩放
 - 背景图单独存储于 localStorage（base64），超配额时静默失败
 - 不使用任何构建工具，直接浏览器打开 index.html 即可运行
+
+## Release & Changelog Rules
+
+本项目使用 **Semantic Versioning**：`MAJOR.MINOR.PATCH`
+
+| 类型 | 触发条件 | 示例 |
+|------|----------|------|
+| PATCH | UI微调、小修复、不改变行为的重构 | 颜色调整、文字修正、路径规范 |
+| MINOR | 新增功能但向后兼容 | 新增显示选项、新快捷键 |
+| MAJOR | 破坏兼容或重大架构改动 | 数据结构变更、localStorage key更换 |
+
+### 每次完成代码修改任务后，必须按顺序执行：
+
+**1. 升级 VERSION 文件**
+- 读取根目录 `VERSION`（纯版本号一行，如 `5.3.2`）
+- 按改动类型升级对应位，写回 `VERSION`（只保留一行，无空行）
+
+**2. 在 README.md 的 `## Changelog` 下方插入新条目（最新在前）**
+```
+### vX.Y.Z — YYYY-MM-DD
+- 变更点1（用户可感知的描述）
+- 变更点2
+```
+- 若 `## Changelog` 区块不存在，先创建再插入
+- 只追加，不覆盖已有条目
+
+**3. 输出建议 git commit message**
+- 格式：`vX.Y.Z: <简短描述>`
+- 示例：`v5.3.2: fix OUT/IN badge color, widen shot overlay right panel`

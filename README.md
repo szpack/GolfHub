@@ -110,3 +110,13 @@ No build step · No external dependencies · Vanilla JS + Canvas
 ├── ui.js          — DOM 操作、事件绑定、面板刷新
 └── app.js         — 全局状态 S{}、持久化、Canvas 引擎、导出
 ```
+
+---
+
+## Changelog
+
+<!-- Claude: keep this section updated. Newest on top. -->
+
+### v5.3.3 — 2026-03-04
+- OUT/IN 统计改为白底黑字（不再沿用成绩色块）
+- 击球信息版右侧区域加宽 10px（SHOT_W 480→490，左列宽度不变）

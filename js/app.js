@@ -7,7 +7,7 @@
 // FONT / CANVAS CONSTANTS
 // ============================================================
 const SF = `ui-sans-serif,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Helvetica,Arial,sans-serif`;
-const SHOT_W=480, SHOT_H=132, ROW1=46, ROW2=42, ROW3=44, COL_W=148, RPAD=12;
+const SHOT_W=490, SHOT_H=132, ROW1=46, ROW2=42, ROW3=44, COL_W=148, RPAD=12;
 
 // ============================================================
 // I18N
