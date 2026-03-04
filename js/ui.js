@@ -63,6 +63,7 @@ function buildHoleNav(){
           if(pg&&pg>0) delete prev.manualTypes[pg-1];
         }
         S.currentHole=i;
+        S.scorecardSummary=null; // return to hole view
         const ch=S.holes[i];
         if(ch.delta!==null){
           const g=getGross(ch);
@@ -77,10 +78,19 @@ function buildHoleNav(){
       cont.appendChild(card);
     }
     if(row===0){
-      cont.appendChild(makeStatCard('F',f9P,f9G));
+      const fc=makeStatCard('F',f9P,f9G);
+      fc.style.cursor='pointer';
+      fc.onclick=()=>{ S.scorecardSummary='out'; render(); scheduleSave(); };
+      cont.appendChild(fc);
     } else {
-      cont.appendChild(makeStatCard('B',b9P,b9G));
-      cont.appendChild(makeStatCard('T',f9P+b9P,f9G+b9G));
+      const bc=makeStatCard('B',b9P,b9G);
+      bc.style.cursor='pointer';
+      bc.onclick=()=>{ S.scorecardSummary='in'; render(); scheduleSave(); };
+      cont.appendChild(bc);
+      const tc=makeStatCard('T',f9P+b9P,f9G+b9G);
+      tc.style.cursor='pointer';
+      tc.onclick=()=>{ S.scorecardSummary='tot'; render(); scheduleSave(); };
+      cont.appendChild(tc);
     }
   });
 }

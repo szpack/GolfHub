@@ -58,7 +58,14 @@ function deltaLabel(d){
 }
 
 // ── SCORECARD GEOMETRY ──
-function getSCRange(){ return S.scoreRange==='front9'?[0,9]:S.scoreRange==='back9'?[9,18]:[0,18]; }
+function getSCRange(){
+  // summary view (triggered by clicking F/B/T stat cards)
+  if(S.scorecardSummary==='out') return [0,9];
+  if(S.scorecardSummary==='in')  return [9,18];
+  if(S.scorecardSummary==='tot') return [0,18];
+  // hole view: always full 18-hole grid; scores rendered only for holes before currentHole
+  return [0,18];
+}
 function getSCWidth(scale){
   // v5.3: add OUT+IN sub-total columns for 18H mode
   const[s,e]=getSCRange(); const count=e-s;
@@ -76,6 +83,10 @@ function getSCHeight(scale){
 // ── SCORECARD OVERLAY DRAW — v4.5 ──
 function drawScorecardOverlay(ctx,X,Y,scale){
   const[start,end]=getSCRange(), count=end-start;
+  if(count<=0) return;
+  // In hole view: only fill scores for holes before currentHole; hide on hole 1
+  const scoreEnd = S.scorecardSummary===null ? S.currentHole : end;
+  if(S.scorecardSummary===null && scoreEnd===0) return;
   const is18=count===18;
   // v5.3: columns — for 18H: label | 1-9 | OUT | 10-18 | IN | TOT
   const COL=54, LAB=Math.round(COL*1.3), TOT=Math.round(COL*1.5);
@@ -215,7 +226,7 @@ function drawScorecardOverlay(ctx,X,Y,scale){
 
   for(let i=0;i<count;i++){
     const h=S.holes[start+i], lx=holeX(i), cellCx=X+lx+colW/2;
-    const delta=h.delta; // null = unfilled
+    const delta=(start+i)<scoreEnd ? h.delta : null; // only filled for holes before currentHole
     if(is18){
       if(i<9){ scoreOut+=(delta??0); if(delta!==null)filledOut++; }
       else   { scoreIn +=(delta??0); if(delta!==null)filledIn++; }
@@ -252,8 +263,8 @@ function drawScorecardOverlay(ctx,X,Y,scale){
   }
 
   // TOT
-  const td=S.holes.slice(start,end).reduce((a,h)=>a+(h.delta??0),0);
-  const tg=S.holes.slice(start,end).reduce((a,h)=>a+h.par+(h.delta??0),0);
+  const td=S.holes.slice(start,Math.min(end,scoreEnd)).reduce((a,h)=>a+(h.delta??0),0);
+  const tg=S.holes.slice(start,Math.min(end,scoreEnd)).reduce((a,h)=>a+h.par+(h.delta??0),0);
   ctx.fillStyle='#111';
   ctx.font=`700 ${totFontSz}px ${SF}`;
   ctx.textAlign='center'; ctx.textBaseline='middle';

@@ -187,6 +187,7 @@ function defState(){
   return{
     playerName:'PLAYER', courseName:'', currentHole:0, displayMode:'topar',
     ratio:'16:9', showShot:true, showScore:false, scoreRange:'18',
+    scorecardSummary:null,
     showTotal:false, showDist:false,
     exportRes:2160, bgOpacity:1.0, overlayOpacity:1.0,
     safeZone:false, szSize:'10', lang:'en',
@@ -362,6 +363,7 @@ function gotoNextHole(){
   // v5.1: always go to sequentially next hole (not next empty)
   const next=(S.currentHole+1)%18;
   S.currentHole=next;
+  S.scorecardSummary=null;
   const ch=S.holes[next];
   if(ch.delta!==null){
     const g=getGross(ch);
