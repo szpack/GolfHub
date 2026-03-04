@@ -117,6 +117,45 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v6.2.0 — 2026-03-05
+- 右侧面板重构：Par 3/4/5 按钮移入洞号标题行；Players 区域移至洞号下方；To Pin 距离移入 Shot 区域；Total Display 开关移至预览区工具栏（16:9 按钮左侧）
+- 新增击球类型 P（暂定球 Provisional），支持全语言
+- Shot Overlay 球员名字字号 32→34px
+- 总杆显示逻辑：过程态（TEE/APPR等）只计前 N-1 洞；结果态（PAR/BIRDIE/BOGEY）计入当前洞
+- Scorecard 范围选项移至工具栏上方，展开时向上，避免界面跳动
+- 导出区：删除提示文字；Single 改为框线按钮，Batch 改为绿色实体按钮；标签字号与 Shot/Final Score 一致
+
+### v6.1.0 — 2026-03-05
+- B1: 球员区添加"Players:/球员："标签 + "Manage…/管理…"按钮，移除旧 Players… 占位文字
+- B2/B3: 导出区重组为 Single / Batch 两行，增加提示文字"Export: Overlay only"
+- B4: 移除 ptool 区球员姓名输入框（与多球员系统冲突），相关 JS null-safe 处理
+- B5: Final Score 数字字体 54→56px 加大
+- B6: PREV/NEXT 击球按钮字体 13→11px 缩小
+- B7: 击球信息版左栏洞号/PAR/标准杆 Y 坐标下移（0.28/0.53/0.76 → 0.31/0.57/0.80）
+- C3: 球员管理历史列表增加搜索框，实时过滤历史球员
+
+### v6.0.1 — 2026-03-05
+- A1: 修复默认背景图启动不显示（onerror 在 src 赋值前绑定，display:block 立即生效）
+- A2: Score Board 范围选项移至左侧预览下方，紧贴 SC 开关，消除遮挡与定位错误
+- A3: TOT 统计始终为 Gross，覆盖全部 18 洞（未填写洞按 Par 计入），不受 To Par 模式影响
+- A4: 开球（Shot 0）距离改为全球员共享的洞长度，任何球员修改后所有人同步
+- A5: 点击 OUT/IN/TOT 统计卡高亮（stat-active），与洞号卡行为一致；New Round 同时清空已选球员
+- 修复球员全名显示被误加省略号（与 S.playerName 对比改为与原始名对比）
+
+### v6.0.0 — 2026-03-04
+- 多球员系统：支持最多150名球员，session 单人模式无缝启动；首次添加球员自动迁移已录数据
+- 球员操作区：位于距旗杆输入与击球类型之间，每行最多4个按钮，当前球员高亮；球员管理入口（Players…）含历史球员库
+- Tee Off 洞长度共享：同洞第一杆距离所有球员共享
+- 导出系统全面解耦：Shot PNG / SC PNG 独立导出；Hole Sequence / SC Sequence 批量导出为 ZIP（使用 JSZip）
+- 文件命名规则：`{Course}_{Player}_H{n}_S{n}_{TYPE}_{MODE}_{RES}.png` 等
+- Scorecard TOT 列永远显示 Gross 总杆
+- 计分卡左上角可选显示球员名字（⚙️ Settings 开关）
+- 击球信息版开关 / 计分卡开关移至预览区下方与球场名称同行
+
+### v5.5.0 — 2026-03-04
+- 新增多语言支持：日文（🇯🇵 日本語）、韩文（🇰🇷 한국어）、西班牙语（🇪🇸 ES）
+- UI 术语、成绩选择器、Canvas 文字、系统提示全面本地化
+
 ### v5.4.0 — 2026-03-04
 - 计分卡信息版保持完整 18 洞格子；当前洞 N 时仅在 1~(N-1) 洞格内填入成绩，当前洞及后续洞格留空；总杆仅按已完成洞之和计算；洞 1 时不显示
 - 新增汇总视图：点击 F/B/T 统计卡分别切换至 OUT(1-9) / IN(10-18) / TOT(1-18) 显示

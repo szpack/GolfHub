@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Golf Overlay Tool v5.3.1</title>
+<title>Golf Overlay Tool v6.2.0</title>
 <link rel="stylesheet" href="./css/overlay.css">
 </head>
 <body>
@@ -11,11 +11,14 @@
 <!-- HEADER -->
 <div id="hdr">
   <div class="logo" id="logo-text">⛳ GOLF <span>OVERLAY</span></div>
-  <span class="logo-meta">v5.3.1<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
+  <span class="logo-meta">v6.2.0<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
   <span style="flex:1"></span>
   <div id="lang-toggle">
     <button class="lang-btn active" data-lang="en" onclick="setLang('en')">🇺🇸 EN</button>
     <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">🇨🇳 中文</button>
+    <button class="lang-btn" data-lang="ja" onclick="setLang('ja')">🇯🇵 日本語</button>
+    <button class="lang-btn" data-lang="ko" onclick="setLang('ko')">🇰🇷 한국어</button>
+    <button class="lang-btn" data-lang="es" onclick="setLang('es')">🇪🇸 ES</button>
   </div>
   <button id="btn-settings" onclick="openSettings()"><span>⚙️</span><span id="settings-lbl"> Settings</span></button>
   <button id="btn-new" onclick="openNewRound()">New…</button>
@@ -37,17 +40,27 @@
       </div>
     </div>
 
-    <!-- v4.5: Player/Course row + ratio buttons (no more ptool export area) -->
+    <!-- Scorecard range (above ptool — expands upward from SC toggle) -->
+    <div id="score-range-sec" style="display:none">
+      <div class="opt-sub" id="score-sub">
+        <label><input type="radio" name="scr" value="front9"> <span id="lbl-front9">Front 9</span></label>
+        <label><input type="radio" name="scr" value="back9"> <span id="lbl-back9">Back 9</span></label>
+        <label><input type="radio" name="scr" value="18" checked> <span id="lbl-18h">18 Holes</span></label>
+      </div>
+    </div>
+
+    <!-- Course + Overlay Toggles + Total + Ratio -->
     <div id="ptool">
       <div id="player-wrap">
-        <label for="inp-player">🏌️</label>
-        <input type="text" id="inp-player" placeholder="PLAYER" maxlength="20"
-               onfocus="this.select()">
         <label for="inp-course" style="font-size:12px;color:var(--t2);flex-shrink:0">⛳</label>
         <input type="text" id="inp-course" placeholder="COURSE" maxlength="24"
                onfocus="this.select()">
+        <div class="ptool-toggles">
+          <label class="ptool-toggle-lbl"><input type="checkbox" id="chk-shot" checked> <span id="lbl-shot">Shot</span></label>
+          <label class="ptool-toggle-lbl"><input type="checkbox" id="chk-score"> <span id="lbl-score">SC</span></label>
+        </div>
       </div>
-      <!-- ratio buttons right-aligned on same row -->
+      <label class="ptool-toggle-lbl" style="flex-shrink:0"><input type="checkbox" id="chk-total"> <span id="total-lbl">Total</span></label>
       <div id="ratio-group">
         <button class="ratio-btn active" data-ratio="16:9" onclick="setRatio('16:9')">16:9</button>
         <button class="ratio-btn" data-ratio="9:16" onclick="setRatio('9:16')">9:16</button>
@@ -55,7 +68,7 @@
       </div>
     </div>
 
-    <!-- Scorecard Nav — v4.6: rows aligned, To Par/Gross at same height -->
+    <!-- Scorecard Nav -->
     <div id="nav">
       <div id="nav-outer">
         <div id="nav-rows-col">
@@ -74,36 +87,35 @@
 
   <!-- RIGHT PANEL -->
   <div id="right">
-    <!-- Hole hero — no debug statusbar -->
+    <!-- Hole hero — with inline par buttons -->
     <div id="hole-banner">
       <div id="hole-hero">
         <span id="hole-num-big">HOLE 1</span>
-        <span id="hole-par-big">PAR 4</span>
-      </div>
-    </div>
-
-    <!-- Par + Dist + Total -->
-    <div class="sec">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:0">
-        <span id="par-lbl" style="font-size:11px;color:var(--t2)">Par</span>
         <div class="par-grp">
           <button class="par-btn" id="par3" onclick="setPar(3)">3</button>
           <button class="par-btn" id="par4" onclick="setPar(4)">4</button>
           <button class="par-btn" id="par5" onclick="setPar(5)">5</button>
         </div>
       </div>
-      <div class="dist-row">
+    </div>
+
+    <!-- Player Area (right after hole banner) -->
+    <div id="player-section" class="sec">
+      <div id="player-mgr-row">
+        <span id="player-section-lbl" class="stitle" style="margin-bottom:0;flex:1">Players</span>
+        <button id="btn-player-mgr" onclick="openPlayerManager()">Manage…</button>
+      </div>
+      <div id="player-btn-grid"></div>
+    </div>
+
+    <!-- Shot (with To Pin inside) -->
+    <div class="sec">
+      <div class="stitle" id="shot-section-title">Shot <span id="type-mode-badge" class="auto-badge">AUTO</span></div>
+      <div class="dist-row" style="margin-top:0;margin-bottom:7px">
         <span id="dist-lbl" style="font-size:12px;color:var(--t2);white-space:nowrap;flex-shrink:0"></span>
         <input type="number" id="inp-dist" placeholder="" min="0" max="999" onfocus="this.select()" style="width:72px;height:34px;flex-shrink:0;font-size:14px">
         <span class="dist-unit" id="dist-unit">yds</span>
-        <div class="dist-divider"></div>
-        <label class="total-label"><input type="checkbox" id="chk-total"> <span id="total-lbl">Total Disp</span></label>
       </div>
-    </div>
-
-    <!-- Shot — v5.2: moved above Final Score -->
-    <div class="sec">
-      <div class="stitle" id="shot-section-title">Shot <span id="type-mode-badge" class="auto-badge">AUTO</span></div>
       <div class="shot-nav">
         <button class="shot-nav-btn" id="btn-prev">◀ PREV SHOT</button>
         <div class="shot-info-box" id="shot-info">— / —</div>
@@ -113,10 +125,9 @@
       <div id="type-row2" class="type-row"></div>
     </div>
 
-    <!-- Final Score — v5.2: moved below Shot -->
+    <!-- Final Score -->
     <div id="delta-section">
       <div class="stitle" id="delta-section-title">Final Score (Delta)</div>
-      <!-- v5.3.1: layout: [−] [blue delta] [+] [NEXT] -->
       <div id="delta-display">
         <button class="delta-adj-btn" id="btn-delta-minus" onclick="adjDelta(-1)">−</button>
         <button id="delta-val-btn" class="unfilled" onclick="openPicker(event)">
@@ -131,7 +142,7 @@
       </div>
     </div>
 
-    <!-- Export Section — v4.6: moved above Display Options -->
+    <!-- Export Section (two individual + two batch) -->
     <div id="export-section">
       <div class="stitle" id="export-title">Export</div>
       <div class="res-group-inline">
@@ -144,26 +155,31 @@
         <input type="range" id="overlay-opacity" min="0" max="100" value="100">
         <span id="overlay-opacity-val">100%</span>
       </div>
-      <div class="exp-btn-wrap">
-        <button id="btn-export" onclick="doExport()">
-          <span>🖼</span><span id="export-btn-txt">Create Overlay PNG</span>
+      <!-- Single exports — outlined buttons -->
+      <div class="exp-row-label" id="exp-lbl-single">Single</div>
+      <div class="exp-btn-row" style="position:relative">
+        <button class="exp-indiv-btn" id="btn-export-shot" onclick="doExportShotOnly()">
+          🖼 <span id="lbl-exp-shot">Shot PNG</span>
+        </button>
+        <button class="exp-indiv-btn" id="btn-export-sc" onclick="doExportScorecardOnly()">
+          📊 <span id="lbl-exp-sc">Scorecard PNG</span>
         </button>
         <div id="exp-status"></div>
       </div>
-    </div>
-
-    <!-- Display Options -->
-    <div class="sec">
-      <div class="stitle" id="options-title">Display Options</div>
-      <div class="opt-row">
-        <input type="checkbox" id="chk-shot" checked><label for="chk-shot" id="lbl-shot">Shot Overlay</label>
-        <span style="width:12px;flex-shrink:0"></span>
-        <input type="checkbox" id="chk-score"><label for="chk-score" id="lbl-score">Scorecard</label>
+      <!-- Batch exports — filled buttons -->
+      <div class="exp-row-label" id="exp-lbl-batch">Batch</div>
+      <div class="exp-btn-row">
+        <button class="exp-batch-btn" id="btn-export-hole-seq" onclick="doExportHoleSequence()">
+          📦 <span id="lbl-exp-hole-seq">Hole Shots ZIP</span>
+        </button>
+        <button class="exp-batch-btn" id="btn-export-sc-seq" onclick="doExportScorecardSequence()">
+          📦 <span id="lbl-exp-sc-seq">18 SC ZIP</span>
+        </button>
       </div>
-      <div class="opt-sub" id="score-sub" style="display:none">
-        <label><input type="radio" name="scr" value="front9"> <span id="lbl-front9">Front 9</span></label>
-        <label><input type="radio" name="scr" value="back9"> <span id="lbl-back9">Back 9</span></label>
-        <label><input type="radio" name="scr" value="18" checked> <span id="lbl-18h">18 Holes</span></label>
+      <!-- Progress bar -->
+      <div id="exp-progress-wrap" style="display:none">
+        <div id="exp-progress-bar-bg"><div id="exp-progress-bar"></div></div>
+        <div id="exp-progress-txt"></div>
       </div>
     </div>
 
@@ -181,6 +197,35 @@
   <div id="picker-scroll"></div>
   <div style="padding:2px 0 0">
     <button id="picker-cancel" onclick="closePicker()">Cancel</button>
+  </div>
+</div>
+
+<!-- PLAYER MANAGER MODAL -->
+<div id="player-modal-bg"></div>
+<div id="player-modal">
+  <div id="pm-header">
+    <h3 id="pm-title">Players</h3>
+    <button onclick="closePlayerManager()">×</button>
+  </div>
+  <div id="pm-body">
+    <div class="pm-section">
+      <div class="pm-section-title" id="pm-active-title">Active Players</div>
+      <div id="pm-active-list"></div>
+    </div>
+    <div class="pm-section">
+      <div class="pm-section-title" id="pm-add-title">Add Player</div>
+      <div id="pm-add-row">
+        <input type="text" id="pm-add-input" placeholder="Name…" maxlength="30">
+        <button id="pm-add-btn" onclick="addPlayerFromInput()">+</button>
+      </div>
+    </div>
+    <div class="pm-section">
+      <div class="pm-section-title" id="pm-hist-title">History</div>
+      <div id="pm-hist-search-row">
+        <input type="text" id="pm-hist-search" placeholder="Search…" maxlength="30">
+      </div>
+      <div id="pm-hist-list"></div>
+    </div>
   </div>
 </div>
 
@@ -206,6 +251,10 @@
     <div class="sd-sec">
       <div class="sd-sec-title" id="sd-sc-title">Scorecard Overlay</div>
       <button class="sd-btn highlight" id="sd-reset-sc" onclick="resetScorecardPos()">↺ Reset Scorecard Position</button>
+      <div class="sd-row">
+        <label id="sd-show-pname-lbl" for="chk-show-pname">Show Player Name</label>
+        <input type="checkbox" id="chk-show-pname" style="accent-color:var(--mg)">
+      </div>
     </div>
     <div class="sd-sec">
       <div class="sd-sec-title" id="sd-sz-title">Safe Zone</div>
@@ -244,6 +293,7 @@
 
 <div id="mini-toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="./js/scoreboard.js"></script>
 <script src="./js/ui.js"></script>
 <script src="./js/app.js"></script>

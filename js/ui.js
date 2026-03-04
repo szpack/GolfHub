@@ -5,7 +5,7 @@
 
 // ── SHOT LABEL HELPERS ──
 function shotTypeLabel(t){
-  const map={TEE:T('toeOff'),APPR:T('approach'),LAYUP:T('layup'),CHIP:T('chip'),PUTT:T('putt'),FOR_BIRDIE:T('forBirdie'),FOR_PAR:T('forPar'),FOR_BOGEY:T('forBogey'),FOR_DOUBLE:T('forDouble'),FOR_TRIPLE:T('forTriple')};
+  const map={TEE:T('toeOff'),APPR:T('approach'),LAYUP:T('layup'),CHIP:T('chip'),PUTT:T('putt'),PROV:T('provisional'),FOR_BIRDIE:T('forBirdie'),FOR_PAR:T('forPar'),FOR_BOGEY:T('forBogey'),FOR_DOUBLE:T('forDouble'),FOR_TRIPLE:T('forTriple')};
   return (map[t]||t||'').toUpperCase();
 }
 function autoType(h,idx){
@@ -26,6 +26,117 @@ function autoType(h,idx){
   }
   if(idx===1&&h.par>=4) return 'APPR';
   return 'CHIP';
+}
+
+// ── PLAYER AREA ──
+function buildPlayerArea(){
+  const grid=document.getElementById('player-btn-grid');
+  if(!grid) return;
+  grid.innerHTML='';
+  const players=S.players||[];
+  if(players.length===0){
+    const btn=document.createElement('button');
+    btn.className='player-add-single';
+    btn.textContent='+ '+(LANG==='zh'?'添加球员':LANG==='ja'?'プレーヤー追加':LANG==='ko'?'플레이어 추가':'Add Player');
+    btn.onclick=()=>openPlayerManager();
+    grid.appendChild(btn);
+    return;
+  }
+  players.forEach(p=>{
+    const btn=document.createElement('button');
+    btn.className='player-btn'+(p.id===S.currentPlayerId?' active':'');
+    btn.textContent=p.name;
+    btn.title=p.name;
+    btn.onclick=()=>switchToPlayer(p.id);
+    grid.appendChild(btn);
+  });
+}
+
+function openPlayerManager(){
+  // clear search on open, then wire live filter
+  const srch=document.getElementById('pm-hist-search');
+  if(srch){ srch.value=''; srch.oninput=()=>buildPlayerManager(); }
+  buildPlayerManager();
+  const m=document.getElementById('player-modal');
+  const bg=document.getElementById('player-modal-bg');
+  if(m) m.style.display='flex';
+  if(bg) bg.style.display='block';
+  const inp=document.getElementById('pm-add-input');
+  if(inp) inp.focus();
+}
+
+function closePlayerManager(){
+  const m=document.getElementById('player-modal');
+  const bg=document.getElementById('player-modal-bg');
+  if(m) m.style.display='none';
+  if(bg) bg.style.display='none';
+}
+
+function buildPlayerManager(){
+  const activeList=document.getElementById('pm-active-list');
+  if(activeList){
+    activeList.innerHTML='';
+    (S.players||[]).forEach(p=>{
+      const row=document.createElement('div');
+      row.className='pm-player-row'+(p.id===S.currentPlayerId?' pm-current':'');
+      const nameSpan=document.createElement('span');
+      nameSpan.textContent=p.name;
+      const delBtn=document.createElement('button');
+      delBtn.className='pm-del-btn';
+      delBtn.textContent='×';
+      delBtn.onclick=()=>{ removePlayer(p.id); buildPlayerManager(); buildPlayerArea(); };
+      row.appendChild(nameSpan);
+      row.appendChild(delBtn);
+      activeList.appendChild(row);
+    });
+    if((S.players||[]).length===0){
+      const emp=document.createElement('div');
+      emp.style.cssText='font-size:12px;color:var(--t3);padding:6px 0';
+      emp.textContent=LANG==='zh'?'暂无球员':'No players yet';
+      activeList.appendChild(emp);
+    }
+  }
+  // history
+  const histList=document.getElementById('pm-hist-list');
+  if(histList){
+    histList.innerHTML='';
+    const searchVal=(document.getElementById('pm-hist-search')||{}).value||'';
+    const searchLc=searchVal.trim().toLowerCase();
+    const hist=(S.playerHistory||[]).filter(name=>!(S.players||[]).some(p=>p.name===name)&&(!searchLc||name.toLowerCase().includes(searchLc)));
+    if(hist.length===0){
+      const emp=document.createElement('div');
+      emp.style.cssText='font-size:12px;color:var(--t3);padding:4px 0';
+      emp.textContent=LANG==='zh'?'无历史球员':'No history';
+      histList.appendChild(emp);
+    } else {
+      hist.forEach(name=>{
+        const item=document.createElement('div');
+        item.className='pm-history-item';
+        const nameSpan=document.createElement('span');
+        nameSpan.textContent=name;
+        const addBtn=document.createElement('button');
+        addBtn.className='pm-hist-add-btn';
+        addBtn.textContent='+';
+        addBtn.onclick=()=>{ if(addPlayer(name)){buildPlayerManager();buildPlayerArea();miniToast(name+(LANG==='zh'?' 已添加':' added'));} };
+        item.appendChild(nameSpan);
+        item.appendChild(addBtn);
+        histList.appendChild(item);
+      });
+    }
+  }
+}
+
+function addPlayerFromInput(){
+  const inp=document.getElementById('pm-add-input');
+  if(!inp) return;
+  const name=inp.value.trim();
+  if(!name) return;
+  if(addPlayer(name)){
+    inp.value='';
+    buildPlayerManager();
+    buildPlayerArea();
+    miniToast(name+(LANG==='zh'?' 已添加':' added'));
+  }
 }
 
 // ── MINI TOAST ──
@@ -78,16 +189,16 @@ function buildHoleNav(){
       cont.appendChild(card);
     }
     if(row===0){
-      const fc=makeStatCard('F',f9P,f9G);
+      const fc=makeStatCard('F',f9P,f9G,S.scorecardSummary==='out');
       fc.style.cursor='pointer';
       fc.onclick=()=>{ S.scorecardSummary='out'; render(); scheduleSave(); };
       cont.appendChild(fc);
     } else {
-      const bc=makeStatCard('B',b9P,b9G);
+      const bc=makeStatCard('B',b9P,b9G,S.scorecardSummary==='in');
       bc.style.cursor='pointer';
       bc.onclick=()=>{ S.scorecardSummary='in'; render(); scheduleSave(); };
       cont.appendChild(bc);
-      const tc=makeStatCard('T',f9P+b9P,f9G+b9G);
+      const tc=makeStatCard('T',f9P+b9P,f9G+b9G,S.scorecardSummary==='tot');
       tc.style.cursor='pointer';
       tc.onclick=()=>{ S.scorecardSummary='tot'; render(); scheduleSave(); };
       cont.appendChild(tc);
@@ -95,9 +206,9 @@ function buildHoleNav(){
   });
 }
 
-function makeStatCard(lbl,par,gross){
+function makeStatCard(lbl,par,gross,isActive){
   const el=document.createElement('div');
-  el.className='stat-card';
+  el.className='stat-card'+(isActive?' stat-active':'');
   el.innerHTML=`<div class="sc-lbl">${lbl}</div><div class="sc-val"><span style="color:var(--gold);font-size:9px">${par}</span><br><span class="sc-num">${gross}</span></div>`;
   return el;
 }
@@ -130,6 +241,7 @@ const ACTION_TYPES=[
   {type:'LAYUP', labelKey:'typeLayup'},
   {type:'CHIP',  labelKey:'typeChip'},
   {type:'PUTT',  labelKey:'typePutt'},
+  {type:'PROV',  labelKey:'typeProv'},
 ];
 const CONTEXT_TYPES=[
   {type:'FOR_BIRDIE', labelKey:'typeFB'},
@@ -163,7 +275,7 @@ function buildTypeButtons(){
 function updateRightPanel(){
   const h=curHole(), idx=S.currentHole, gross=getGross(h);
   document.getElementById('hole-num-big').textContent=T('holeHero',idx+1);
-  document.getElementById('hole-par-big').textContent=T('parLabel',h.par);
+  const _hpb=document.getElementById('hole-par-big'); if(_hpb) _hpb.textContent=T('parLabel',h.par);
   [3,4,5].forEach(p=>document.getElementById('par'+p).classList.toggle('active',h.par===p));
   // Per-shot To Pin — data-driven, no checkbox
   const shotToPin=getShotToPin(h,h.shotIndex);
@@ -181,7 +293,8 @@ function updateRightPanel(){
   if(badge){badge.textContent=isManual?'MANUAL':'AUTO';badge.style.background=isManual?'#3a2a1a':'#2a3a2a';badge.style.color=isManual?'#c8843c':'#5c8c5c';badge.style.borderColor=isManual?'#6a4a2a':'#3a5a3a';}
   document.getElementById('mode-tp').classList.toggle('active',S.displayMode==='topar');
   document.getElementById('mode-gr').classList.toggle('active',S.displayMode==='gross');
-  document.getElementById('score-sub').style.display=S.showScore?'flex':'none';
+  const _scoreSec=document.getElementById('score-range-sec');
+  if(_scoreSec) _scoreSec.style.display=S.showScore?'block':'none';
 }
 
 // ── DELTA PICKER — anchored popover ──
@@ -248,10 +361,21 @@ function closeSettings(){
 function openNewRound(){ document.getElementById('newround-modal').style.display='flex'; }
 function closeNewRound(){ document.getElementById('newround-modal').style.display='none'; }
 function doNewRound(){
-  if(document.getElementById('m-scores').checked)
+  if(document.getElementById('m-scores').checked){
     S.holes.forEach(h=>{h.delta=null;h.shots=[];h.shotIndex=0;h.manualTypes={};h.toPins={};});
+    // also clear all per-player byPlayer data
+    if(S.byPlayer){
+      Object.keys(S.byPlayer).forEach(pid=>{
+        if(S.byPlayer[pid]&&S.byPlayer[pid].holes)
+          S.byPlayer[pid].holes.forEach(h=>{h.delta=null;h.shots=[];h.shotIndex=0;h.manualTypes={};h.toPins={};});
+      });
+    }
+  }
   if(document.getElementById('m-pars').checked)
     S.holes.forEach(h=>h.par=4);
+  // Clear all players so user can re-select for new round
+  S.players=[]; S.currentPlayerId=null; S.byPlayer={};
+  if(typeof buildPlayerArea==='function') buildPlayerArea();
   closeNewRound(); render(); scheduleSave();
 }
 
@@ -300,7 +424,7 @@ function wireAll(){
   };
 
   // Player / course
-  document.getElementById('inp-player').oninput=e=>{ S.playerName=e.target.value||'PLAYER'; redrawOnly(); scheduleSave(); };
+  const _inpPlayer=document.getElementById('inp-player'); if(_inpPlayer) _inpPlayer.oninput=e=>{ S.playerName=e.target.value||'PLAYER'; redrawOnly(); scheduleSave(); };
   document.getElementById('inp-course').oninput=e=>{ S.courseName=e.target.value||''; scheduleSave(); };
 
   // Per-shot To Pin — data driven, no checkbox
@@ -314,9 +438,19 @@ function wireAll(){
   document.getElementById('chk-shot').onchange=e=>{ S.showShot=e.target.checked; redrawOnly(); scheduleSave(); };
   document.getElementById('chk-score').onchange=e=>{
     S.showScore=e.target.checked;
-    document.getElementById('score-sub').style.display=e.target.checked?'flex':'none';
+    const sec=document.getElementById('score-range-sec');
+    if(sec) sec.style.display=e.target.checked?'block':'none';
     redrawOnly(); scheduleSave();
   };
+  // show player name in scorecard
+  const chkPN=document.getElementById('chk-show-pname');
+  if(chkPN) chkPN.onchange=e=>{ S.showPlayerName=e.target.checked; redrawOnly(); scheduleSave(); };
+  // player manager modal backdrop
+  const pmBg=document.getElementById('player-modal-bg');
+  if(pmBg) pmBg.onclick=closePlayerManager;
+  // player manager input enter key
+  const pmInp=document.getElementById('pm-add-input');
+  if(pmInp) pmInp.addEventListener('keydown',e=>{ if(e.key==='Enter') addPlayerFromInput(); });
   // v4.5: auto-center scorecard when range changes
   document.querySelectorAll('[name=scr]').forEach(r=>r.onchange=()=>{
     S.scoreRange=r.value;

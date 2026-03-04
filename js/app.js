@@ -45,8 +45,9 @@ const STRINGS = {
     forBirdie:'FOR BIRDIE', forPar:'FOR PAR', forBogey:'FOR BOGEY',
     forDouble:'FOR DOUBLE', forTriple:'FOR TRIPLE+',
     // shot type button labels — abbreviated
-    typeTee:'TEE', typeAppr:'APPR', typeLayup:'LAYUP', typeChip:'CHIP', typePutt:'PUTT',
+    typeTee:'TEE', typeAppr:'APPR', typeLayup:'LAYUP', typeChip:'CHIP', typePutt:'PUTT', typeProv:'P',
     typeFB:'FOR BIRDIE', typeFP:'FOR PAR', typeFBo:'FOR BOGEY',
+    provisional:'PROVISIONAL',
     pickerRows:d=>{
       if(d==='clear') return 'CLEAR';
       if(d<=-4) return d+'';
@@ -94,8 +95,9 @@ const STRINGS = {
     toeOff:'开球', approach:'攻果岭', layup:'过度', chip:'切杆', putt:'推杆',
     forBirdie:'抓鸟推', forPar:'保帕推', forBogey:'保柏忌推',
     forDouble:'保双推', forTriple:'保三+推',
-    typeTee:'开球', typeAppr:'攻果岭', typeLayup:'过度', typeChip:'切杆', typePutt:'推杆',
+    typeTee:'开球', typeAppr:'攻果岭', typeLayup:'过度', typeChip:'切杆', typePutt:'推杆', typeProv:'P',
     typeFB:'抓鸟推', typeFP:'保帕推', typeFBo:'保柏忌推',
+    provisional:'暂定球',
     pickerRows:d=>{
       if(d==='clear') return '清除';
       if(d<=-4) return d+'';
@@ -112,6 +114,156 @@ const STRINGS = {
     toPinLabel:'距旗杆', ydsLabel:'码',
     albatross:'信天翁', eagle:'老鹰', birdie:'小鸟', par:'标准杆',
     bogey:'柏忌', double:'双柏忌', triple:'三柏忌+',
+  },
+  ja:{
+    holeHero:h=>`ホール ${h}`, parLabel:p=>`パー ${p}`,
+    hintMain:'クリックして背景画像をアップロード / 画像をここにドロップ',
+    hintSub:'プレビュー専用 — エクスポートには含まれません',
+    distLabel:'ピンまで', distUnit:'ヤード',
+    totalLabel:'合計表示',
+    finalScore:'ホールスコア (DELTA)',
+    setScore:'スコア設定',
+    shotSection:'ショット', optionsTitle:'表示オプション',
+    shotOverlay:'Shot Overlay', scorecardOverlay:'スコアカード',
+    front9:'前半 9H', back9:'後半 9H', h18:'18ホール',
+    topar:'To Par', gross:'Gross',
+    sdTitle:'⚙️ 設定', sdBg:'背景画像', sdBgOp:'背景の不透明度',
+    sdClearBg:'🗑 背景をクリア（デフォルトに戻す）',
+    sdSc:'スコアカード', sdResetSc:'↺ スコアカード位置をリセット',
+    sdSz:'セーフゾーン', sdSzLbl:'セーフゾーンガイドを表示', sdSzSize:'ゾーンサイズ',
+    sdPar:'コースパー',
+    settingsLbl:' 設定',
+    nrTitle:'🏌️ 新ラウンド', nrClearScores:'このラウンドのスコアをクリア',
+    nrResetPars:'コースパーを4にリセット（全ホール）',
+    nrCancel:'キャンセル', nrConfirm:'確認',
+    pickerTitle:'ホールスコア', pickerCancel:'キャンセル',
+    exportTitle:'エクスポート',
+    exportBtn:'オーバーレイ PNG 作成',
+    bgBtn:'背景をアップロード', opaLbl:'不透明度',
+    nextHoleShort:'次のホール',
+    parLbl:'パー',
+    toeOff:'ティーショット', approach:'アプローチ', layup:'レイアップ', chip:'チップ', putt:'パット',
+    forBirdie:'バーディーパット', forPar:'パーパット', forBogey:'ボギーパット',
+    forDouble:'ダブルパット', forTriple:'トリプル+パット',
+    typeTee:'TEE', typeAppr:'APPR', typeLayup:'LAYUP', typeChip:'CHIP', typePutt:'PUTT', typeProv:'P',
+    typeFB:'バーディー', typeFP:'パー', typeFBo:'ボギー',
+    provisional:'プロビジョナル',
+    pickerRows:d=>{
+      if(d==='clear') return 'クリア';
+      if(d<=-4) return d+'';
+      if(d===-3) return '-3  アルバトロス';
+      if(d===-2) return '-2  イーグル';
+      if(d===-1) return '-1  バーディー';
+      if(d===0)  return '0  パー';
+      if(d===1)  return '+1  ボギー';
+      if(d===2)  return '+2  ダブルボギー';
+      if(d===3)  return '+3  トリプルボギー';
+      return (d>0?'+':'')+d;
+    },
+    grossDisp:(g,p,d)=>`グロス: ${g}（パー ${p}  ${d>=0?'+':''}${d}）`,
+    toPinLabel:'ピンまで', ydsLabel:'ヤード',
+    albatross:'アルバトロス', eagle:'イーグル', birdie:'バーディー', par:'パー',
+    bogey:'ボギー', double:'ダブルボギー', triple:'トリプル+',
+  },
+  ko:{
+    holeHero:h=>`${h}번 홀`, parLabel:p=>`파 ${p}`,
+    hintMain:'클릭하여 배경 이미지 업로드 / 여기에 이미지를 드롭',
+    hintSub:'미리보기 전용 — 내보내기에 포함되지 않음',
+    distLabel:'핀까지', distUnit:'야드',
+    totalLabel:'합계 표시',
+    finalScore:'홀 스코어 (DELTA)',
+    setScore:'스코어 설정',
+    shotSection:'샷', optionsTitle:'표시 옵션',
+    shotOverlay:'Shot Overlay', scorecardOverlay:'스코어카드',
+    front9:'전반 9홀', back9:'후반 9홀', h18:'18홀',
+    topar:'To Par', gross:'Gross',
+    sdTitle:'⚙️ 설정', sdBg:'배경 이미지', sdBgOp:'배경 투명도',
+    sdClearBg:'🗑 배경 지우기（기본값으로 복원）',
+    sdSc:'스코어카드', sdResetSc:'↺ 스코어카드 위치 초기화',
+    sdSz:'안전 영역', sdSzLbl:'안전 영역 가이드 표시', sdSzSize:'영역 크기',
+    sdPar:'코스 파',
+    settingsLbl:' 설정',
+    nrTitle:'🏌️ 새 라운드', nrClearScores:'이 라운드 스코어 초기화',
+    nrResetPars:'코스 파를 4로 리셋（전 홀）',
+    nrCancel:'취소', nrConfirm:'확인',
+    pickerTitle:'홀 스코어', pickerCancel:'취소',
+    exportTitle:'내보내기',
+    exportBtn:'오버레이 PNG 생성',
+    bgBtn:'배경 업로드', opaLbl:'투명도',
+    nextHoleShort:'다음 홀',
+    parLbl:'파',
+    toeOff:'티샷', approach:'어프로치', layup:'레이업', chip:'칩샷', putt:'퍼트',
+    forBirdie:'버디 퍼트', forPar:'파 퍼트', forBogey:'보기 퍼트',
+    forDouble:'더블 퍼트', forTriple:'트리플+ 퍼트',
+    typeTee:'TEE', typeAppr:'APPR', typeLayup:'LAYUP', typeChip:'CHIP', typePutt:'PUTT', typeProv:'P',
+    typeFB:'버디', typeFP:'파', typeFBo:'보기',
+    provisional:'잠정구',
+    pickerRows:d=>{
+      if(d==='clear') return '지우기';
+      if(d<=-4) return d+'';
+      if(d===-3) return '-3  알바트로스';
+      if(d===-2) return '-2  이글';
+      if(d===-1) return '-1  버디';
+      if(d===0)  return '0  파';
+      if(d===1)  return '+1  보기';
+      if(d===2)  return '+2  더블보기';
+      if(d===3)  return '+3  트리플보기';
+      return (d>0?'+':'')+d;
+    },
+    grossDisp:(g,p,d)=>`그로스: ${g}（파 ${p}  ${d>=0?'+':''}${d}）`,
+    toPinLabel:'핀까지', ydsLabel:'야드',
+    albatross:'알바트로스', eagle:'이글', birdie:'버디', par:'파',
+    bogey:'보기', double:'더블보기', triple:'트리플+',
+  },
+  es:{
+    holeHero:h=>`HOYO ${h}`, parLabel:p=>`PAR ${p}`,
+    hintMain:'Clic para subir fondo / Soltar imagen aquí',
+    hintSub:'Solo vista previa — no se incluye en la exportación',
+    distLabel:'Al hoyo', distUnit:'yds',
+    totalLabel:'MOSTRAR TOTAL',
+    finalScore:'PUNTUACIÓN FINAL (DELTA)',
+    setScore:'ESTABLECER PUNT.',
+    shotSection:'GOLPE', optionsTitle:'OPCIONES DE PANTALLA',
+    shotOverlay:'Shot Overlay', scorecardOverlay:'Tarjeta',
+    front9:'9 delant.', back9:'9 traseros', h18:'18 hoyos',
+    topar:'A par', gross:'Brutos',
+    sdTitle:'⚙️ Ajustes', sdBg:'Imagen de fondo', sdBgOp:'Opacidad del fondo',
+    sdClearBg:'🗑 Borrar fondo (restaurar por defecto)',
+    sdSc:'Tarjeta de puntuación', sdResetSc:'↺ Restablecer posición',
+    sdSz:'Zona segura', sdSzLbl:'Mostrar guías de zona segura', sdSzSize:'Tamaño de zona',
+    sdPar:'Par del campo',
+    settingsLbl:' Ajustes',
+    nrTitle:'🏌️ Nueva ronda', nrClearScores:'Borrar puntuaciones de esta ronda',
+    nrResetPars:'Restablecer par del campo a 4 (todos los hoyos)',
+    nrCancel:'Cancelar', nrConfirm:'Confirmar',
+    pickerTitle:'Puntuación final', pickerCancel:'Cancelar',
+    exportTitle:'EXPORTAR',
+    exportBtn:'Crear PNG del overlay',
+    bgBtn:'Subir fondo', opaLbl:'Opacidad',
+    nextHoleShort:'SIGUIENTE',
+    parLbl:'Par',
+    toeOff:'SALIDA', approach:'APROXIMACIÓN', layup:'LAYUP', chip:'CHIP', putt:'PUTT',
+    forBirdie:'P/ BIRDIE', forPar:'P/ PAR', forBogey:'P/ BOGEY',
+    forDouble:'P/ DOBLE', forTriple:'P/ TRIPLE+',
+    typeTee:'SALIDA', typeAppr:'APROX', typeLayup:'LAYUP', typeChip:'CHIP', typePutt:'PUTT', typeProv:'P',
+    typeFB:'P/BIRDIE', typeFP:'P/PAR', typeFBo:'P/BOGEY',
+    provisional:'PROVISIONAL',
+    pickerRows:d=>{
+      if(d==='clear') return 'BORRAR';
+      if(d<=-4) return d+'';
+      if(d===-3) return '-3  ALBATROS';
+      if(d===-2) return '-2  ÁGUILA';
+      if(d===-1) return '-1  BIRDIE';
+      if(d===0)  return '0  PAR';
+      if(d===1)  return '+1  BOGEY';
+      if(d===2)  return '+2  DOBLE';
+      if(d===3)  return '+3  TRIPLE';
+      return (d>0?'+':'')+d;
+    },
+    grossDisp:(g,p,d)=>`Brutos: ${g}  (Par ${p}  ${d>=0?'+':''}${d})`,
+    toPinLabel:'AL HOYO', ydsLabel:'YDS',
+    albatross:'ALBATROS', eagle:'ÁGUILA', birdie:'BIRDIE', par:'PAR',
+    bogey:'BOGEY', double:'DOBLE', triple:'TRIPLE+',
   }
 };
 
@@ -139,7 +291,7 @@ function applyLang(){
   g('total-lbl').textContent=T('totalLabel');
   g('delta-section-title').textContent=T('finalScore');
   g('shot-section-title').innerHTML=T('shotSection')+' <span id="type-mode-badge" class="auto-badge">AUTO</span>';
-  g('options-title').textContent=T('optionsTitle');
+  if(g('options-title')) g('options-title').textContent=T('optionsTitle');
   g('lbl-shot').textContent=T('shotOverlay');
   g('lbl-score').textContent=T('scorecardOverlay');
   g('lbl-front9').textContent=T('front9');
@@ -164,10 +316,26 @@ function applyLang(){
   g('picker-title').textContent=T('pickerTitle');
   g('picker-cancel').textContent=T('pickerCancel');
   g('export-title').textContent=T('exportTitle');
-  g('export-btn-txt').textContent=T('exportBtn');
+  const _expBtnTxt=g('export-btn-txt'); if(_expBtnTxt) _expBtnTxt.textContent=T('exportBtn');
   g('lbl-opa').textContent=T('opaLbl');
   g('settings-lbl').textContent=T('settingsLbl');
   const nhil=g('nhi-lbl'); if(nhil) nhil.textContent=T('nextHoleShort');
+  // export section labels
+  const expLblS=g('exp-lbl-single'); if(expLblS) expLblS.textContent=LANG==='zh'?'单张':'Single';
+  const expLblB=g('exp-lbl-batch'); if(expLblB) expLblB.textContent=LANG==='zh'?'批量':'Batch';
+  const lbHS=g('lbl-exp-hole-seq'); if(lbHS) lbHS.textContent=LANG==='zh'?'当前洞击球包':'Hole Shots ZIP';
+  const lbSS=g('lbl-exp-sc-seq'); if(lbSS) lbSS.textContent=LANG==='zh'?'18洞计分卡包':'18 SC ZIP';
+  // player UI labels (B1)
+  const pmTitle=g('pm-title'); if(pmTitle) pmTitle.textContent=LANG==='zh'?'球员管理':LANG==='ja'?'プレーヤー管理':LANG==='ko'?'플레이어 관리':'Players';
+  const pmActiveTitle=g('pm-active-title'); if(pmActiveTitle) pmActiveTitle.textContent=LANG==='zh'?'已添加球员':LANG==='ja'?'追加済み':LANG==='ko'?'추가된 선수':'Active Players';
+  const pmAddTitle=g('pm-add-title'); if(pmAddTitle) pmAddTitle.textContent=LANG==='zh'?'添加球员':LANG==='ja'?'追加':LANG==='ko'?'추가':'Add Player';
+  const pmHistTitle=g('pm-hist-title'); if(pmHistTitle) pmHistTitle.textContent=LANG==='zh'?'历史球员':LANG==='ja'?'履歴':LANG==='ko'?'히스토리':'History';
+  const pmAddInp=g('pm-add-input'); if(pmAddInp) pmAddInp.placeholder=LANG==='zh'?'球员姓名…':'Name…';
+  const pmSearch=g('pm-hist-search'); if(pmSearch) pmSearch.placeholder=LANG==='zh'?'搜索球员…':'Search…';
+  const btnPM=g('btn-player-mgr'); if(btnPM) btnPM.textContent=LANG==='zh'?'管理…':LANG==='ja'?'管理…':LANG==='ko'?'관리…':'Manage…';
+  const pSecLbl=g('player-section-lbl'); if(pSecLbl) pSecLbl.textContent=LANG==='zh'?'球员':LANG==='ja'?'プレーヤー':LANG==='ko'?'플레이어':'Players';
+  const showPNLbl=g('sd-show-pname-lbl'); if(showPNLbl) showPNLbl.textContent=LANG==='zh'?'显示球员名字':'Show Player Name';
+  if(typeof buildPlayerArea==='function') buildPlayerArea();
   buildTypeButtons();
   buildDeltaBtn();
 }
@@ -177,6 +345,7 @@ function applyLang(){
 // ============================================================
 const DEFAULT_BG = './bkimg.jpeg';
 const LS_KEY = 'golf_v531';
+const SESSION_ID = '__session__';
 
 function defaultScorecardCenter(ratio){
   // Default: horizontally centered in canvas, 83% down
@@ -192,6 +361,9 @@ function defState(){
     exportRes:2160, bgOpacity:1.0, overlayOpacity:1.0,
     safeZone:false, szSize:'10', lang:'en',
     userBg:null,
+    // multi-player
+    players:[], currentPlayerId:null, playerHistory:[], byPlayer:{},
+    showPlayerName:false,
     // x = 0.95 − SHOT_W/1920 = 0.695 (right edge at 5% safe zone), y = 0.05 (top safe zone)
     overlayPos:{
       '16:9':{x:0.695,y:0.05},
@@ -204,11 +376,107 @@ function defState(){
       '9:16':{x:0.5,y:0.89,centered:true},
       '1:1': {x:0.5,y:0.84,centered:true}
     },
-    holes:Array.from({length:18},()=>({par:4,delta:null,shots:[],shotIndex:0,manualTypes:{},toPins:{}}))
+    holes:Array.from({length:18},()=>({par:4,holeLengthYds:null,delta:null,shots:[],shotIndex:0,manualTypes:{},toPins:{}}))
   };
 }
 
 let S = defState();
+
+// ============================================================
+// PLAYER MANAGEMENT
+// ============================================================
+function effectivePlayerId(){ return S.currentPlayerId||SESSION_ID; }
+
+function ensurePlayerData(pid){
+  if(!S.byPlayer) S.byPlayer={};
+  if(!S.byPlayer[pid]){
+    S.byPlayer[pid]={holes:Array.from({length:18},()=>({delta:null,shots:[],shotIndex:0,manualTypes:{},toPins:{}}))};
+  }
+}
+
+function currentPlayerDisplayName(){
+  if(S.currentPlayerId){
+    const p=(S.players||[]).find(p=>p.id===S.currentPlayerId);
+    if(p) return p.name;
+  }
+  return S.playerName||'PLAYER';
+}
+
+function saveCurrentPlayerData(){
+  const pid=effectivePlayerId();
+  ensurePlayerData(pid);
+  S.byPlayer[pid].holes=S.holes.map(h=>({
+    delta:h.delta,
+    shots:JSON.parse(JSON.stringify(h.shots||[])),
+    shotIndex:h.shotIndex||0,
+    manualTypes:Object.assign({},h.manualTypes||{}),
+    toPins:Object.assign({},h.toPins||{})
+  }));
+}
+
+function loadPlayerData(pid){
+  ensurePlayerData(pid);
+  const ph=S.byPlayer[pid].holes;
+  S.holes.forEach((h,i)=>{
+    const p=ph[i]||{};
+    h.delta=p.delta!==undefined?p.delta:null;
+    h.shots=JSON.parse(JSON.stringify(p.shots||[]));
+    h.shotIndex=p.shotIndex||0;
+    h.manualTypes=Object.assign({},p.manualTypes||{});
+    h.toPins=Object.assign({},p.toPins||{});
+  });
+}
+
+function switchToPlayer(pid){
+  if(pid===effectivePlayerId()) return;
+  saveCurrentPlayerData();
+  S.currentPlayerId=(pid===SESSION_ID)?null:pid;
+  loadPlayerData(effectivePlayerId());
+  if(typeof buildPlayerArea==='function') buildPlayerArea();
+  render(); scheduleSave();
+}
+
+function addPlayer(name){
+  name=(name||'').trim();
+  if(!name) return false;
+  if(!S.players) S.players=[];
+  if(S.players.length>=150){ miniToast(LANG==='zh'?'最多150名球员':'Max 150 players',true); return false; }
+  if(S.players.find(p=>p.name===name)){ miniToast(LANG==='zh'?'球员已存在':'Player exists',true); return false; }
+  const id='p_'+Date.now()+'_'+Math.random().toString(36).slice(2,5);
+  const isFirst=S.players.length===0;
+  S.players.push({id,name});
+  if(!S.playerHistory) S.playerHistory=[];
+  S.playerHistory=[name,...S.playerHistory.filter(n=>n!==name)].slice(0,50);
+  if(isFirst){
+    // migrate current session data to this player
+    ensurePlayerData(id);
+    S.byPlayer[id].holes=S.holes.map(h=>({
+      delta:h.delta,shots:JSON.parse(JSON.stringify(h.shots||[])),
+      shotIndex:h.shotIndex||0,manualTypes:Object.assign({},h.manualTypes||{}),
+      toPins:Object.assign({},h.toPins||{})
+    }));
+    if(S.byPlayer[SESSION_ID]) delete S.byPlayer[SESSION_ID];
+    S.currentPlayerId=id;
+    // S.holes already has the right data
+  } else {
+    ensurePlayerData(id);
+  }
+  scheduleSave();
+  return true;
+}
+
+function removePlayer(id){
+  if(!S.players) return;
+  saveCurrentPlayerData();
+  S.players=S.players.filter(p=>p.id!==id);
+  if(S.byPlayer) delete S.byPlayer[id];
+  if(S.currentPlayerId===id){
+    S.currentPlayerId=S.players.length>0?S.players[0].id:null;
+    loadPlayerData(effectivePlayerId());
+  }
+  if(typeof buildPlayerArea==='function') buildPlayerArea();
+  render(); scheduleSave();
+}
 
 // ============================================================
 // PERSISTENCE
@@ -240,9 +508,26 @@ function loadSaved(){
       if(S.scorecardPos[r]===undefined) S.scorecardPos[r]=defState().scorecardPos[r];
     });
     S.holes=Array.from({length:18},(_,i)=>Object.assign(
-      {par:4,delta:null,shots:[],shotIndex:0,manualTypes:{},toPins:{}},
+      {par:4,holeLengthYds:null,delta:null,shots:[],shotIndex:0,manualTypes:{},toPins:{}},
       saved.holes?.[i]||{}
     ));
+    // multi-player fields
+    S.players=saved.players||[];
+    S.currentPlayerId=saved.currentPlayerId||null;
+    S.playerHistory=saved.playerHistory||[];
+    S.byPlayer=saved.byPlayer||{};
+    S.showPlayerName=!!saved.showPlayerName;
+    // backward-compat: old saves had per-hole data in holes[], no byPlayer
+    const pid=effectivePlayerId();
+    if(!saved.byPlayer){
+      ensurePlayerData(pid);
+      S.byPlayer[pid].holes=S.holes.map(h=>({
+        delta:h.delta,shots:JSON.parse(JSON.stringify(h.shots||[])),
+        shotIndex:h.shotIndex||0,manualTypes:Object.assign({},h.manualTypes||{}),
+        toPins:Object.assign({},h.toPins||{})
+      }));
+    }
+    loadPlayerData(pid);
     LANG=S.lang||'en';
     const bgData=localStorage.getItem(LS_KEY+'_bg');
     S.userBg=bgData||null;
@@ -259,14 +544,12 @@ function loadSaved(){
 function applyBg(){
   const img=document.getElementById('bg-img');
   const hint=document.getElementById('upload-hint');
-  if(S.userBg){
-    img.src=S.userBg; img.style.display='block'; img.style.opacity=S.bgOpacity;
-    hint.classList.add('hidden');
-  } else {
-    img.src=DEFAULT_BG; img.style.display='block'; img.style.opacity=S.bgOpacity;
-    hint.classList.add('hidden');
-    img.onerror=()=>{ img.style.display='none'; hint.classList.remove('hidden'); img.onerror=null; };
-  }
+  // Always set onerror BEFORE src to catch any load failure (including cached failures)
+  img.onerror=()=>{ img.onerror=null; img.style.display='none'; hint.classList.remove('hidden'); };
+  img.src=S.userBg||DEFAULT_BG;
+  img.style.display='block';
+  img.style.opacity=S.bgOpacity;
+  hint.classList.add('hidden');
 }
 function setBgFile(file){
   if(!file||!file.type.startsWith('image/')) return;
@@ -347,13 +630,19 @@ function setShotType(type){
 }
 
 function getShotToPin(h,idx){
+  // TEE shot (idx=0): always use shared hole length — same distance for all players
+  if(idx===0) return h.holeLengthYds??null;
   return h.toPins?.[idx]??null;
 }
 function setShotToPin(val){
   const h=curHole();
-  if(!h.toPins) h.toPins={};
-  h.toPins[h.shotIndex]=val;
-  h.distance=val;
+  if(h.shotIndex===0){
+    // TEE Off: update shared hole length only (all players share this distance)
+    h.holeLengthYds=val;
+  } else {
+    if(!h.toPins) h.toPins={};
+    h.toPins[h.shotIndex]=val;
+  }
   redrawOnly(); scheduleSave();
 }
 
@@ -599,44 +888,54 @@ function drawShotOverlay(ctx,X,Y,scale){
   ctx.fillStyle='#fff';
   ctx.font=`900 ${Math.round(56*scale)}px ${SF}`;
   ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(String(S.currentHole+1),X+colW/2,Y+H*0.28); // v5.3: up from 0.36
+  ctx.fillText(String(S.currentHole+1),X+colW/2,Y+H*0.31);
 
-  // v5.3: PAR label + number — shifted higher for visual balance
   ctx.fillStyle='rgba(255,255,255,0.6)';
   ctx.font=`700 ${Math.round(20*scale)}px ${SF}`;
-  ctx.fillText('PAR',X+colW/2,Y+H*0.53); // up from 0.63
+  ctx.fillText('PAR',X+colW/2,Y+H*0.57);
 
   ctx.fillStyle='#B8962E';
   ctx.font=`900 ${Math.round(36*scale)}px ${SF}`;
-  ctx.fillText(String(h.par),X+colW/2,Y+H*0.76); // up from 0.87
+  ctx.fillText(String(h.par),X+colW/2,Y+H*0.80);
 
   // ── ROW1: player name + total badge ──
   const rx=X+colW+rpad, rW=W-colW-2*rpad;
+
+  // Pre-compute result mode for context-aware total (result=include current, in-play=exclude current)
+  const _si=h.shotIndex, _gross=getGross(h);
+  const _isLast=_gross!==null&&_si===_gross-1;
+  const _isForMode=_isLast&&!!h.manualTypes[_si]&&(h.shots[_si]?.type||'').startsWith('FOR_');
+  const _isResultMode=_isLast&&!_isForMode;
+  const _ci=S.currentHole;
+  const _totalHoles=S.holes.slice(0,_isResultMode?_ci+1:_ci).filter(x=>x.delta!==null);
+  const _ctxTd=_totalHoles.reduce((a,x)=>a+x.delta,0);
+  const _ctxTg=_totalHoles.reduce((a,x)=>a+x.par+x.delta,0);
+  const _showTotal=S.showTotal&&_totalHoles.length>0;
+  const _bColor=_ctxTd<0?'#C0392B':_ctxTd<=7?'#1a5bb5':_ctxTd<=17?'#2e7d32':_ctxTd<=27?'#888888':'#111111';
+
   let nameMaxW=rW;
-  // v5.3: pre-measure total badge width to reserve space for name truncation
-  if(S.showTotal){
-    const td=totalDelta(), tg=totalGross();
-    const bTxt=S.displayMode==='topar'?fmtDeltaDisplay(td):String(tg);
+  if(_showTotal){
+    const bTxt=S.displayMode==='topar'?fmtDeltaDisplay(_ctxTd):String(_ctxTg);
     ctx.font=`900 ${Math.round(38*scale)}px ${SF}`;
     const btw=ctx.measureText(bTxt).width;
     const reservedBadgeW=Math.max(80*scale,btw+24*scale);
-    nameMaxW=rW-reservedBadgeW+rpad; // account for right padding
+    nameMaxW=rW-reservedBadgeW+rpad;
   }
 
-  const nameFontSz=Math.round(32*scale);
+  const nameFontSz=Math.round(34*scale);
   ctx.fillStyle='#111';
   ctx.font=`700 ${nameFontSz}px ${SF}`;
   ctx.textAlign='left'; ctx.textBaseline='middle';
-  let name=(S.playerName||'PLAYER').toUpperCase();
+  let name=currentPlayerDisplayName().toUpperCase();
+  const origName=name;
   while(ctx.measureText(name).width>nameMaxW&&name.length>1) name=name.slice(0,-1);
-  if(name!==(S.playerName||'PLAYER').toUpperCase()) name=name.slice(0,-1)+'…';
+  if(name!==origName) name=name.slice(0,-1)+'…';
   ctx.fillText(name,rx,Y+r1/2);
 
-  // Total badge — v5.3: right-flush to card edge, fills full ROW1 height, large font
-  if(S.showTotal){
-    const td=totalDelta(), tg=totalGross();
-    const bColor=totalBadgeColor();
-    const bTxt=S.displayMode==='topar'?fmtDeltaDisplay(td):String(tg);
+  // Total badge — context-aware: in-play=prev holes, result=include current hole
+  if(_showTotal){
+    const bColor=_bColor;
+    const bTxt=S.displayMode==='topar'?fmtDeltaDisplay(_ctxTd):String(_ctxTg);
     // Right edge flush to card border, height fills entire ROW1
     const badgeMinW=80*scale;
     ctx.font=`900 ${Math.round(38*scale)}px ${SF}`;
@@ -765,48 +1064,58 @@ function rrect(ctx,x,y,w,h,r){
 }
 
 // ============================================================
-// EXPORT
+// EXPORT — helpers
 // ============================================================
-function doExport(){
+function expGetDims(){
   const res=S.exportRes||2160;
-  let expW,expH;
-  if(S.ratio==='16:9'){expW=Math.round(res*16/9);expH=res;}
-  else if(S.ratio==='9:16'){expW=Math.round(res*9/16);expH=res;}
-  else{expW=res;expH=res;}
+  let w,h;
+  if(S.ratio==='16:9'){w=Math.round(res*16/9);h=res;}
+  else if(S.ratio==='9:16'){w=Math.round(res*9/16);h=res;}
+  else{w=res;h=res;}
+  return{w,h};
+}
+function expSanitize(s){ return (s||'').replace(/[^\w\u4e00-\u9fa5\u3040-\u30ff\uAC00-\uD7A3]/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'')||'_'; }
+function expResLabel(){ const r=S.exportRes||2160; return r>=2160?'4K':r>=1440?'1440P':'1080P'; }
+function expModeLabel(){ return S.displayMode==='topar'?'TOPAR':'GROSS'; }
+function expCourse(){ return expSanitize(S.courseName)||'Course'; }
+function expPlayer(){ if(S.currentPlayerId){const p=(S.players||[]).find(p=>p.id===S.currentPlayerId);if(p)return expSanitize(p.name);} return 'Session'; }
+function expShotFile(hole,shotNum,st){ return `${expCourse()}_${expPlayer()}_H${String(hole).padStart(2,'0')}_S${String(shotNum).padStart(2,'0')}_${st}_${expModeLabel()}_${expResLabel()}.png`; }
+function expFinalFile(hole,res){ return `${expCourse()}_${expPlayer()}_H${String(hole).padStart(2,'0')}_FINAL_${res}_${expModeLabel()}_${expResLabel()}.png`; }
+function expSCFile(k,range){ return `${expCourse()}_${expPlayer()}_SC_${String(k).padStart(2,'0')}_${range}_${expModeLabel()}_${expResLabel()}.png`; }
 
-  let offscreen;
-  try{ offscreen=document.createElement('canvas'); offscreen.width=expW; offscreen.height=expH; }
-  catch(err){ showExpStatus(false); return; }
+function expCanvasToBlob(canvas){ return new Promise(r=>canvas.toBlob(r,'image/png')); }
+function expSleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
-  const ctx=offscreen.getContext('2d');
-  ctx.save();
-  ctx.globalAlpha=S.overlayOpacity??1;
-  drawOverlays(ctx,expW,expH,true);
-  ctx.restore();
+function expMakeShotCanvas(w,h){
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const ctx=c.getContext('2d'); ctx.globalAlpha=S.overlayOpacity??1;
+  const scale=w/1920, pos=S.overlayPos[S.ratio];
+  drawShotOverlay(ctx,pos.x*w,pos.y*h,scale);
+  return c;
+}
+function expMakeSCCanvas(w,h){
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const ctx=c.getContext('2d'); ctx.globalAlpha=S.overlayOpacity??1;
+  const scale=w/1920, scW=getSCWidth(scale), pos=S.scorecardPos[S.ratio];
+  let scX; if(pos.centered)scX=(w-scW)/2; else if(pos.absX!==undefined)scX=pos.absX*w; else scX=pos.x*w-scW/2;
+  drawScorecardOverlay(ctx,scX,pos.y*h,scale);
+  return c;
+}
 
-  const h=curHole();
-  const stype=(h.shots[h.shotIndex]?.type||'shot').toLowerCase().replace('_','-');
-  const fname=`hole${String(S.currentHole+1).padStart(2,'0')}_shot${String(h.shotIndex+1).padStart(2,'0')}_${stype}_${res}p.png`;
+function expGetForType(delta){
+  if(delta<=-1) return 'FOR_BIRDIE';
+  if(delta===0) return 'FOR_PAR';
+  if(delta===1) return 'FOR_BOGEY';
+  if(delta===2) return 'FOR_DOUBLE';
+  return 'FOR_TRIPLE';
+}
 
-  try{
-    offscreen.toBlob(blob=>{
-      if(!blob){ showExpStatus(false,'toBlob null'); return; }
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');
-      a.href=url; a.download=fname;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      setTimeout(()=>URL.revokeObjectURL(url),4000);
-      showExpStatus(true);
-    },'image/png');
-  } catch(err){
-    try{
-      const url=offscreen.toDataURL('image/png');
-      const a=document.createElement('a');
-      a.href=url; a.download=fname;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      showExpStatus(true);
-    } catch(e2){ showExpStatus(false,e2.message); }
-  }
+function expDownloadBlob(blob,fname){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=fname;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
 }
 
 function showExpStatus(ok,errMsg){
@@ -815,6 +1124,137 @@ function showExpStatus(ok,errMsg){
   el.classList.add(ok?'ok':'err');
   clearTimeout(el._t);
   el._t=setTimeout(()=>el.className='',ok?1000:2000);
+}
+
+function expShowProgress(txt,frac){
+  const wrap=document.getElementById('exp-progress-wrap');
+  const bar=document.getElementById('exp-progress-bar');
+  const label=document.getElementById('exp-progress-txt');
+  if(!wrap) return;
+  wrap.style.display='block';
+  if(bar) bar.style.width=Math.round((frac||0)*100)+'%';
+  if(label) label.textContent=txt||'';
+}
+function expHideProgress(){
+  const wrap=document.getElementById('exp-progress-wrap');
+  if(wrap) wrap.style.display='none';
+}
+
+// ── Single: Shot Overlay only ──
+function doExportShotOnly(){
+  const h=curHole();
+  if(h.delta===null){ miniToast('Set score first',true); return; }
+  const{w,h:H}=expGetDims();
+  const canvas=expMakeShotCanvas(w,H);
+  const st=(h.shots[h.shotIndex]?.type||'SHOT').toUpperCase();
+  const fname=expShotFile(S.currentHole+1,h.shotIndex+1,st);
+  expCanvasToBlob(canvas).then(blob=>{ expDownloadBlob(blob,fname); showExpStatus(true); }).catch(()=>showExpStatus(false));
+}
+
+// ── Single: Scorecard only ──
+function doExportScorecardOnly(){
+  const{w,h}=expGetDims();
+  const canvas=expMakeSCCanvas(w,h);
+  const fname=expSCFile(S.currentHole+1,`1-${Math.max(0,S.currentHole)}`);
+  expCanvasToBlob(canvas).then(blob=>{ expDownloadBlob(blob,fname); showExpStatus(true); }).catch(()=>showExpStatus(false));
+}
+
+// ── Batch: current hole shot sequence → ZIP ──
+async function doExportHoleSequence(){
+  const h=curHole();
+  if(h.delta===null){ miniToast('Set score first',true); return; }
+  const gross=getGross(h);
+  if(!gross||gross<=0){ miniToast('Invalid score',true); return; }
+  if(typeof JSZip==='undefined'){ miniToast('JSZip not loaded',true); return; }
+
+  const{w,h:H}=expGetDims();
+  const zip=new JSZip();
+  const holeNum=S.currentHole+1;
+  // save state
+  const savedIdx=h.shotIndex, savedMT=JSON.parse(JSON.stringify(h.manualTypes||{})), savedShots=JSON.parse(JSON.stringify(h.shots||[]));
+
+  try{
+    // shot frames: indices 0..gross-1
+    for(let i=0;i<gross;i++){
+      h.shotIndex=i;
+      if(i===gross-1){
+        // last shot: show FOR_X mode
+        const ft=expGetForType(h.delta);
+        if(!h.shots[i]) h.shots[i]={type:null};
+        h.shots[i].type=ft; h.manualTypes[i]=true;
+      }
+      expShowProgress(`Shot ${i+1}/${gross+1}`,i/(gross+1));
+      const canvas=expMakeShotCanvas(w,H);
+      const st=(h.shots[i]?.type||'SHOT').replace(/ /g,'_').toUpperCase();
+      const fname=expShotFile(holeNum,i+1,st);
+      const blob=await expCanvasToBlob(canvas);
+      zip.file(fname,blob);
+      await expSleep(10);
+    }
+    // FINAL frame
+    h.shotIndex=gross-1;
+    delete h.manualTypes[gross-1]; // exit FOR mode → result mode
+    expShowProgress(`Final ${gross+1}/${gross+1}`,gross/(gross+1));
+    const fcanvas=expMakeShotCanvas(w,H);
+    const resultStr=deltaLabel(h.delta).replace(/\s+/g,'_').toUpperCase();
+    const ffname=expFinalFile(holeNum,resultStr);
+    const fblob=await expCanvasToBlob(fcanvas);
+    zip.file(ffname,fblob);
+
+    expShowProgress('Packaging ZIP…',0.97);
+    const zblob=await zip.generateAsync({type:'blob'});
+    expDownloadBlob(zblob,`${expCourse()}_${expPlayer()}_H${String(holeNum).padStart(2,'0')}_shots.zip`);
+    expShowProgress('Done ✓',1);
+    setTimeout(expHideProgress,2500);
+  } catch(err){
+    miniToast('Export error: '+err.message,true);
+    expHideProgress();
+  } finally{
+    // restore
+    h.shotIndex=savedIdx; h.manualTypes=savedMT; h.shots=savedShots;
+    redrawOnly();
+  }
+}
+
+// ── Batch: scorecard sequence (hole 1-18) → ZIP ──
+async function doExportScorecardSequence(){
+  if(typeof JSZip==='undefined'){ miniToast('JSZip not loaded',true); return; }
+  const{w,h}=expGetDims();
+  const zip=new JSZip();
+  const savedHole=S.currentHole, savedSummary=S.scorecardSummary;
+  S.scorecardSummary=null;
+
+  try{
+    for(let k=1;k<=18;k++){
+      S.currentHole=k; // scorecard shows holes 0..k-1 (before hole k)
+      expShowProgress(`Scorecard ${k}/18`,k/18);
+      const canvas=expMakeSCCanvas(w,h);
+      const rangeStr=k<=1?'0':`1-${k-1}`;
+      const fname=expSCFile(k,rangeStr);
+      const blob=await expCanvasToBlob(canvas);
+      zip.file(fname,blob);
+      await expSleep(10);
+    }
+    // TOT view (all 18)
+    S.scorecardSummary='tot';
+    expShowProgress('SC TOT…',0.97);
+    const totCanvas=expMakeSCCanvas(w,h);
+    const totFname=`${expCourse()}_${expPlayer()}_SC_TOT_1-18_${expModeLabel()}_${expResLabel()}.png`;
+    const totBlob=await expCanvasToBlob(totCanvas);
+    zip.file(totFname,totBlob);
+
+    expShowProgress('Packaging ZIP…',0.99);
+    const zblob=await zip.generateAsync({type:'blob'});
+    expDownloadBlob(zblob,`${expCourse()}_${expPlayer()}_SC_sequence.zip`);
+    expShowProgress('Done ✓',1);
+    setTimeout(expHideProgress,2500);
+  } catch(err){
+    miniToast('Export error: '+err.message,true);
+    expHideProgress();
+  } finally{
+    S.currentHole=savedHole; S.scorecardSummary=savedSummary;
+    redrawOnly();
+  }
 }
 
 // ============================================================
@@ -828,12 +1268,13 @@ function init(){
   // Sync UI
   document.querySelectorAll('.ratio-btn').forEach(b=>b.classList.toggle('active',b.dataset.ratio===S.ratio));
   document.querySelectorAll('.res-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.res)===S.exportRes));
-  document.getElementById('inp-player').value=S.playerName||'';
+  const _ip=document.getElementById('inp-player'); if(_ip) _ip.value=S.playerName||'';
   document.getElementById('inp-course').value=S.courseName||'';
   document.getElementById('chk-shot').checked=S.showShot;
   document.getElementById('chk-score').checked=S.showScore;
+  const chkPN=document.getElementById('chk-show-pname'); if(chkPN) chkPN.checked=!!S.showPlayerName;
   document.getElementById('chk-total').checked=S.showTotal;
-  document.getElementById('score-sub').style.display=S.showScore?'flex':'none';
+  const _scRangeSec=document.getElementById('score-range-sec'); if(_scRangeSec) _scRangeSec.style.display=S.showScore?'block':'none';
   document.querySelectorAll('[name=scr]').forEach(r=>r.checked=r.value===S.scoreRange);
   document.getElementById('bg-opacity').value=Math.round((S.bgOpacity??1)*100);
   document.getElementById('bg-opacity-val').textContent=Math.round((S.bgOpacity??1)*100)+'%';
@@ -847,6 +1288,7 @@ function init(){
 
   applyLang();
   applyBg();
+  if(typeof buildPlayerArea==='function') buildPlayerArea();
   render();
 }
 

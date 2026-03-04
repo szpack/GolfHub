@@ -143,9 +143,20 @@ function drawScorecardOverlay(ctx,X,Y,scale){
   ctx.textAlign='center'; ctx.textBaseline='middle';
 
   // HOLE label
-  ctx.fillStyle='rgba(255,255,255,0.6)';
-  ctx.font=`600 ${lblFontSz}px ${SF}`;
-  ctx.fillText('HOLE',X+labelW/2,Y+hdrH/2);
+  // HOLE label or player name
+  if(S.showPlayerName){
+    const pn=(typeof currentPlayerDisplayName==='function'?currentPlayerDisplayName():(S.playerName||'PLAYER')).toUpperCase();
+    ctx.fillStyle='rgba(255,255,255,0.9)';
+    ctx.font=`700 ${Math.round(lblFontSz*0.75)}px ${SF}`;
+    let dn=pn;
+    while(ctx.measureText(dn).width>labelW*0.88&&dn.length>1) dn=dn.slice(0,-1);
+    if(dn!==pn) dn=dn.slice(0,-1)+'…';
+    ctx.fillText(dn,X+labelW/2,Y+hdrH/2);
+  } else {
+    ctx.fillStyle='rgba(255,255,255,0.6)';
+    ctx.font=`600 ${lblFontSz}px ${SF}`;
+    ctx.fillText('HOLE',X+labelW/2,Y+hdrH/2);
+  }
 
   // Hole numbers
   for(let i=0;i<count;i++){
@@ -262,13 +273,12 @@ function drawScorecardOverlay(ctx,X,Y,scale){
     drawSubTot(inX, scoreIn, parIn);
   }
 
-  // TOT
-  const td=S.holes.slice(start,Math.min(end,scoreEnd)).reduce((a,h)=>a+(h.delta??0),0);
-  const tg=S.holes.slice(start,Math.min(end,scoreEnd)).reduce((a,h)=>a+h.par+(h.delta??0),0);
+  // TOT: always Gross, always includes ALL holes in range (unplayed = par via delta??0)
+  const tg=S.holes.slice(start,end).reduce((a,h)=>a+h.par+(h.delta??0),0);
   ctx.fillStyle='#111';
   ctx.font=`700 ${totFontSz}px ${SF}`;
   ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(S.displayMode==='topar'?fmtDeltaDisplay(td):String(tg),X+totX+totalW/2,scY+scoreRowH/2);
+  ctx.fillText(String(tg),X+totX+totalW/2,scY+scoreRowH/2);
 
   // Outer border
   ctx.strokeStyle='rgba(27,94,59,0.25)'; ctx.lineWidth=1;
