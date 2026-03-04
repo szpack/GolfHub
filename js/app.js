@@ -667,6 +667,19 @@ function gotoNextHole(){
   }
   render(); scheduleSave();
 }
+function gotoPrevHole(){
+  const prev=(S.currentHole+17)%18;
+  S.currentHole=prev;
+  S.scorecardSummary=null;
+  const ch=S.holes[prev];
+  if(ch.delta!==null){
+    const g=getGross(ch);
+    if(g&&g>0) ch.shotIndex=g-1; else ch.shotIndex=0;
+  } else {
+    ch.shotIndex=0;
+  }
+  render(); scheduleSave();
+}
 
 function setRatio(r){
   S.ratio=r;

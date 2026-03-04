@@ -236,6 +236,7 @@ function buildDeltaBtn(){
 }
 
 // ── TYPE BUTTONS ──
+const SHOT_KEYS={TEE:'T',APPR:'A',LAYUP:'L',CHIP:'C',PUTT:'U',PROV:'V',FOR_BIRDIE:'B',FOR_PAR:'P',FOR_BOGEY:'O'};
 const ACTION_TYPES=[
   {type:'TEE',   labelKey:'typeTee'},
   {type:'APPR',  labelKey:'typeAppr'},
@@ -496,16 +497,25 @@ function wireAll(){
 
   // Keyboard
   window.addEventListener('keydown',e=>{
-    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
-    if(e.key==='ArrowRight'||e.key==='.') nextShot();
-    else if(e.key==='ArrowLeft'||e.key===',') prevShot();
-    else if(e.key.toLowerCase()==='h') gotoNextHole();
-    else {
-      const n=parseInt(e.key);
-      if(n>=1&&n<=9){
-        const p=(S.players||[])[n-1];
-        if(p) switchToPlayer(p.id);
-      }
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT') return;
+    const k=e.key;
+    if(k==='ArrowRight'||k==='.'){nextShot();e.preventDefault();}
+    else if(k==='ArrowLeft'||k===','){prevShot();e.preventDefault();}
+    else if(k==='ArrowUp'){gotoPrevHole();e.preventDefault();}
+    else if(k==='ArrowDown'){gotoNextHole();e.preventDefault();}
+    else if(!e.metaKey&&!e.ctrlKey&&!e.altKey){
+      const kl=k.toLowerCase();
+      if(kl==='h') gotoNextHole();
+      else if(kl==='t') setShotType('TEE');
+      else if(kl==='a') setShotType('APPR');
+      else if(kl==='l') setShotType('LAYUP');
+      else if(kl==='c') setShotType('CHIP');
+      else if(kl==='u') setShotType('PUTT');
+      else if(kl==='v') setShotType('PROV');
+      else if(kl==='b') setShotType('FOR_BIRDIE');
+      else if(kl==='p') setShotType('FOR_PAR');
+      else if(kl==='o') setShotType('FOR_BOGEY');
+      else{const n=parseInt(k);if(n>=1&&n<=9){const p=(S.players||[])[n-1];if(p)switchToPlayer(p.id);}}
     }
   });
   window.addEventListener('resize',()=>render());

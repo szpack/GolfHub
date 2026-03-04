@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Golf Overlay Tool v6.3.2</title>
+<title>Golf Overlay Tool v6.4.4</title>
 <link rel="stylesheet" href="./css/overlay.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
 <!-- HEADER -->
 <div id="hdr">
   <div class="logo" id="logo-text">⛳ GOLF <span>OVERLAY</span></div>
-  <span class="logo-meta">v6.3.2<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
+  <span class="logo-meta">v6.4.4<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
   <span style="flex:1"></span>
   <div id="lang-toggle">
     <button class="lang-btn active" data-lang="en" onclick="setLang('en')">🇺🇸 EN</button>
@@ -140,9 +140,38 @@
       </div>
     </div>
 
-    <!-- Export Section (two individual + two batch) -->
+    <!-- Export Section v6.4.4 -->
     <div id="export-section">
       <div class="stitle" id="export-title">Export</div>
+
+      <!-- Shots group -->
+      <div class="exp-group">
+        <div class="exp-group-lbl">Shots</div>
+        <div class="exp-btn-row" style="position:relative">
+          <button class="exp-indiv-btn" id="btn-export-shot" onclick="doExportShotOnly()">
+            🖼 <span id="lbl-exp-shot">Shot PNG</span>
+          </button>
+          <button class="exp-batch-btn" id="btn-export-hole-seq" onclick="doExportHoleSequence()">
+            📦 <span id="lbl-exp-hole-seq">Hole Shots ZIP</span>
+          </button>
+          <div id="exp-status"></div>
+        </div>
+      </div>
+
+      <!-- Scorecard group -->
+      <div class="exp-group">
+        <div class="exp-group-lbl">Scorecard</div>
+        <div class="exp-btn-row">
+          <button class="exp-indiv-btn" id="btn-export-sc" onclick="doExportScorecardOnly()">
+            📊 <span id="lbl-exp-sc">Scorecard PNG</span>
+          </button>
+          <button class="exp-batch-btn" id="btn-export-sc-seq" onclick="doExportScorecardSequence()">
+            📦 <span id="lbl-exp-sc-seq">18 SC ZIP</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Resolution + Opacity -->
       <div class="res-group-inline">
         <button class="res-btn active" data-res="2160" onclick="setRes(this)">4K</button>
         <button class="res-btn" data-res="1440" onclick="setRes(this)">1440P</button>
@@ -153,25 +182,7 @@
         <input type="range" id="overlay-opacity" min="0" max="100" value="100">
         <span id="overlay-opacity-val">100%</span>
       </div>
-      <!-- Single exports — outlined buttons -->
-      <div class="exp-btn-row" style="position:relative">
-        <button class="exp-indiv-btn" id="btn-export-shot" onclick="doExportShotOnly()">
-          🖼 <span id="lbl-exp-shot">Shot PNG</span>
-        </button>
-        <button class="exp-indiv-btn" id="btn-export-sc" onclick="doExportScorecardOnly()">
-          📊 <span id="lbl-exp-sc">Scorecard PNG</span>
-        </button>
-        <div id="exp-status"></div>
-      </div>
-      <!-- Batch exports — filled buttons -->
-      <div class="exp-btn-row">
-        <button class="exp-batch-btn" id="btn-export-hole-seq" onclick="doExportHoleSequence()">
-          📦 <span id="lbl-exp-hole-seq">Hole Shots ZIP</span>
-        </button>
-        <button class="exp-batch-btn" id="btn-export-sc-seq" onclick="doExportScorecardSequence()">
-          📦 <span id="lbl-exp-sc-seq">18 SC ZIP</span>
-        </button>
-      </div>
+
       <!-- Progress bar -->
       <div id="exp-progress-wrap" style="display:none">
         <div id="exp-progress-bar-bg"><div id="exp-progress-bar"></div></div>

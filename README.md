@@ -117,6 +117,40 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v6.4.4 — 2026-03-05
+- Export 区重新分组：Shots 组（Shot PNG + Hole Shots ZIP）/ Scorecard 组（Scorecard PNG + 18 SC ZIP）
+- ZIP 按钮为绿色主按钮，PNG 按钮为 outline 样式
+- 分辨率 + 透明度设置折叠到 Options… 按钮下方（默认隐藏）
+- 按钮间距 8px，分组间距 16px；导出逻辑完全不变
+
+### v6.4.3 — 2026-03-05
+- Par 按钮加大（22px 粗体），选中态绿色；底边与 HOLE X 底边对齐（align-items:flex-end）
+
+### v6.4.2 — 2026-03-05
+- 修复 Final Score 区域多余左侧绿色竖条（移除 #delta-section border-left）
+- 左侧导航区统一新视觉规范：#ptool/#nav/#left 使用 --panel-bg + --panel-border
+- 比例按钮（16:9/9:16/1:1）、To Par/Gross 按钮：transparent 底 + panel-border；选中态 --accent-green
+- 18 洞卡片当前洞高亮、F/B/T 统计卡激活态统一改用 --accent-green
+- F/B/T 统计卡标签金色改用 --accent-gold；SC 开关/Radio 勾选色改用 --accent-green
+
+### v6.4.1 — 2026-03-05
+- 统一右侧控制区视觉系统：新增 CSS Design Tokens（--accent-gold/green, --panel-bg, --panel-border, --text-primary/muted）
+- 右侧面板背景改为 #1f1f1f，所有区块分割线改用 --panel-border (#2c2c2c)
+- 所有未选按钮统一为 transparent 背景 + panel-border 边框；选中态统一用 --accent-green (#22c55e)
+- Par 数字、Par 标签改用 --accent-gold；Final Score 左侧边条改用 --accent-green
+- .stitle 统一 12px / 0.08em letter-spacing / text-muted 颜色
+- 导出按钮、进度条统一使用 --accent-green；无 JS 改动
+
+### v6.4.0 — 2026-03-05
+- 右侧控制区 UI/UX 全面打磨：模块间距加大、标题统一弱化样式（11px/0.08em letter-spacing）
+- Par 数字按钮改为金色（#D4A017）加粗，选中态保持绿色白字
+- 球员按钮高度 32px，所有交互按钮统一圆角 6px + 80ms ease-out 动效
+- 击球类型按钮右下角新增键盘快捷键角标（T/A/L/C/U/V），FOR 结果按钮角标（B/P/O）
+- Final Score / Export 标题统一弱化（muted）
+- 新增快捷键：T/A/L/C/U/V=击球类型，B/P/O=FOR 结果，↑/↓=上一洞/下一洞
+- 新增 gotoPrevHole()，方向键 ↑/↓ 可循环切换球洞
+- 快捷键在输入框（INPUT/TEXTAREA/SELECT）聚焦时自动屏蔽，Ctrl/Cmd/Alt 修饰键时不触发
+
 ### v6.3.2 — 2026-03-05
 - 修复 F9/B9/18H 切换无效：radio onChange 增加 `S.scorecardSummary=null`，清除统计卡优先状态，确保 Scorecard Overlay 立即更新
 - 右侧面板宽度减少 15px（355→340px）
