@@ -63,7 +63,9 @@ function getSCRange(){
   if(S.scorecardSummary==='out') return [0,9];
   if(S.scorecardSummary==='in')  return [9,18];
   if(S.scorecardSummary==='tot') return [0,18];
-  // hole view: always full 18-hole grid; scores rendered only for holes before currentHole
+  // hole view — use scoreRange setting from radio buttons
+  if(S.scoreRange==='front9') return [0,9];
+  if(S.scoreRange==='back9')  return [9,18];
   return [0,18];
 }
 function getSCWidth(scale){

@@ -320,9 +320,13 @@ function applyLang(){
   g('lbl-opa').textContent=T('opaLbl');
   g('settings-lbl').textContent=T('settingsLbl');
   const nhil=g('nhi-lbl'); if(nhil) nhil.textContent=T('nextHoleShort');
-  // export section labels
+  // export section labels (elements may not exist if removed from HTML)
   const expLblS=g('exp-lbl-single'); if(expLblS) expLblS.textContent=LANG==='zh'?'单张':'Single';
   const expLblB=g('exp-lbl-batch'); if(expLblB) expLblB.textContent=LANG==='zh'?'批量':'Batch';
+  // Scorecard range labels (inline radios)
+  g('lbl-front9').textContent=LANG==='zh'?'前9':LANG==='ja'?'前半':LANG==='ko'?'전반':'F9';
+  g('lbl-back9').textContent=LANG==='zh'?'后9':LANG==='ja'?'後半':LANG==='ko'?'후반':'B9';
+  g('lbl-18h').textContent='18H';
   const lbHS=g('lbl-exp-hole-seq'); if(lbHS) lbHS.textContent=LANG==='zh'?'当前洞击球包':'Hole Shots ZIP';
   const lbSS=g('lbl-exp-sc-seq'); if(lbSS) lbSS.textContent=LANG==='zh'?'18洞计分卡包':'18 SC ZIP';
   // player UI labels (B1)
@@ -610,15 +614,16 @@ function clearHole(){
 function setMode(m){ S.displayMode=m; render(); scheduleSave(); }
 
 function prevShot(){
-  const h=curHole();
-  if(h.delta===null||h.shotIndex<=0) return;
-  h.shotIndex--; render(); scheduleSave();
+  const h=curHole(), g=getGross(h);
+  if(h.delta===null||!g) return;
+  h.shotIndex=h.shotIndex<=0?g-1:h.shotIndex-1;
+  render(); scheduleSave();
 }
 function nextShot(){
-  const h=curHole();
-  const g=getGross(h);
-  if(!g||h.shotIndex>=g-1) return;
-  h.shotIndex++; render(); scheduleSave();
+  const h=curHole(), g=getGross(h);
+  if(h.delta===null||!g) return;
+  h.shotIndex=h.shotIndex>=g-1?0:h.shotIndex+1;
+  render(); scheduleSave();
 }
 function setShotType(type){
   const h=curHole();
@@ -1274,7 +1279,7 @@ function init(){
   document.getElementById('chk-score').checked=S.showScore;
   const chkPN=document.getElementById('chk-show-pname'); if(chkPN) chkPN.checked=!!S.showPlayerName;
   document.getElementById('chk-total').checked=S.showTotal;
-  const _scRangeSec=document.getElementById('score-range-sec'); if(_scRangeSec) _scRangeSec.style.display=S.showScore?'block':'none';
+  const _scRangeSec=document.getElementById('score-range-sec'); if(_scRangeSec){ _scRangeSec.style.display=''; _scRangeSec.classList.toggle('show',!!S.showScore); }
   document.querySelectorAll('[name=scr]').forEach(r=>r.checked=r.value===S.scoreRange);
   document.getElementById('bg-opacity').value=Math.round((S.bgOpacity??1)*100);
   document.getElementById('bg-opacity-val').textContent=Math.round((S.bgOpacity??1)*100)+'%';

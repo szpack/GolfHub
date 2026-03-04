@@ -42,10 +42,11 @@ function buildPlayerArea(){
     grid.appendChild(btn);
     return;
   }
-  players.forEach(p=>{
+  players.forEach((p,i)=>{
     const btn=document.createElement('button');
     btn.className='player-btn'+(p.id===S.currentPlayerId?' active':'');
-    btn.textContent=p.name;
+    const num=i<9?`${i+1} `:'';
+    btn.textContent=num+p.name;
     btn.title=p.name;
     btn.onclick=()=>switchToPlayer(p.id);
     grid.appendChild(btn);
@@ -271,6 +272,23 @@ function buildTypeButtons(){
   });
 }
 
+// ── SHOT NUMBER BUTTONS ──
+function buildShotButtons(){
+  const cont=document.getElementById('shot-btns');
+  if(!cont) return;
+  cont.innerHTML='';
+  const h=curHole(), gross=getGross(h);
+  if(!gross||h.delta===null){ return; }
+  for(let i=0;i<gross;i++){
+    const btn=document.createElement('button');
+    const isCur=i===h.shotIndex, isPast=i<h.shotIndex;
+    btn.className='snum-btn '+(isCur?'cur':isPast?'past':'future');
+    btn.textContent=String(i+1);
+    btn.onclick=(()=>{ const idx=i; return ()=>{ curHole().shotIndex=idx; render(); scheduleSave(); }; })();
+    cont.appendChild(btn);
+  }
+}
+
 // ── RIGHT PANEL REFRESH ──
 function updateRightPanel(){
   const h=curHole(), idx=S.currentHole, gross=getGross(h);
@@ -284,17 +302,17 @@ function updateRightPanel(){
   distInput.placeholder='';
   document.getElementById('chk-total').checked=S.showTotal;
   buildDeltaBtn();
+  buildShotButtons();
   const hasDelta=h.delta!==null;
   document.getElementById('btn-prev').disabled=!hasDelta;
   document.getElementById('btn-next').disabled=!hasDelta;
-  document.getElementById('shot-info').textContent=hasDelta&&gross?`${h.shotIndex+1} / ${gross}`:'— / —';
   const isManual=hasDelta&&h.manualTypes[h.shotIndex];
   const badge=document.getElementById('type-mode-badge');
   if(badge){badge.textContent=isManual?'MANUAL':'AUTO';badge.style.background=isManual?'#3a2a1a':'#2a3a2a';badge.style.color=isManual?'#c8843c':'#5c8c5c';badge.style.borderColor=isManual?'#6a4a2a':'#3a5a3a';}
   document.getElementById('mode-tp').classList.toggle('active',S.displayMode==='topar');
   document.getElementById('mode-gr').classList.toggle('active',S.displayMode==='gross');
   const _scoreSec=document.getElementById('score-range-sec');
-  if(_scoreSec) _scoreSec.style.display=S.showScore?'block':'none';
+  if(_scoreSec){ _scoreSec.style.display=''; _scoreSec.classList.toggle('show',S.showScore); }
 }
 
 // ── DELTA PICKER — anchored popover ──
@@ -439,7 +457,7 @@ function wireAll(){
   document.getElementById('chk-score').onchange=e=>{
     S.showScore=e.target.checked;
     const sec=document.getElementById('score-range-sec');
-    if(sec) sec.style.display=e.target.checked?'block':'none';
+    if(sec){ sec.style.display=''; sec.classList.toggle('show',e.target.checked); }
     redrawOnly(); scheduleSave();
   };
   // show player name in scorecard
@@ -454,6 +472,7 @@ function wireAll(){
   // v4.5: auto-center scorecard when range changes
   document.querySelectorAll('[name=scr]').forEach(r=>r.onchange=()=>{
     S.scoreRange=r.value;
+    S.scorecardSummary=null; // exit stat-card summary view so scoreRange takes effect
     // Auto center on range switch
     S.scorecardPos[S.ratio]={x:0.5, y:S.scorecardPos[S.ratio]?.y??0.83, centered:true};
     redrawOnly(); scheduleSave();
@@ -481,6 +500,13 @@ function wireAll(){
     if(e.key==='ArrowRight'||e.key==='.') nextShot();
     else if(e.key==='ArrowLeft'||e.key===',') prevShot();
     else if(e.key.toLowerCase()==='h') gotoNextHole();
+    else {
+      const n=parseInt(e.key);
+      if(n>=1&&n<=9){
+        const p=(S.players||[])[n-1];
+        if(p) switchToPlayer(p.id);
+      }
+    }
   });
   window.addEventListener('resize',()=>render());
 }

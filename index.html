@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Golf Overlay Tool v6.2.0</title>
+<title>Golf Overlay Tool v6.3.2</title>
 <link rel="stylesheet" href="./css/overlay.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
 <!-- HEADER -->
 <div id="hdr">
   <div class="logo" id="logo-text">⛳ GOLF <span>OVERLAY</span></div>
-  <span class="logo-meta">v6.2.0<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
+  <span class="logo-meta">v6.3.2<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
   <span style="flex:1"></span>
   <div id="lang-toggle">
     <button class="lang-btn active" data-lang="en" onclick="setLang('en')">🇺🇸 EN</button>
@@ -40,15 +40,6 @@
       </div>
     </div>
 
-    <!-- Scorecard range (above ptool — expands upward from SC toggle) -->
-    <div id="score-range-sec" style="display:none">
-      <div class="opt-sub" id="score-sub">
-        <label><input type="radio" name="scr" value="front9"> <span id="lbl-front9">Front 9</span></label>
-        <label><input type="radio" name="scr" value="back9"> <span id="lbl-back9">Back 9</span></label>
-        <label><input type="radio" name="scr" value="18" checked> <span id="lbl-18h">18 Holes</span></label>
-      </div>
-    </div>
-
     <!-- Course + Overlay Toggles + Total + Ratio -->
     <div id="ptool">
       <div id="player-wrap">
@@ -58,6 +49,12 @@
         <div class="ptool-toggles">
           <label class="ptool-toggle-lbl"><input type="checkbox" id="chk-shot" checked> <span id="lbl-shot">Shot</span></label>
           <label class="ptool-toggle-lbl"><input type="checkbox" id="chk-score"> <span id="lbl-score">SC</span></label>
+          <!-- Scorecard range — inline, same row as SC toggle -->
+          <div id="score-range-sec" style="display:none">
+            <label class="ptool-toggle-lbl sc-radio-lbl"><input type="radio" name="scr" value="front9"> <span id="lbl-front9">F9</span></label>
+            <label class="ptool-toggle-lbl sc-radio-lbl"><input type="radio" name="scr" value="back9"> <span id="lbl-back9">B9</span></label>
+            <label class="ptool-toggle-lbl sc-radio-lbl"><input type="radio" name="scr" value="18" checked> <span id="lbl-18h">18H</span></label>
+          </div>
         </div>
       </div>
       <label class="ptool-toggle-lbl" style="flex-shrink:0"><input type="checkbox" id="chk-total"> <span id="total-lbl">Total</span></label>
@@ -91,6 +88,7 @@
     <div id="hole-banner">
       <div id="hole-hero">
         <span id="hole-num-big">HOLE 1</span>
+        <span id="par-hero-lbl">Par</span>
         <div class="par-grp">
           <button class="par-btn" id="par3" onclick="setPar(3)">3</button>
           <button class="par-btn" id="par4" onclick="setPar(4)">4</button>
@@ -117,9 +115,9 @@
         <span class="dist-unit" id="dist-unit">yds</span>
       </div>
       <div class="shot-nav">
-        <button class="shot-nav-btn" id="btn-prev">◀ PREV SHOT</button>
-        <div class="shot-info-box" id="shot-info">— / —</div>
-        <button class="shot-nav-btn" id="btn-next">NEXT SHOT ▶</button>
+        <button class="shot-nav-btn" id="btn-prev">◀ PREV</button>
+        <div id="shot-btns"></div>
+        <button class="shot-nav-btn" id="btn-next">NEXT ▶</button>
       </div>
       <div id="type-row1" class="type-row"></div>
       <div id="type-row2" class="type-row"></div>
@@ -156,7 +154,6 @@
         <span id="overlay-opacity-val">100%</span>
       </div>
       <!-- Single exports — outlined buttons -->
-      <div class="exp-row-label" id="exp-lbl-single">Single</div>
       <div class="exp-btn-row" style="position:relative">
         <button class="exp-indiv-btn" id="btn-export-shot" onclick="doExportShotOnly()">
           🖼 <span id="lbl-exp-shot">Shot PNG</span>
@@ -167,7 +164,6 @@
         <div id="exp-status"></div>
       </div>
       <!-- Batch exports — filled buttons -->
-      <div class="exp-row-label" id="exp-lbl-batch">Batch</div>
       <div class="exp-btn-row">
         <button class="exp-batch-btn" id="btn-export-hole-seq" onclick="doExportHoleSequence()">
           📦 <span id="lbl-exp-hole-seq">Hole Shots ZIP</span>

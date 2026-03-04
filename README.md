@@ -117,6 +117,27 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v6.3.2 — 2026-03-05
+- 修复 F9/B9/18H 切换无效：radio onChange 增加 `S.scorecardSummary=null`，清除统计卡优先状态，确保 Scorecard Overlay 立即更新
+- 右侧面板宽度减少 15px（355→340px）
+- 击球类型按钮字号减小（9→7px），padding/高度缩减（28px→24px）
+
+### v6.3.1 — 2026-03-05
+- 修复 F9/B9 Scorecard 范围切换无效：getSCRange() 未读取 S.scoreRange，现已修复
+- Players/Manage 恢复同行显示（标签左、按钮右对齐）
+- 杆进度色块和 PREV/NEXT 按钮缩小（高度 26px）
+- 击球类型按钮缩小（min-height 28px，字号 9px）
+- 球员按钮显示序号"1 Pack"，键盘 1–9 快速切换对应球员
+
+### v6.3.0 — 2026-03-05
+- Par 按钮组加 "Par" 标签；右侧面板宽度 340→355px
+- PREV/NEXT 改为循环（首杆↔末杆），删除 "SHOT" 文字
+- 杆进度 "4/5" 改为可点击的色块数字按钮（当前/已完成/未来 3 种状态）
+- 删除导出区 Single/Batch 标签（仅保留按钮）
+- Scorecard 范围选项改为与 SC 开关同行 inline 显示（F9/B9/18H）
+- Players 区域："管理..." 按钮移至球员列表下方
+- Course Name 输入框宽度缩短
+
 ### v6.2.0 — 2026-03-05
 - 右侧面板重构：Par 3/4/5 按钮移入洞号标题行；Players 区域移至洞号下方；To Pin 距离移入 Shot 区域；Total Display 开关移至预览区工具栏（16:9 按钮左侧）
 - 新增击球类型 P（暂定球 Provisional），支持全语言
