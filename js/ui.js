@@ -5,7 +5,8 @@
 
 // ── SHOT LABEL HELPERS ──
 function shotTypeLabel(t){
-  const map={TEE:T('toeOff'),APPR:T('approach'),LAYUP:T('layup'),CHIP:T('chip'),PUTT:T('putt'),PROV:T('provisional'),FOR_BIRDIE:T('forBirdie'),FOR_PAR:T('forPar'),FOR_BOGEY:T('forBogey'),FOR_DOUBLE:T('forDouble'),FOR_TRIPLE:T('forTriple')};
+  const map={TEE:T('toeOff'),APPR:T('approach'),LAYUP:T('layup'),CHIP:T('chip'),PUTT:T('putt'),PROV:T('provisional'),FOR_BIRDIE:T('forBirdie'),FOR_PAR:T('forPar'),FOR_BOGEY:T('forBogey'),FOR_DOUBLE:T('forDouble'),FOR_TRIPLE:T('forTriple'),
+    FW:'FAIRWAY',ROUGH:'ROUGH',BUNKER:'BUNKER',TREES:'TREES',WATER:'WATER',OB:'OB',DROP:'DROP',GREEN:'GREEN'};
   return (map[t]||t||'').toUpperCase();
 }
 function autoType(h,idx){
@@ -205,6 +206,7 @@ function buildHoleNav(){
       cont.appendChild(tc);
     }
   });
+  if(typeof narrowAutoScrollNav==='function') narrowAutoScrollNav();
 }
 
 function makeStatCard(lbl,par,gross,isActive){

@@ -117,6 +117,41 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v8.0.0 — 2026-03-05
+- iPhone narrow-screen adaptation (≤430px): responsive compression of existing desktop layout
+- Breakpoint changed from 768px to 430px — no longer triggers on tablets/iPads
+- Header: one compact line with product name, language cycle button, Skin, gear, New
+- Hole nav: single-row horizontal scroll with fade hints, auto-scroll to active hole
+- Theme picker hidden from nav on narrow; accessible via Settings drawer (Overlay Style section)
+- Options bar with Preview + Options toggle between canvas and hole nav
+- All right-panel sections (Par, Players, Shot, Final Score, Export) compacted with reduced padding
+- Type buttons become horizontal scrollable row on narrow
+- Preview entry opens fullscreen preview overlay for adjusting overlay positions
+
+### v7.1.0 — 2026-03-05
+- Mobile layout rework: fix capsule button truncation with proper horizontal scroll padding + fade masks
+- Remove player section from mobile body (use More → Players instead) to eliminate blank space
+- Convert F9/B9/TOT scorecard summary from card layout to compact inline text
+- Reduce bottom bar height (44px buttons, tighter padding)
+- Shrink hole nav buttons and add fade gradient scroll hints
+- Add long-press repeat for distance +/- buttons
+- Add scrollIntoView when distance input receives focus (prevents keyboard obstruction)
+- Reduce vertical spacing throughout all mobile sections
+
+### v7.0.0 — 2026-03-05
+- 新增 iPhone 移动端 Record Mode（<=768px 自动切换）
+- 固定顶部 Header：HOLE X · Par X · To Pin 距离（点击 Par 可循环切换 3/4/5）
+- 击球状态胶囊按钮（横向滚动）：TEE/APPR/LAYUP/CHIP/PUTT + FW/Rough/Bunker/Trees/Water/OB/Drop/Green
+- To Pin 距离快速微调按钮（-5/-1/+1/+5）
+- 本洞结果区：点击展开编辑，支持 +/- 调整和快捷标签选择（Albatross~+3+）
+- 计分卡区简化为 F9/B9/TOT 摘要卡片
+- 18 洞横向滚动导航，当前洞高亮并自动居中
+- 左右滑动手势切洞（左滑下一洞、右滑上一洞）
+- 固定底部操作栏：+Stroke / Finish Hole / Undo（避免遮挡内容，键盘弹出时自动隐藏）
+- More 菜单（底部 Action Sheet）：Preview / Export PNG / Settings / Players / Reset Hole
+- Preview 页面：显示背景图 + Canvas 角标，支持拖动调整位置并导出
+- 球员按钮行在移动端支持横向滚动
+
 ### v6.7.4 — 2026-03-05
 - 为 CSS/JS 链接添加版本查询参数（?v=6.7.4），解决 GitHub Pages CDN 缓存旧样式导致布局不一致的问题
 

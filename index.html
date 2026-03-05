@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Golf Overlay Tool v6.7.4</title>
-<link rel="stylesheet" href="./css/overlay.css?v=6.7.4">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Golf Overlay Tool v8.0.0</title>
+<link rel="stylesheet" href="./css/overlay.css?v=8.0.0">
 </head>
 <body>
 
 <!-- HEADER -->
 <div id="hdr">
   <div class="logo" id="logo-text">⛳ GOLF <span>OVERLAY</span></div>
-  <span class="logo-meta">v6.7.4<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
+  <span class="logo-meta">v8.0.0<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
   <span style="flex:1"></span>
   <div id="lang-toggle">
     <button class="lang-btn active" data-lang="en" onclick="setLang('en')">🇺🇸 EN</button>
@@ -20,6 +20,8 @@
     <button class="lang-btn" data-lang="ko" onclick="setLang('ko')">🇰🇷 한국어</button>
     <button class="lang-btn" data-lang="es" onclick="setLang('es')">🇪🇸 ES</button>
   </div>
+  <button id="btn-lang-narrow" class="narrow-only" onclick="cycleNarrowLang()">EN</button>
+  <button id="btn-skin-narrow" class="narrow-only" onclick="openSettings()">Skin</button>
   <button id="btn-settings" onclick="openSettings()"><span>⚙️</span><span id="settings-lbl"> Settings</span></button>
   <button id="btn-new" onclick="openNewRound()">New…</button>
 </div>
@@ -38,6 +40,13 @@
           <div id="hint-sub" style="font-size:10px;color:var(--t3)">Preview only — not included in export</div>
         </div>
       </div>
+    </div>
+
+    <!-- Narrow-only: Preview + Options toggle -->
+    <div id="narrow-opts-bar">
+      <button id="btn-preview-narrow" onclick="openMobPreview()">Preview</button>
+      <button id="btn-opts-toggle" onclick="toggleNarrowOpts()">Options…</button>
+      <span style="flex:1"></span>
     </div>
 
     <!-- Course + Overlay Toggles + Total + Ratio -->
@@ -203,6 +212,88 @@
   </div>
 </div>
 
+<!-- MOBILE RECORD MODE -->
+<div id="mob">
+  <div id="mob-hdr">
+    <span id="mob-hole-lbl">HOLE 1</span>
+    <span class="mob-hdr-dot">&middot;</span>
+    <span id="mob-par-lbl" onclick="mobCyclePar()">Par 4</span>
+    <span class="mob-hdr-dot">&middot;</span>
+    <span id="mob-topin-tap" onclick="document.getElementById('mob-dist-inp').focus()">
+      <span id="mob-tp-lbl">To Pin:</span>
+      <span id="mob-tp-val">&mdash;</span>
+      <span id="mob-tp-unit">y</span>
+    </span>
+    <span style="flex:1"></span>
+    <button id="mob-more-btn" onclick="openMobMore()">&#x22EF;</button>
+  </div>
+  <div id="mob-body">
+    <div class="mob-sec" id="mob-lie-sec">
+      <div id="mob-lie-scroll"></div>
+    </div>
+    <div class="mob-sec" id="mob-dist-sec">
+      <div class="mob-dist-row">
+        <button class="mob-adj-btn" id="mob-adj-m5">&minus;5</button>
+        <button class="mob-adj-btn mob-adj-sm" id="mob-adj-m1">&minus;1</button>
+        <input type="number" id="mob-dist-inp" min="0" max="999" placeholder="yards" inputmode="numeric" onfocus="this.select()">
+        <button class="mob-adj-btn mob-adj-sm" id="mob-adj-p1">+1</button>
+        <button class="mob-adj-btn" id="mob-adj-p5">+5</button>
+      </div>
+    </div>
+    <div class="mob-sec" id="mob-result-sec">
+      <div id="mob-result-bar" onclick="mobToggleResult()">
+        <span id="mob-strokes-txt">Strokes: &mdash;</span>
+        <span id="mob-result-txt">&mdash;</span>
+        <span class="mob-chevron" id="mob-result-chevron">&#x25BE;</span>
+      </div>
+      <div id="mob-result-edit">
+        <div id="mob-result-adj-row">
+          <button class="mob-result-adj" onclick="adjDelta(-1)">&minus;</button>
+          <span id="mob-result-gross">&mdash;</span>
+          <button class="mob-result-adj" onclick="adjDelta(+1)">+</button>
+        </div>
+        <div id="mob-result-quick"></div>
+      </div>
+    </div>
+    <div class="mob-sec" id="mob-sc-sec">
+      <div id="mob-sc-row"></div>
+    </div>
+    <div class="mob-sec" id="mob-nav-sec">
+      <div id="mob-nav-scroll"></div>
+    </div>
+  </div>
+  <div id="mob-bar">
+    <button id="mob-btn-stroke" onclick="mobAddStroke()">+Stroke</button>
+    <button id="mob-btn-finish" onclick="mobFinishHole()">Finish Hole</button>
+    <button id="mob-btn-undo" onclick="mobUndoStroke()">Undo</button>
+  </div>
+</div>
+
+<!-- Mobile More Menu -->
+<div id="mob-more-bg" onclick="closeMobMore()"></div>
+<div id="mob-more-menu">
+  <button onclick="openMobPreview()">Preview</button>
+  <button onclick="mobDoExport()">Export PNG</button>
+  <button onclick="openSettings();closeMobMore()">Settings</button>
+  <button onclick="openPlayerManager();closeMobMore()">Players</button>
+  <button onclick="mobResetHole()">Reset Hole</button>
+  <hr>
+  <button onclick="closeMobMore()">Cancel</button>
+</div>
+
+<!-- Mobile Preview Page -->
+<div id="mob-preview">
+  <div id="mob-pv-hdr">
+    <button onclick="closeMobPreview()">&larr; Back</button>
+    <span>Preview</span>
+    <button onclick="doExportShotOnly()">Export</button>
+  </div>
+  <div id="mob-pv-area">
+    <img id="mob-pv-bg">
+    <canvas id="mob-pv-cv"></canvas>
+  </div>
+</div>
+
 <!-- DELTA PICKER POPOVER -->
 <div id="picker-backdrop" onclick="closePicker()"></div>
 <div id="picker-popover">
@@ -253,6 +344,15 @@
     <button id="sd-close" onclick="closeSettings()">×</button>
   </div>
   <div id="sd-body">
+    <div class="sd-sec" id="sd-theme-sec">
+      <div class="sd-sec-title">Overlay Style</div>
+      <div id="sd-theme-btns" style="display:flex;flex-wrap:wrap;gap:4px">
+        <button class="theme-btn active" data-theme="classic" onclick="setTheme('classic')">Classic</button>
+        <button class="theme-btn" data-theme="broadcast_gold" onclick="setTheme('broadcast_gold')">Broadcast Gold</button>
+        <button class="theme-btn" data-theme="pgatour" onclick="setTheme('pgatour')">PGA Tour</button>
+        <button class="theme-btn" data-theme="livgolf" onclick="setTheme('livgolf')">LIV Golf</button>
+      </div>
+    </div>
     <div class="sd-sec">
       <div class="sd-sec-title" id="sd-bg-title">Background Image</div>
       <div class="sd-row">
@@ -310,8 +410,8 @@
 <div id="mini-toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="./js/scoreboard.js?v=6.7.4"></script>
-<script src="./js/ui.js?v=6.7.4"></script>
-<script src="./js/app.js?v=6.7.4"></script>
+<script src="./js/scoreboard.js?v=8.0.0"></script>
+<script src="./js/ui.js?v=8.0.0"></script>
+<script src="./js/app.js?v=8.0.0"></script>
 </body>
 </html>

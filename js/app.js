@@ -278,6 +278,7 @@ function setLang(l){
   LANG=l; S.lang=l;
   document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===l));
   applyLang(); render(); scheduleSave();
+  if(typeof updateNarrowLangBtn==='function') updateNarrowLangBtn();
 }
 
 function applyLang(){
@@ -1440,6 +1441,7 @@ function render(){
   buildDeltaBtn();
   buildTypeButtons();
   updateRightPanel();
+  updateMobUI();
 }
 
 function redrawOnly(){
@@ -1868,6 +1870,451 @@ async function doExportScorecardSequence(){
 }
 
 // ============================================================
+// MOBILE RECORD MODE
+// ============================================================
+const MOB_LIE_TYPES = [
+  {type:'FW',label:'FW'},{type:'ROUGH',label:'Rough'},
+  {type:'BUNKER',label:'Bunker'},{type:'TREES',label:'Trees'},
+  {type:'WATER',label:'Water'},{type:'OB',label:'OB'},
+  {type:'DROP',label:'Drop'},{type:'GREEN',label:'Green'},
+];
+
+function isMobile(){ return window.innerWidth <= 430; }
+
+function mobAddStroke(){
+  const h = curHole();
+  if(h.delta === null){
+    h.delta = 1 - h.par;
+  } else {
+    if(h.delta + 1 > 12) return;
+    h.delta = h.delta + 1;
+  }
+  h.manualTypes = {};
+  reconcileShots(h);
+  const g = getGross(h);
+  if(g && g > 0) h.shotIndex = g - 1;
+  render(); scheduleSave();
+}
+
+function mobUndoStroke(){
+  const h = curHole();
+  if(h.delta === null) return;
+  const g = getGross(h);
+  if(g <= 1){
+    clearHole();
+  } else {
+    h.delta = h.delta - 1;
+    h.manualTypes = {};
+    reconcileShots(h);
+    const ng = getGross(h);
+    if(ng && ng > 0) h.shotIndex = ng - 1;
+    render(); scheduleSave();
+  }
+}
+
+function mobFinishHole(){ gotoNextHole(); }
+
+function mobCyclePar(){
+  const h = curHole();
+  const next = h.par === 3 ? 4 : h.par === 4 ? 5 : 3;
+  setPar(next);
+}
+
+function mobAdjDist(delta){
+  const inp = document.getElementById('mob-dist-inp');
+  let val = parseInt(inp.value) || 0;
+  val = Math.max(0, Math.min(999, val + delta));
+  inp.value = val;
+  setShotToPin(val);
+  updateMobUI();
+}
+
+function mobToggleResult(){
+  document.getElementById('mob-result-sec').classList.toggle('expanded');
+}
+
+function mobResetHole(){
+  clearHole(); closeMobMore();
+}
+
+function openMobMore(){
+  document.getElementById('mob-more-bg').classList.add('show');
+  document.getElementById('mob-more-menu').classList.add('show');
+}
+function closeMobMore(){
+  document.getElementById('mob-more-bg').classList.remove('show');
+  document.getElementById('mob-more-menu').classList.remove('show');
+}
+
+function mobDoExport(){
+  closeMobMore();
+  const h = curHole();
+  if(h.delta === null){ miniToast('Set score first', true); return; }
+  doExportShotOnly();
+}
+
+// ── Mobile Preview ──
+let mobPvCv, mobPvDragging=null, mobPvDragStart={};
+
+function openMobPreview(){
+  closeMobMore();
+  const pv = document.getElementById('mob-preview');
+  pv.classList.add('show');
+  const bgEl = document.getElementById('mob-pv-bg');
+  bgEl.src = S.userBg || DEFAULT_BG;
+  bgEl.style.display = 'block';
+  bgEl.style.opacity = S.bgOpacity;
+  mobPvCv = document.getElementById('mob-pv-cv');
+  setTimeout(mobPvRender, 50);
+  mobPvCv.addEventListener('touchstart', mobPvTouchStart, {passive:false});
+  window.addEventListener('touchmove', mobPvTouchMove, {passive:false});
+  window.addEventListener('touchend', mobPvTouchEnd);
+}
+
+function closeMobPreview(){
+  document.getElementById('mob-preview').classList.remove('show');
+  if(mobPvCv){
+    mobPvCv.removeEventListener('touchstart', mobPvTouchStart);
+    window.removeEventListener('touchmove', mobPvTouchMove);
+    window.removeEventListener('touchend', mobPvTouchEnd);
+  }
+}
+
+function mobPvRender(){
+  if(!mobPvCv) return;
+  const area = document.getElementById('mob-pv-area');
+  const aw = area.clientWidth, ah = area.clientHeight;
+  let cw, ch;
+  if(S.ratio==='16:9'){ch=ah;cw=ah*(16/9);if(cw>aw){cw=aw;ch=aw*(9/16);}}
+  else if(S.ratio==='9:16'){cw=aw;ch=aw*(16/9);if(ch>ah){ch=ah;cw=ah*(9/16);}}
+  else{const s=Math.min(aw,ah);cw=s;ch=s;}
+  cw=Math.floor(cw); ch=Math.floor(ch);
+  const d = window.devicePixelRatio || 1;
+  mobPvCv.width = Math.round(cw * d);
+  mobPvCv.height = Math.round(ch * d);
+  mobPvCv.style.width = cw + 'px';
+  mobPvCv.style.height = ch + 'px';
+  mobPvCv.style.left = ((aw - cw) / 2) + 'px';
+  mobPvCv.style.top = ((ah - ch) / 2) + 'px';
+  const ctx = mobPvCv.getContext('2d');
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+  ctx.clearRect(0, 0, cw, ch);
+  ctx.save();
+  ctx.globalAlpha = S.overlayOpacity ?? 1;
+  const savedW = cvCssW, savedH = cvCssH;
+  cvCssW = cw; cvCssH = ch;
+  drawOverlays(ctx, cw, ch, false);
+  cvCssW = savedW; cvCssH = savedH;
+  ctx.restore();
+}
+
+function mobPvTouchStart(e){
+  if(e.touches.length !== 1) return;
+  const t = e.touches[0];
+  const rect = mobPvCv.getBoundingClientRect();
+  const cw = parseInt(mobPvCv.style.width);
+  const ch = parseInt(mobPvCv.style.height);
+  const mx = (t.clientX - rect.left) / rect.width * cw;
+  const my = (t.clientY - rect.top) / rect.height * ch;
+  const scale = cw / 1920;
+  if(S.showShot && curHole().delta !== null){
+    const pos = S.overlayPos[S.ratio];
+    const ox = pos.x * cw, oy = pos.y * ch;
+    if(mx >= ox && mx <= ox + SHOT_W*scale && my >= oy && my <= oy + SHOT_H*scale){
+      mobPvDragging = 'overlay'; mobPvDragStart = {mx, my, ox, oy, cw, ch};
+      e.preventDefault(); return;
+    }
+  }
+  if(S.showScore){
+    const is916 = S.ratio==='9:16';
+    const scScale = scale * (is916?1.35:1);
+    const scW = getSCWidth(scScale);
+    const pos = S.scorecardPos[S.ratio];
+    const scX = pos.centered ? (cw-scW)/2 : (pos.absX!==undefined ? pos.absX*cw : pos.x*cw-scW/2);
+    const scY = pos.y * ch;
+    const scH = getSCHeight(scScale);
+    if(mx >= scX && mx <= scX+scW && my >= scY && my <= scY+scH){
+      mobPvDragging = 'scorecard'; mobPvDragStart = {mx, my, ox:scX, oy:scY, cw, ch};
+      e.preventDefault();
+    }
+  }
+}
+
+function mobPvTouchMove(e){
+  if(!mobPvDragging) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  const rect = mobPvCv.getBoundingClientRect();
+  const {cw, ch} = mobPvDragStart;
+  const mx = (t.clientX - rect.left) / rect.width * cw;
+  const my = (t.clientY - rect.top) / rect.height * ch;
+  const dx = mx - mobPvDragStart.mx, dy = my - mobPvDragStart.my;
+  const scale = cw / 1920;
+  if(mobPvDragging === 'overlay'){
+    const nx = Math.max(0, Math.min(cw-1, mobPvDragStart.ox + dx));
+    const ny = Math.max(0, Math.min(ch-1, mobPvDragStart.oy + dy));
+    S.overlayPos[S.ratio] = {x: nx/cw, y: ny/ch};
+  } else {
+    const is916 = S.ratio==='9:16';
+    const scScale = scale * (is916?1.35:1);
+    const sw = getSCWidth(scScale);
+    const nx = Math.max(0, Math.min(cw-1, mobPvDragStart.ox + dx));
+    const ny = Math.max(0, Math.min(ch-1, mobPvDragStart.oy + dy));
+    const centerX = (cw - sw) / 2;
+    const centered = Math.abs(nx - centerX) < 12;
+    S.scorecardPos[S.ratio] = {x:(nx+sw/2)/cw, y:ny/ch, centered, absX:nx/cw};
+  }
+  mobPvRender(); scheduleSave();
+}
+
+function mobPvTouchEnd(){ mobPvDragging = null; }
+
+// ── Mobile UI Update ──
+function updateMobUI(){
+  if(!isMobile()) return;
+  const h = curHole();
+  const idx = S.currentHole;
+  const gross = getGross(h);
+
+  // Header
+  document.getElementById('mob-hole-lbl').textContent = T('holeHero', idx+1);
+  document.getElementById('mob-par-lbl').textContent = 'Par ' + h.par;
+  const tp = getShotToPin(h, h.shotIndex);
+  document.getElementById('mob-tp-val').textContent = tp !== null ? tp : '\u2014';
+  document.getElementById('mob-tp-unit').textContent = T('distUnit').charAt(0);
+
+  // Distance input
+  const distInp = document.getElementById('mob-dist-inp');
+  if(document.activeElement !== distInp){
+    distInp.value = tp !== null ? tp : '';
+  }
+
+  // Lie capsules
+  buildMobLieCapsules();
+
+  // Result bar
+  const strokesTxt = document.getElementById('mob-strokes-txt');
+  const resultTxt = document.getElementById('mob-result-txt');
+  if(h.delta !== null){
+    strokesTxt.textContent = 'Strokes: ' + gross;
+    resultTxt.textContent = deltaLabel(h.delta);
+    resultTxt.style.background = deltaColorHex(h.delta);
+  } else {
+    strokesTxt.textContent = 'Strokes: \u2014';
+    resultTxt.textContent = '\u2014';
+    resultTxt.style.background = 'var(--s2)';
+  }
+
+  // Result edit
+  document.getElementById('mob-result-gross').textContent = gross !== null ? gross : '\u2014';
+  buildMobResultQuick();
+
+  // Scorecard summary
+  buildMobScSummary();
+
+  // Hole nav
+  buildMobHoleNav();
+}
+
+function buildMobLieCapsules(){
+  const cont = document.getElementById('mob-lie-scroll');
+  if(!cont) return;
+  cont.innerHTML = '';
+  const h = curHole();
+  const curType = h.delta !== null ? (h.shots[h.shotIndex]?.type || '') : '';
+  const allTypes = [
+    ...ACTION_TYPES.map(t => ({type:t.type, label:T(t.labelKey)})),
+    ...MOB_LIE_TYPES,
+  ];
+  allTypes.forEach(({type, label}) => {
+    const btn = document.createElement('button');
+    btn.className = 'mob-lie-btn' + (curType === type ? ' active' : '');
+    btn.textContent = label;
+    btn.onclick = () => {
+      if(h.delta === null) mobAddStroke();
+      setShotType(type);
+      updateMobUI();
+    };
+    cont.appendChild(btn);
+  });
+}
+
+function buildMobResultQuick(){
+  const cont = document.getElementById('mob-result-quick');
+  if(!cont) return;
+  cont.innerHTML = '';
+  const h = curHole();
+  const quick = [
+    {d:-3,l:'Albatross'},{d:-2,l:'Eagle'},{d:-1,l:'Birdie'},
+    {d:0,l:'Par'},{d:1,l:'Bogey'},{d:2,l:'+2'},{d:3,l:'+3+'}
+  ];
+  quick.forEach(({d,l}) => {
+    const btn = document.createElement('button');
+    btn.className = 'mob-quick-btn' + (h.delta === d ? ' active' : '');
+    btn.textContent = l;
+    if(h.delta === d) btn.style.background = deltaColorHex(d);
+    btn.onclick = () => { setDelta(d); };
+    cont.appendChild(btn);
+  });
+}
+
+function buildMobScSummary(){
+  const cont = document.getElementById('mob-sc-row');
+  if(!cont) return;
+  cont.innerHTML = '';
+  const f9p = S.holes.slice(0,9).reduce((a,h)=>a+h.par,0);
+  const f9g = S.holes.slice(0,9).reduce((a,h)=>a+h.par+(h.delta??0),0);
+  const b9p = S.holes.slice(9,18).reduce((a,h)=>a+h.par,0);
+  const b9g = S.holes.slice(9,18).reduce((a,h)=>a+h.par+(h.delta??0),0);
+  [{lbl:'F9',par:f9p,val:f9g},{lbl:'B9',par:b9p,val:b9g},{lbl:'TOT',par:f9p+b9p,val:f9g+b9g}].forEach(({lbl,par,val}) => {
+    const span = document.createElement('span');
+    span.className = 'mob-sc-item';
+    span.innerHTML = `<span class="sc-lbl">${lbl}</span><span class="sc-val">${val}</span><span class="sc-par">/${par}</span>`;
+    cont.appendChild(span);
+  });
+}
+
+function buildMobHoleNav(){
+  const cont = document.getElementById('mob-nav-scroll');
+  if(!cont) return;
+  cont.innerHTML = '';
+  for(let i=0; i<18; i++){
+    const h = S.holes[i];
+    const btn = document.createElement('div');
+    btn.className = 'mob-hole-btn ' + deltaCardClass(h.delta);
+    if(i === S.currentHole) btn.classList.add('active');
+    let sc = '\u2014';
+    if(h.delta !== null) sc = S.displayMode === 'topar' ? fmtDeltaDisplay(h.delta) : String(h.par + h.delta);
+    btn.innerHTML = `<div class="mh-num">${i+1}</div><div class="mh-par">P${h.par}</div><div class="mh-sc">${sc}</div>`;
+    btn.onclick = () => {
+      S.currentHole = i;
+      S.scorecardSummary = null;
+      const ch = S.holes[i];
+      if(ch.delta !== null){
+        const g = getGross(ch);
+        if(g && g > 0) ch.shotIndex = g - 1;
+      } else { ch.shotIndex = 0; }
+      render(); scheduleSave();
+    };
+    cont.appendChild(btn);
+  }
+  setTimeout(() => {
+    const active = cont.querySelector('.active');
+    if(active) active.scrollIntoView({inline:'center', behavior:'smooth'});
+  }, 50);
+}
+
+// ── Mobile Swipe Gesture ──
+function initMobSwipe(){
+  const body = document.getElementById('mob-body');
+  if(!body) return;
+  let startX = 0, startY = 0, startTime = 0;
+  body.addEventListener('touchstart', e => {
+    if(e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    startTime = Date.now();
+  }, {passive:true});
+  body.addEventListener('touchend', e => {
+    if(e.changedTouches.length !== 1) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    const dt = Date.now() - startTime;
+    if(dt > 400 || Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 60) return;
+    if(dx < 0) gotoNextHole();
+    else gotoPrevHole();
+  }, {passive:true});
+}
+
+// ── Mobile Distance Input Wiring ──
+function wireMobDist(){
+  const inp = document.getElementById('mob-dist-inp');
+  if(!inp) return;
+  inp.oninput = e => {
+    const val = e.target.value === '' ? null : parseInt(e.target.value);
+    setShotToPin(isNaN(val) ? null : val);
+    updateMobUI();
+  };
+  // scrollIntoView when keyboard opens
+  inp.addEventListener('focus', () => {
+    setTimeout(() => {
+      const sec = document.getElementById('mob-dist-sec');
+      if(sec) sec.scrollIntoView({behavior:'smooth', block:'center'});
+    }, 300);
+  });
+  // Long-press support for distance +/- buttons
+  const adjMap = {
+    'mob-adj-m5': -5, 'mob-adj-m1': -1,
+    'mob-adj-p1': 1,  'mob-adj-p5': 5
+  };
+  Object.entries(adjMap).forEach(([id, delta]) => {
+    const btn = document.getElementById(id);
+    if(!btn) return;
+    let timer = null, interval = null;
+    const fire = () => mobAdjDist(delta);
+    const stopRepeat = () => { clearTimeout(timer); clearInterval(interval); timer=null; interval=null; };
+    btn.addEventListener('click', fire);
+    btn.addEventListener('touchstart', e => {
+      e.preventDefault();
+      fire();
+      timer = setTimeout(() => { interval = setInterval(fire, 80); }, 400);
+    }, {passive:false});
+    btn.addEventListener('touchend', stopRepeat);
+    btn.addEventListener('touchcancel', stopRepeat);
+  });
+}
+
+// ── Mobile Keyboard Handling ──
+function initMobKeyboard(){
+  if(!window.visualViewport) return;
+  window.visualViewport.addEventListener('resize', () => {
+    const vvh = window.visualViewport.height;
+    const wh = window.innerHeight;
+    const bar = document.getElementById('mob-bar');
+    if(!bar) return;
+    if(vvh < wh * 0.75){
+      bar.style.display = 'none';
+    } else {
+      bar.style.display = '';
+    }
+  });
+}
+
+// ============================================================
+// NARROW SCREEN HELPERS (≤430px — iPhone adaptation)
+// ============================================================
+const LANG_ORDER = ['en','zh','ja','ko','es'];
+const LANG_SHORT = {en:'EN',zh:'中',ja:'JP',ko:'KR',es:'ES'};
+
+function cycleNarrowLang(){
+  const cur = LANG_ORDER.indexOf(LANG);
+  const next = LANG_ORDER[(cur + 1) % LANG_ORDER.length];
+  setLang(next);
+  updateNarrowLangBtn();
+}
+
+function updateNarrowLangBtn(){
+  const btn = document.getElementById('btn-lang-narrow');
+  if(btn) btn.textContent = LANG_SHORT[LANG] || 'EN';
+}
+
+function toggleNarrowOpts(){
+  const ptool = document.getElementById('ptool');
+  if(!ptool) return;
+  ptool.classList.toggle('narrow-hidden');
+  const btn = document.getElementById('btn-opts-toggle');
+  if(btn) btn.textContent = ptool.classList.contains('narrow-hidden') ? 'Options…' : 'Options ▴';
+}
+
+function narrowAutoScrollNav(){
+  if(window.innerWidth > 430) return;
+  const cont = document.getElementById('nav-rows-col');
+  if(!cont) return;
+  const active = cont.querySelector('.hcard.active');
+  if(active) setTimeout(() => active.scrollIntoView({inline:'center', behavior:'smooth'}), 60);
+}
+
+// ============================================================
 // INIT
 // ============================================================
 function init(){
@@ -1902,6 +2349,19 @@ function init(){
   applyBg();
   if(typeof buildPlayerArea==='function') buildPlayerArea();
   render();
+
+  // Mobile init
+  initMobSwipe();
+  wireMobDist();
+  initMobKeyboard();
+  updateMobUI();
+
+  // Narrow screen init
+  updateNarrowLangBtn();
+  if(window.innerWidth <= 430){
+    const ptool = document.getElementById('ptool');
+    if(ptool) ptool.classList.add('narrow-hidden');
+  }
 }
 
 window.addEventListener('DOMContentLoaded',init);
