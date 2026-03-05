@@ -117,6 +117,9 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v8.0.1 — 2026-03-05
+- Fix: iPhone narrow-screen breakpoint widened from 430px to 480px (iPhone 16 Pro Max viewport is 440px, was not triggering)
+
 ### v8.0.0 — 2026-03-05
 - iPhone narrow-screen adaptation (≤430px): responsive compression of existing desktop layout
 - Breakpoint changed from 768px to 430px — no longer triggers on tablets/iPads

@@ -349,12 +349,9 @@ input[type=range]{accent-color:var(--mg);flex:1}
 /* ── Options toggle area ── */
 #narrow-opts-bar{display:none}
 
-/* ── RESPONSIVE — NARROW SCREEN (iPhone ≤430px) ── */
-@media(max-width:430px){
+/* ── RESPONSIVE — NARROW SCREEN (iPhone ≤480px) ── */
+@media(max-width:480px){
   html,body{overflow:auto!important;height:auto!important;min-height:100svh}
-
-  /* DEBUG: red header border confirms media query is active */
-  #hdr{border-bottom:3px solid red!important}
 
   /* ── Header: one compact line ── */
   #hdr{padding:4px 8px;gap:4px}

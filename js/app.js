@@ -1879,7 +1879,7 @@ const MOB_LIE_TYPES = [
   {type:'DROP',label:'Drop'},{type:'GREEN',label:'Green'},
 ];
 
-function isMobile(){ return window.innerWidth <= 430; }
+function isMobile(){ return window.innerWidth <= 480; }
 
 function mobAddStroke(){
   const h = curHole();
@@ -2281,7 +2281,7 @@ function initMobKeyboard(){
 }
 
 // ============================================================
-// NARROW SCREEN HELPERS (≤430px — iPhone adaptation)
+// NARROW SCREEN HELPERS (≤480px — iPhone adaptation)
 // ============================================================
 const LANG_ORDER = ['en','zh','ja','ko','es'];
 const LANG_SHORT = {en:'EN',zh:'中',ja:'JP',ko:'KR',es:'ES'};
@@ -2307,7 +2307,7 @@ function toggleNarrowOpts(){
 }
 
 function narrowAutoScrollNav(){
-  if(window.innerWidth > 430) return;
+  if(window.innerWidth > 480) return;
   const cont = document.getElementById('nav-rows-col');
   if(!cont) return;
   const active = cont.querySelector('.hcard.active');
@@ -2358,7 +2358,7 @@ function init(){
 
   // Narrow screen init
   updateNarrowLangBtn();
-  if(window.innerWidth <= 430){
+  if(window.innerWidth <= 480){
     const ptool = document.getElementById('ptool');
     if(ptool) ptool.classList.add('narrow-hidden');
   }
