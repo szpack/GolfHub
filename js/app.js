@@ -407,6 +407,16 @@ function currentPlayerDisplayName(){
   return S.playerName||'PLAYER';
 }
 
+function resetAllShotIndex(hi){
+  S.holes[hi].shotIndex=0;
+  if(S.byPlayer){
+    for(const pid in S.byPlayer){
+      const ph=S.byPlayer[pid].holes;
+      if(ph&&ph[hi]) ph[hi].shotIndex=0;
+    }
+  }
+}
+
 function saveCurrentPlayerData(){
   const pid=effectivePlayerId();
   ensurePlayerData(pid);
@@ -660,26 +670,14 @@ function gotoNextHole(){
   const next=(S.currentHole+1)%18;
   S.currentHole=next;
   S.scorecardSummary=null;
-  const ch=S.holes[next];
-  if(ch.delta!==null){
-    const g=getGross(ch);
-    if(g&&g>0) ch.shotIndex=g-1; else ch.shotIndex=0;
-  } else {
-    ch.shotIndex=0;
-  }
+  resetAllShotIndex(next);
   render(); scheduleSave();
 }
 function gotoPrevHole(){
   const prev=(S.currentHole+17)%18;
   S.currentHole=prev;
   S.scorecardSummary=null;
-  const ch=S.holes[prev];
-  if(ch.delta!==null){
-    const g=getGross(ch);
-    if(g&&g>0) ch.shotIndex=g-1; else ch.shotIndex=0;
-  } else {
-    ch.shotIndex=0;
-  }
+  resetAllShotIndex(prev);
   render(); scheduleSave();
 }
 
@@ -1879,7 +1877,7 @@ const MOB_LIE_TYPES = [
   {type:'DROP',label:'Drop'},{type:'GREEN',label:'Green'},
 ];
 
-function isMobile(){ return window.innerWidth <= 480; }
+function isMobile(){ return screen.width <= 480 || document.documentElement.classList.contains('narrow'); }
 
 function mobAddStroke(){
   const h = curHole();
@@ -2189,11 +2187,7 @@ function buildMobHoleNav(){
     btn.onclick = () => {
       S.currentHole = i;
       S.scorecardSummary = null;
-      const ch = S.holes[i];
-      if(ch.delta !== null){
-        const g = getGross(ch);
-        if(g && g > 0) ch.shotIndex = g - 1;
-      } else { ch.shotIndex = 0; }
+      resetAllShotIndex(i);
       render(); scheduleSave();
     };
     cont.appendChild(btn);
@@ -2307,7 +2301,7 @@ function toggleNarrowOpts(){
 }
 
 function narrowAutoScrollNav(){
-  if(window.innerWidth > 480) return;
+  if(!isMobile()) return;
   const cont = document.getElementById('nav-rows-col');
   if(!cont) return;
   const active = cont.querySelector('.hcard.active');
@@ -2358,7 +2352,7 @@ function init(){
 
   // Narrow screen init
   updateNarrowLangBtn();
-  if(window.innerWidth <= 480){
+  if(isMobile()){
     const ptool = document.getElementById('ptool');
     if(ptool) ptool.classList.add('narrow-hidden');
   }

@@ -117,6 +117,15 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v8.0.3 — 2026-03-05
+- 切换球洞时（键盘左右键、点击导航卡片）所有玩家的当前杆均重置为第一杆
+- 统一四处切换入口（gotoNextHole / gotoPrevHole / buildHoleNav / mob导航）
+
+### v8.0.2 — 2026-03-05
+- Fix: replace CSS `@media(max-width)` with JS `screen.width` detection + `html.narrow` class
+- Immune to Safari "Request Desktop Website" mode which inflates viewport to ~980px
+- Detection script runs in `<head>` before first paint, no layout flash
+
 ### v8.0.1 — 2026-03-05
 - Fix: iPhone narrow-screen breakpoint widened from 430px to 480px (iPhone 16 Pro Max viewport is 440px, was not triggering)
 

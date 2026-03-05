@@ -3,15 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Golf Overlay Tool v8.0.1</title>
-<link rel="stylesheet" href="./css/overlay.css?v=8.0.1">
+<title>Golf Overlay Tool v8.0.3</title>
+<link rel="stylesheet" href="./css/overlay.css?v=8.0.3">
+<script>
+/* Narrow-screen detection: use screen.width (physical device pixels)
+   — immune to Safari "Request Desktop Website" which inflates viewport to ~980px */
+(function(){
+  var w = screen.width;
+  if(w > 0 && w <= 480) document.documentElement.classList.add('narrow');
+})();
+</script>
 </head>
 <body>
 
 <!-- HEADER -->
 <div id="hdr">
   <div class="logo" id="logo-text">⛳ GOLF <span>OVERLAY</span></div>
-  <span class="logo-meta">v8.0.1<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
+  <span class="logo-meta">v8.0.3<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
   <span style="flex:1"></span>
   <div id="lang-toggle">
     <button class="lang-btn active" data-lang="en" onclick="setLang('en')">🇺🇸 EN</button>
@@ -410,8 +418,8 @@
 <div id="mini-toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="./js/scoreboard.js?v=8.0.1"></script>
-<script src="./js/ui.js?v=8.0.1"></script>
-<script src="./js/app.js?v=8.0.1"></script>
+<script src="./js/scoreboard.js?v=8.0.3"></script>
+<script src="./js/ui.js?v=8.0.3"></script>
+<script src="./js/app.js?v=8.0.3"></script>
 </body>
 </html>

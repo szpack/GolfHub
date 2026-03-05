@@ -177,15 +177,7 @@ function buildHoleNav(){
         }
         S.currentHole=i;
         S.scorecardSummary=null; // return to hole view
-        const ch=S.holes[i];
-        if(ch.delta!==null){
-          const g=getGross(ch);
-          if(g&&g>0) ch.shotIndex=g-1;
-          // Also reset last-shot manual type for the target hole
-          if(g&&g>0) delete ch.manualTypes[g-1];
-        } else {
-          ch.shotIndex=0;
-        }
+        resetAllShotIndex(i);
         render(); scheduleSave();
       };
       cont.appendChild(card);

@@ -349,150 +349,148 @@ input[type=range]{accent-color:var(--mg);flex:1}
 /* ── Options toggle area ── */
 #narrow-opts-bar{display:none}
 
-/* ── RESPONSIVE — NARROW SCREEN (iPhone ≤480px) ── */
-@media(max-width:480px){
-  html,body{overflow:auto!important;height:auto!important;min-height:100svh}
+/* ── RESPONSIVE — NARROW SCREEN (JS adds html.narrow via screen.width detection) ── */
 
-  /* ── Header: one compact line ── */
-  #hdr{padding:4px 8px;gap:4px}
-  .logo{font-size:13px;letter-spacing:0}
-  .logo-meta{display:none}
-  #lang-toggle{display:none}
-  .narrow-only{display:inline-flex!important}
-  #btn-lang-narrow{
-    height:28px;padding:0 7px;border-radius:5px;
-    border:1px solid var(--bd);background:var(--s2);
-    color:var(--t2);font:600 11px/1 inherit;cursor:pointer;flex-shrink:0;
-    align-items:center;
-  }
-  #btn-skin-narrow{
-    height:28px;padding:0 7px;border-radius:5px;
-    border:1px solid var(--bd);background:var(--s2);
-    color:var(--t2);font:600 11px/1 inherit;cursor:pointer;flex-shrink:0;
-    align-items:center;
-  }
-  #btn-settings{height:28px;padding:0 8px}
-  #btn-settings #settings-lbl{display:none}
-  #btn-new{height:28px;padding:0 10px;font-size:11px}
-
-  /* ── Main: single column, scrollable ── */
-  #main{display:flex!important;flex-direction:column;grid-template-columns:none;overflow-y:auto!important;overflow-x:hidden;-webkit-overflow-scrolling:touch;flex:none}
-
-  /* ── Left panel ── */
-  #left{border-right:none;overflow:visible}
-  #preview{flex:none;height:200px;min-height:140px}
-
-  /* ── Options toggle bar (between preview and nav) ── */
-  #narrow-opts-bar{
-    display:flex;align-items:center;gap:6px;
-    padding:4px 8px;background:var(--panel-bg);border-top:1px solid var(--panel-border);
-    flex-shrink:0;
-  }
-  #narrow-opts-bar button{
-    height:26px;padding:0 10px;border-radius:5px;
-    border:1px solid var(--panel-border);background:var(--s2);
-    color:var(--text-muted);font:600 10px/1 inherit;cursor:pointer;
-  }
-  #narrow-opts-bar button:active{background:var(--bd)}
-  #btn-preview-narrow{border-color:var(--accent-green)!important;color:var(--accent-green)!important}
-
-  /* ── Ptool (collapsible on narrow) ── */
-  #ptool{flex-wrap:wrap;gap:4px;padding:4px 8px}
-  #ptool.narrow-hidden{display:none!important}
-  #inp-course{max-width:100px;height:30px;font-size:12px}
-  .ptool-toggle-lbl{font-size:10px!important}
-  .ptool-toggle-lbl input[type=checkbox]{width:12px;height:12px}
-  .ratio-btn{height:28px;padding:0 8px;font-size:10px;min-width:36px}
-  #score-range-sec{gap:3px!important}
-  .sc-radio-lbl{font-size:9px!important}
-
-  /* ── Nav: hide theme picker + mode buttons; single-row horizontal scroll ── */
-  #theme-picker{display:none!important}
-  #nav{padding:4px 0;flex-direction:column;gap:2px;overflow:visible}
-  #nav-outer{flex-direction:column;gap:2px;overflow:visible;position:relative}
-  #nav-rows-col{flex-direction:row;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 12px}
-  #nav-rows-col::-webkit-scrollbar{display:none}
-  .nav-row{flex-shrink:0;gap:2px}
-  /* Fade hints on nav scroll */
-  #nav-outer::before,#nav-outer::after{
-    content:'';position:absolute;top:0;bottom:0;width:14px;z-index:2;pointer-events:none;
-  }
-  #nav-outer::before{left:0;background:linear-gradient(to right,var(--panel-bg),transparent)}
-  #nav-outer::after{right:0;background:linear-gradient(to left,var(--panel-bg),transparent)}
-  #nav-footer{flex-direction:row;gap:4px;padding:2px 12px}
-  .mode-wrap{flex-direction:row;gap:3px}
-  .mode-btn{min-height:20px;padding:2px 8px;font-size:9px}
-  .hcard{width:40px;height:42px}
-  .hcard .hn{font-size:7px}
-  .hcard .hp{font-size:7px}
-  .hcard .hs{font-size:11px}
-  .stat-card{width:42px;height:42px;margin-left:2px}
-  .stat-card .sc-lbl{font-size:8px}
-  .stat-card .sc-val{font-size:8px}
-  .stat-card .sc-num{font-size:11px}
-
-  /* ── Right panel ── */
-  #right{overflow-y:visible}
-  #hole-banner{padding:8px 10px 6px}
-  #hole-num-big{font-size:24px}
-  #par-hero-lbl{font-size:12px;padding-bottom:6px}
-  #hole-hero .par-btn{width:34px;height:34px;font-size:18px}
-  .sec{padding:8px 10px 10px}
-  .stitle{font-size:11px;margin-bottom:6px}
-
-  /* ── Player section compact ── */
-  #player-section{padding:6px 10px 8px}
-  #player-mgr-row{margin-bottom:3px}
-  .player-btn{height:28px;font-size:11px;width:calc(25% - 3px)}
-
-  /* ── Shot section compact ── */
-  .shot-nav{margin-bottom:3px}
-  .shot-nav-btn{width:50px;height:22px;font-size:7px}
-  .snum-btn{height:22px;font-size:10px}
-  .dist-row{gap:4px;margin-top:4px}
-  .dist-row input[type=number]{width:58px;height:28px;font-size:12px}
-  /* Type buttons: horizontal scroll */
-  .type-row{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
-  .type-row::-webkit-scrollbar{display:none}
-  .tbtn{flex-shrink:0;font-size:7px;padding:3px 5px;min-height:22px}
-
-  /* ── Final Score compact: single row with Gross + To Par ── */
-  #delta-section{padding:8px 10px 10px}
-  #delta-display{gap:4px}
-  #delta-val-btn{min-height:48px;font-size:42px;border-radius:8px}
-  .delta-adj-btn{width:40px;min-height:48px;font-size:18px;border-radius:6px}
-  #btn-next-hole-inline{min-height:48px;padding:0 10px;min-width:50px;font-size:10px;border-radius:6px}
-  #btn-next-hole-inline .nhi-icon{font-size:16px}
-
-  /* ── Export section compact ── */
-  #export-section{padding:8px 10px 10px}
-  .exp-group{margin-bottom:10px}
-  .exp-btn-row{gap:5px}
-  .exp-indiv-btn,.exp-batch-btn{height:30px;font-size:10px}
-  .res-group-inline{margin-bottom:5px}
-  .res-btn{height:28px;font-size:10px}
-  .opacity-row{margin-bottom:5px;font-size:11px}
-
-  /* ── Settings drawer full-width ── */
-  #settings-drawer{width:100%}
-  /* ── Picker position fix ── */
-  #picker-popover{width:220px}
-  /* ── Player manager full-width ── */
-  #player-modal{width:calc(100% - 24px);max-height:80vh}
-
-  /* ── Mobile preview page styles ── */
-  #mob-pv-hdr{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top));
-    background:var(--s1);border-bottom:1px solid var(--bd);flex-shrink:0;
-  }
-  #mob-pv-hdr button{
-    height:36px;padding:0 12px;border-radius:6px;
-    border:1px solid var(--bd);background:var(--s2);
-    color:var(--t1);font:600 13px/1 inherit;cursor:pointer;
-  }
-  #mob-pv-hdr span{font:700 15px/1 inherit;color:var(--t1)}
-  #mob-pv-area{flex:1;position:relative;overflow:hidden;background:#111}
-  #mob-pv-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
-  #mob-pv-cv{position:absolute;z-index:3;cursor:move}
+/* ── Header: one compact line ── */
+html.narrow,html.narrow body{overflow:auto!important;height:auto!important;min-height:100svh}
+html.narrow #hdr{padding:4px 8px;gap:4px}
+html.narrow .logo{font-size:13px;letter-spacing:0}
+html.narrow .logo-meta{display:none}
+html.narrow #lang-toggle{display:none}
+html.narrow .narrow-only{display:inline-flex!important}
+html.narrow #btn-lang-narrow{
+  height:28px;padding:0 7px;border-radius:5px;
+  border:1px solid var(--bd);background:var(--s2);
+  color:var(--t2);font:600 11px/1 inherit;cursor:pointer;flex-shrink:0;
+  align-items:center;
 }
+html.narrow #btn-skin-narrow{
+  height:28px;padding:0 7px;border-radius:5px;
+  border:1px solid var(--bd);background:var(--s2);
+  color:var(--t2);font:600 11px/1 inherit;cursor:pointer;flex-shrink:0;
+  align-items:center;
+}
+html.narrow #btn-settings{height:28px;padding:0 8px}
+html.narrow #btn-settings #settings-lbl{display:none}
+html.narrow #btn-new{height:28px;padding:0 10px;font-size:11px}
+
+/* ── Main: single column, scrollable ── */
+html.narrow #main{display:flex!important;flex-direction:column;grid-template-columns:none;overflow-y:auto!important;overflow-x:hidden;-webkit-overflow-scrolling:touch;flex:none}
+
+/* ── Left panel ── */
+html.narrow #left{border-right:none;overflow:visible}
+html.narrow #preview{flex:none;height:200px;min-height:140px}
+
+/* ── Options toggle bar (between preview and nav) ── */
+html.narrow #narrow-opts-bar{
+  display:flex;align-items:center;gap:6px;
+  padding:4px 8px;background:var(--panel-bg);border-top:1px solid var(--panel-border);
+  flex-shrink:0;
+}
+html.narrow #narrow-opts-bar button{
+  height:26px;padding:0 10px;border-radius:5px;
+  border:1px solid var(--panel-border);background:var(--s2);
+  color:var(--text-muted);font:600 10px/1 inherit;cursor:pointer;
+}
+html.narrow #narrow-opts-bar button:active{background:var(--bd)}
+html.narrow #btn-preview-narrow{border-color:var(--accent-green)!important;color:var(--accent-green)!important}
+
+/* ── Ptool (collapsible on narrow) ── */
+html.narrow #ptool{flex-wrap:wrap;gap:4px;padding:4px 8px}
+html.narrow #ptool.narrow-hidden{display:none!important}
+html.narrow #inp-course{max-width:100px;height:30px;font-size:12px}
+html.narrow .ptool-toggle-lbl{font-size:10px!important}
+html.narrow .ptool-toggle-lbl input[type=checkbox]{width:12px;height:12px}
+html.narrow .ratio-btn{height:28px;padding:0 8px;font-size:10px;min-width:36px}
+html.narrow #score-range-sec{gap:3px!important}
+html.narrow .sc-radio-lbl{font-size:9px!important}
+
+/* ── Nav: hide theme picker + mode buttons; single-row horizontal scroll ── */
+html.narrow #theme-picker{display:none!important}
+html.narrow #nav{padding:4px 0;flex-direction:column;gap:2px;overflow:visible}
+html.narrow #nav-outer{flex-direction:column;gap:2px;overflow:visible;position:relative}
+html.narrow #nav-rows-col{flex-direction:row;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 12px}
+html.narrow #nav-rows-col::-webkit-scrollbar{display:none}
+html.narrow .nav-row{flex-shrink:0;gap:2px}
+/* Fade hints on nav scroll */
+html.narrow #nav-outer::before,html.narrow #nav-outer::after{
+  content:'';position:absolute;top:0;bottom:0;width:14px;z-index:2;pointer-events:none;
+}
+html.narrow #nav-outer::before{left:0;background:linear-gradient(to right,var(--panel-bg),transparent)}
+html.narrow #nav-outer::after{right:0;background:linear-gradient(to left,var(--panel-bg),transparent)}
+html.narrow #nav-footer{flex-direction:row;gap:4px;padding:2px 12px}
+html.narrow .mode-wrap{flex-direction:row;gap:3px}
+html.narrow .mode-btn{min-height:20px;padding:2px 8px;font-size:9px}
+html.narrow .hcard{width:40px;height:42px}
+html.narrow .hcard .hn{font-size:7px}
+html.narrow .hcard .hp{font-size:7px}
+html.narrow .hcard .hs{font-size:11px}
+html.narrow .stat-card{width:42px;height:42px;margin-left:2px}
+html.narrow .stat-card .sc-lbl{font-size:8px}
+html.narrow .stat-card .sc-val{font-size:8px}
+html.narrow .stat-card .sc-num{font-size:11px}
+
+/* ── Right panel ── */
+html.narrow #right{overflow-y:visible}
+html.narrow #hole-banner{padding:8px 10px 6px}
+html.narrow #hole-num-big{font-size:24px}
+html.narrow #par-hero-lbl{font-size:12px;padding-bottom:6px}
+html.narrow #hole-hero .par-btn{width:34px;height:34px;font-size:18px}
+html.narrow .sec{padding:8px 10px 10px}
+html.narrow .stitle{font-size:11px;margin-bottom:6px}
+
+/* ── Player section compact ── */
+html.narrow #player-section{padding:6px 10px 8px}
+html.narrow #player-mgr-row{margin-bottom:3px}
+html.narrow .player-btn{height:28px;font-size:11px;width:calc(25% - 3px)}
+
+/* ── Shot section compact ── */
+html.narrow .shot-nav{margin-bottom:3px}
+html.narrow .shot-nav-btn{width:50px;height:22px;font-size:7px}
+html.narrow .snum-btn{height:22px;font-size:10px}
+html.narrow .dist-row{gap:4px;margin-top:4px}
+html.narrow .dist-row input[type=number]{width:58px;height:28px;font-size:12px}
+/* Type buttons: horizontal scroll */
+html.narrow .type-row{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+html.narrow .type-row::-webkit-scrollbar{display:none}
+html.narrow .tbtn{flex-shrink:0;font-size:7px;padding:3px 5px;min-height:22px}
+
+/* ── Final Score compact ── */
+html.narrow #delta-section{padding:8px 10px 10px}
+html.narrow #delta-display{gap:4px}
+html.narrow #delta-val-btn{min-height:48px;font-size:42px;border-radius:8px}
+html.narrow .delta-adj-btn{width:40px;min-height:48px;font-size:18px;border-radius:6px}
+html.narrow #btn-next-hole-inline{min-height:48px;padding:0 10px;min-width:50px;font-size:10px;border-radius:6px}
+html.narrow #btn-next-hole-inline .nhi-icon{font-size:16px}
+
+/* ── Export section compact ── */
+html.narrow #export-section{padding:8px 10px 10px}
+html.narrow .exp-group{margin-bottom:10px}
+html.narrow .exp-btn-row{gap:5px}
+html.narrow .exp-indiv-btn,html.narrow .exp-batch-btn{height:30px;font-size:10px}
+html.narrow .res-group-inline{margin-bottom:5px}
+html.narrow .res-btn{height:28px;font-size:10px}
+html.narrow .opacity-row{margin-bottom:5px;font-size:11px}
+
+/* ── Settings drawer full-width ── */
+html.narrow #settings-drawer{width:100%}
+/* ── Picker position fix ── */
+html.narrow #picker-popover{width:220px}
+/* ── Player manager full-width ── */
+html.narrow #player-modal{width:calc(100% - 24px);max-height:80vh}
+
+/* ── Mobile preview page styles ── */
+html.narrow #mob-pv-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top));
+  background:var(--s1);border-bottom:1px solid var(--bd);flex-shrink:0;
+}
+html.narrow #mob-pv-hdr button{
+  height:36px;padding:0 12px;border-radius:6px;
+  border:1px solid var(--bd);background:var(--s2);
+  color:var(--t1);font:600 13px/1 inherit;cursor:pointer;
+}
+html.narrow #mob-pv-hdr span{font:700 15px/1 inherit;color:var(--t1)}
+html.narrow #mob-pv-area{flex:1;position:relative;overflow:hidden;background:#111}
+html.narrow #mob-pv-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
+html.narrow #mob-pv-cv{position:absolute;z-index:3;cursor:move}
