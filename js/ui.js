@@ -30,6 +30,44 @@ function autoType(h,idx){
 }
 
 // ── PLAYER AREA ──
+function getPlayerHoleDelta(pid,holeIdx){
+  if(pid===effectivePlayerId()) return S.holes[holeIdx].delta;
+  const pd=S.byPlayer[pid];
+  if(pd&&pd.holes&&pd.holes[holeIdx]) return pd.holes[holeIdx].delta;
+  return null;
+}
+function setPlayerHoleDelta(pid,holeIdx,delta){
+  if(pid===effectivePlayerId()){
+    S.holes[holeIdx].delta=delta;
+    S.holes[holeIdx].manualTypes={};
+    reconcileShots(S.holes[holeIdx]);
+    const g=getGross(S.holes[holeIdx]);
+    if(g&&g>0) S.holes[holeIdx].shotIndex=g-1;
+  } else {
+    const pd=S.byPlayer[pid];
+    if(pd&&pd.holes&&pd.holes[holeIdx]){
+      pd.holes[holeIdx].delta=delta;
+      pd.holes[holeIdx].manualTypes={};
+      const par=S.holes[holeIdx].par;
+      const g=delta!==null?par+delta:null;
+      if(g&&g>0){
+        pd.holes[holeIdx].shots=Array.from({length:g},(_,i)=>pd.holes[holeIdx].shots?.[i]||{type:null});
+        pd.holes[holeIdx].shotIndex=g-1;
+      } else {
+        pd.holes[holeIdx].shots=[];
+        pd.holes[holeIdx].shotIndex=0;
+      }
+    }
+  }
+  render(); scheduleSave();
+}
+function adjPlayerDelta(pid,inc){
+  const hi=S.currentHole;
+  let d=getPlayerHoleDelta(pid,hi);
+  if(d===null) d=0; else d=d+inc;
+  if(d<-2) d=-2; if(d>12) d=12;
+  setPlayerHoleDelta(pid,hi,d);
+}
 function buildPlayerArea(){
   const grid=document.getElementById('player-btn-grid');
   if(!grid) return;
@@ -43,14 +81,49 @@ function buildPlayerArea(){
     grid.appendChild(btn);
     return;
   }
-  players.forEach((p,i)=>{
-    const btn=document.createElement('button');
-    btn.className='player-btn'+(p.id===S.currentPlayerId?' active':'');
-    const num=i<9?`${i+1} `:'';
-    btn.textContent=num+p.name;
-    btn.title=p.name;
-    btn.onclick=()=>switchToPlayer(p.id);
-    grid.appendChild(btn);
+  const hi=S.currentHole;
+  players.forEach(p=>{
+    const row=document.createElement('div');
+    row.className='player-row';
+    const isCur=p.id===S.currentPlayerId;
+    // name
+    const nm=document.createElement('div');
+    nm.className='pr-name'+(isCur?' active':'');
+    nm.textContent=p.name;
+    nm.title=p.name;
+    nm.onclick=()=>switchToPlayer(p.id);
+    row.appendChild(nm);
+    // minus
+    const mBtn=document.createElement('button');
+    mBtn.className='pr-adj';
+    mBtn.textContent='−';
+    mBtn.onclick=()=>adjPlayerDelta(p.id,-1);
+    row.appendChild(mBtn);
+    // delta badge
+    const d=getPlayerHoleDelta(p.id,hi);
+    const dBtn=document.createElement('button');
+    dBtn.className='pr-delta-btn';
+    if(d!==null){
+      const bg=deltaColorHex(d);
+      dBtn.style.background=bg; dBtn.style.color='#fff';
+      dBtn.textContent=fmtDeltaDisplay(d);
+    } else {
+      dBtn.style.background='transparent'; dBtn.style.color='var(--text-muted)';
+      dBtn.style.border='1px dashed var(--panel-border)';
+      dBtn.textContent='—';
+    }
+    dBtn.onclick=(e)=>{
+      if(!isCur) switchToPlayer(p.id);
+      openPicker(e);
+    };
+    row.appendChild(dBtn);
+    // plus
+    const pBtn=document.createElement('button');
+    pBtn.className='pr-adj';
+    pBtn.textContent='+';
+    pBtn.onclick=()=>adjPlayerDelta(p.id,+1);
+    row.appendChild(pBtn);
+    grid.appendChild(row);
   });
 }
 
@@ -209,25 +282,7 @@ function makeStatCard(lbl,par,gross,isActive){
 }
 
 // ── DELTA BUTTON ──
-function buildDeltaBtn(){
-  const h=curHole();
-  const btn=document.getElementById('delta-val-btn');
-  const mainTxt=document.getElementById('delta-main-txt');
-  const hintTxt=document.getElementById('delta-hint-txt');
-
-  if(h.delta===null){
-    btn.className='unfilled'; btn.style.cssText='';
-    mainTxt.textContent='—';
-    hintTxt.style.display='none';
-  } else {
-    const d=h.delta;
-    const bg=deltaColorHex(d);
-    btn.className='';
-    btn.style.background=bg; btn.style.color='#fff'; btn.style.borderColor=bg;
-    mainTxt.textContent=fmtDeltaDisplay(d);
-    hintTxt.style.display='none';
-  }
-}
+function buildDeltaBtn(){ buildPlayerArea(); }
 
 // ── TYPE BUTTONS ──
 const SHOT_KEYS={TEE:'T',APPR:'A',LAYUP:'L',CHIP:'C',PUTT:'U',PROV:'V',FOR_BIRDIE:'B',FOR_PAR:'P',FOR_BOGEY:'O'};
@@ -272,14 +327,17 @@ function buildShotButtons(){
   const cont=document.getElementById('shot-btns');
   if(!cont) return;
   cont.innerHTML='';
-  const h=curHole(), gross=getGross(h);
+  const h=curHole(), gross=getGross(h), si=h.shotIndex;
   if(!gross||h.delta===null){ return; }
-  for(let i=0;i<gross;i++){
+  const count=Math.max(gross, h.par);
+  for(let i=0;i<count;i++){
     const btn=document.createElement('button');
-    const isCur=i===h.shotIndex, isPast=i<h.shotIndex;
-    btn.className='snum-btn '+(isCur?'cur':isPast?'past':'future');
+    const isUnused=i>=gross;
+    const isCur=!isUnused&&i===si, isPast=!isUnused&&i<si;
+    btn.className='snum-btn '+(isUnused?'unused':isCur?'cur':isPast?'past':'future');
     btn.textContent=String(i+1);
-    btn.onclick=(()=>{ const idx=i; return ()=>{ curHole().shotIndex=idx; render(); scheduleSave(); }; })();
+    if(!isUnused) btn.onclick=(()=>{ const idx=i; return ()=>{ curHole().shotIndex=idx; render(); scheduleSave(); focusToPin(); }; })();
+    else btn.disabled=true;
     cont.appendChild(btn);
   }
 }
@@ -342,11 +400,15 @@ function openPicker(e){
   buildPickerItems();
   const pop=document.getElementById('picker-popover');
   const bd=document.getElementById('picker-backdrop');
-  const btn=document.getElementById('delta-val-btn');
-  const rect=btn.getBoundingClientRect();
   const pW=200, pH=280;
-  let left=rect.left;
-  let top=rect.bottom+5;
+  let left, top;
+  if(e&&typeof e.clientX==='number'){
+    left=e.clientX-pW/2;
+    top=e.clientY+8;
+  } else {
+    left=window.innerWidth/2-pW/2;
+    top=window.innerHeight/2-pH/2;
+  }
   if(left+pW>window.innerWidth) left=window.innerWidth-pW-8;
   if(top+pH>window.innerHeight) top=rect.top-pH-5;
   if(top<0) top=8;
@@ -520,7 +582,7 @@ function wireAll(){
       else if(kl==='b') setShotType('FOR_BIRDIE');
       else if(kl==='p') setShotType('FOR_PAR');
       else if(kl==='o') setShotType('FOR_BOGEY');
-      else{const n=parseInt(k);if(n>=1&&n<=9){const p=(S.players||[])[n-1];if(p)switchToPlayer(p.id);}}
+      // (number keys 1-9 removed)
     }
   });
   window.addEventListener('resize',()=>render());

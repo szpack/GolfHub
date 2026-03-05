@@ -84,7 +84,7 @@ function getSCWidth(scale){
 function getSCHeight(scale){
   // v5.2.1: scoreRowH +12%
   const hdrH=43, parRowH=48, scoreRowH=93, rowGap=7;
-  const nameRowH=S.showPlayerName?40:0;
+  const nameRowH=40;
   return(nameRowH+hdrH+parRowH+scoreRowH+rowGap*2)*scale;
 }
 
@@ -101,7 +101,7 @@ function drawScorecardOverlay(ctx,X,Y,scale){
   const COL=54, LAB=Math.round(COL*1.3), TOT=Math.round(COL*1.5);
   const colW=COL*scale, labelW=LAB*scale, totalW=TOT*scale;
   const subW=totalW; // OUT and IN same width as TOT
-  const nameRowH=S.showPlayerName?40*scale:0;
+  const nameRowH=40*scale;
   const hdrH=43*scale, parRowH=48*scale, scoreRowH=93*scale, rowGap=7*scale;
   const W=labelW+(count*COL+(is18?TOT*2:0))*scale+totalW;
   const H=nameRowH+hdrH+parRowH+scoreRowH+rowGap*2;
@@ -138,23 +138,30 @@ function drawScorecardOverlay(ctx,X,Y,scale){
     ctx.restore();
   }
 
-  // ── Player name badge row ──
+  // ── Name row: player badge (optional) + course name (always) ──
+  const _padX=8*scale;
   if(S.showPlayerName){
     const pn=(typeof currentPlayerDisplayName==='function'?currentPlayerDisplayName():(S.playerName||'PLAYER')).toUpperCase();
     ctx.textAlign='left'; ctx.textBaseline='middle';
     ctx.font=`${th.nameBadgeWeight} ${Math.round(th.nameBadgeSize*scale)}px ${SF}`;
     let dn=pn;
-    while(ctx.measureText(dn).width>W*0.92&&dn.length>1) dn=dn.slice(0,-1);
+    while(ctx.measureText(dn).width>W*0.6&&dn.length>1) dn=dn.slice(0,-1);
     if(dn!==pn) dn=dn.slice(0,-1)+'…';
-    const padX=8*scale;
-    const nameX=X+padX*1.5;
+    const nameX=X+_padX*1.5;
     const nameW=ctx.measureText(dn).width;
     const badgeH=nameRowH*0.78;
-    rrect(ctx,nameX-padX,Y+(nameRowH-badgeH)/2,nameW+padX*2,badgeH,th.nameBadgeRadius*scale);
+    rrect(ctx,nameX-_padX,Y+(nameRowH-badgeH)/2,nameW+_padX*2,badgeH,th.nameBadgeRadius*scale);
     ctx.fillStyle=th.nameBadgeBg; ctx.fill();
     ctx.fillStyle=th.nameBadgeTextColor;
     ctx.fillText(dn,nameX,Y+nameRowH/2);
   }
+  // Course name — always right aligned, gray
+  const _courseTxt=(S.courseName||'szpack@qq.com').toUpperCase();
+  const _courseFontSz=Math.round(th.nameBadgeSize*scale*0.7);
+  ctx.font=`400 ${_courseFontSz}px ${SF}`;
+  ctx.textAlign='right'; ctx.textBaseline='middle';
+  ctx.fillStyle='rgba(0,0,0,0.3)';
+  ctx.fillText(_courseTxt,X+W-_padX,Y+nameRowH/2);
 
   // ── HOLE header row ──
   const hdrY=Y+nameRowH;

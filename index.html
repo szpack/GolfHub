@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Golf Overlay Tool v8.0.3</title>
-<link rel="stylesheet" href="./css/overlay.css?v=8.0.3">
+<title>Golf Overlay Tool v9.2.0</title>
+<link rel="stylesheet" href="./css/overlay.css?v=9.2.0">
 <script>
 /* Narrow-screen detection: use screen.width (physical device pixels)
    — immune to Safari "Request Desktop Website" which inflates viewport to ~980px */
@@ -19,16 +19,18 @@
 <!-- HEADER -->
 <div id="hdr">
   <div class="logo" id="logo-text">⛳ GOLF <span>OVERLAY</span></div>
-  <span class="logo-meta">v8.0.3<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
+  <span class="logo-meta">v9.1.1<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
   <span style="flex:1"></span>
-  <div id="lang-toggle">
-    <button class="lang-btn active" data-lang="en" onclick="setLang('en')">🇺🇸 EN</button>
-    <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">🇨🇳 中文</button>
-    <button class="lang-btn" data-lang="ja" onclick="setLang('ja')">🇯🇵 日本語</button>
-    <button class="lang-btn" data-lang="ko" onclick="setLang('ko')">🇰🇷 한국어</button>
-    <button class="lang-btn" data-lang="es" onclick="setLang('es')">🇪🇸 ES</button>
+  <div id="lang-wrap">
+    <button id="btn-lang" onclick="toggleLangMenu()">🇺🇸 EN</button>
+    <div id="lang-menu">
+      <button class="lang-opt" data-lang="en" onclick="setLang('en')">🇺🇸 EN</button>
+      <button class="lang-opt" data-lang="zh" onclick="setLang('zh')">🇨🇳 中文</button>
+      <button class="lang-opt" data-lang="ja" onclick="setLang('ja')">🇯🇵 日本語</button>
+      <button class="lang-opt" data-lang="ko" onclick="setLang('ko')">🇰🇷 한국어</button>
+      <button class="lang-opt" data-lang="es" onclick="setLang('es')">🇪🇸 ES</button>
+    </div>
   </div>
-  <button id="btn-lang-narrow" class="narrow-only" onclick="cycleNarrowLang()">EN</button>
   <button id="btn-skin-narrow" class="narrow-only" onclick="openSettings()">Skin</button>
   <button id="btn-settings" onclick="openSettings()"><span>⚙️</span><span id="settings-lbl"> Settings</span></button>
   <button id="btn-new" onclick="openNewRound()">New…</button>
@@ -57,42 +59,8 @@
       <span style="flex:1"></span>
     </div>
 
-    <!-- Course + Overlay Toggles + Total + Ratio -->
-    <div id="ptool">
-      <div id="player-wrap">
-        <label for="inp-course" style="font-size:12px;color:var(--t2);flex-shrink:0">⛳</label>
-        <input type="text" id="inp-course" placeholder="COURSE" maxlength="24"
-               onfocus="this.select()">
-        <div class="ptool-toggles">
-          <label class="ptool-toggle-lbl"><input type="checkbox" id="chk-shot" checked> <span id="lbl-shot">Shot</span></label>
-          <label class="ptool-toggle-lbl"><input type="checkbox" id="chk-score"> <span id="lbl-score">SC</span></label>
-          <!-- Scorecard range — inline, same row as SC toggle -->
-          <div id="score-range-sec" style="display:none">
-            <label class="ptool-toggle-lbl sc-radio-lbl"><input type="radio" name="scr" value="front9"> <span id="lbl-front9">F9</span></label>
-            <label class="ptool-toggle-lbl sc-radio-lbl"><input type="radio" name="scr" value="back9"> <span id="lbl-back9">B9</span></label>
-            <label class="ptool-toggle-lbl sc-radio-lbl"><input type="radio" name="scr" value="18" checked> <span id="lbl-18h">18H</span></label>
-            <label class="ptool-toggle-lbl sc-radio-lbl" style="margin-left:4px"><input type="checkbox" id="chk-pname-nav"> <span id="lbl-pname-nav">Player</span></label>
-          </div>
-        </div>
-      </div>
-      <label class="ptool-toggle-lbl" style="flex-shrink:0"><input type="checkbox" id="chk-total"> <span id="total-lbl">Total</span></label>
-      <div id="ratio-group">
-        <button class="ratio-btn active" data-ratio="16:9" onclick="setRatio('16:9')">16:9</button>
-        <button class="ratio-btn" data-ratio="9:16" onclick="setRatio('9:16')">9:16</button>
-        <button class="ratio-btn" data-ratio="1:1" onclick="setRatio('1:1')">1:1</button>
-      </div>
-    </div>
-
     <!-- Scorecard Nav -->
     <div id="nav">
-      <!-- Overlay Style / Theme picker -->
-      <div id="theme-picker">
-        <div class="theme-sec-lbl">Overlay Style</div>
-        <button class="theme-btn active" data-theme="classic"        onclick="setTheme('classic')">Classic</button>
-        <button class="theme-btn"        data-theme="broadcast_gold" onclick="setTheme('broadcast_gold')">Broadcast Gold</button>
-        <button class="theme-btn"        data-theme="pgatour"        onclick="setTheme('pgatour')">PGA Tour</button>
-        <button class="theme-btn"        data-theme="livgolf"        onclick="setTheme('livgolf')">LIV Golf</button>
-      </div>
       <div id="nav-outer">
         <div id="nav-rows-col">
           <div class="nav-row" id="nav-row1"></div>
@@ -110,20 +78,24 @@
 
   <!-- RIGHT PANEL -->
   <div id="right">
-    <!-- Hole hero — with inline par buttons -->
+    <!-- Hole + Par (vertical) + Next -->
     <div id="hole-banner">
       <div id="hole-hero">
         <span id="hole-num-big">HOLE 1</span>
-        <span id="par-hero-lbl">Par</span>
-        <div class="par-grp">
-          <button class="par-btn" id="par3" onclick="setPar(3)">3</button>
-          <button class="par-btn" id="par4" onclick="setPar(4)">4</button>
-          <button class="par-btn" id="par5" onclick="setPar(5)">5</button>
+        <div class="hole-par-col">
+          <span id="par-hero-lbl">Par</span>
+          <div class="par-grp">
+            <button class="par-btn" id="par3" onclick="setPar(3)">3</button>
+            <button class="par-btn" id="par4" onclick="setPar(4)">4</button>
+            <button class="par-btn" id="par5" onclick="setPar(5)">5</button>
+          </div>
         </div>
+        <span style="flex:1"></span>
+        <button id="btn-next-hole-top" onclick="gotoNextHole()">NEXT →</button>
       </div>
     </div>
 
-    <!-- Player Area (right after hole banner) -->
+    <!-- Players with inline delta controls -->
     <div id="player-section" class="sec">
       <div id="player-mgr-row">
         <span id="player-section-lbl" class="stitle" style="margin-bottom:0;flex:1">Players</span>
@@ -134,7 +106,6 @@
 
     <!-- Shot (with To Pin inside) -->
     <div class="sec">
-      <div class="stitle" id="shot-section-title">Shot <span id="type-mode-badge" class="auto-badge">AUTO</span></div>
       <div class="dist-row" style="margin-top:0;margin-bottom:7px">
         <span id="dist-lbl" style="font-size:12px;color:var(--t2);white-space:nowrap;flex-shrink:0"></span>
         <input type="number" id="inp-dist" placeholder="" min="0" max="999" onfocus="this.select()" style="width:72px;height:34px;flex-shrink:0;font-size:14px">
@@ -149,67 +120,30 @@
       <div id="type-row2" class="type-row"></div>
     </div>
 
-    <!-- Final Score -->
-    <div id="delta-section">
-      <div class="stitle" id="delta-section-title">Final Score (Delta)</div>
-      <div id="delta-display">
-        <button class="delta-adj-btn" id="btn-delta-minus" onclick="adjDelta(-1)">−</button>
-        <button id="delta-val-btn" class="unfilled" onclick="openPicker(event)">
-          <span id="delta-main-txt">—</span>
-          <span class="score-hint" id="delta-hint-txt" style="display:none"></span>
-        </button>
-        <button class="delta-adj-btn" id="btn-delta-plus" onclick="adjDelta(+1)">+</button>
-        <button id="btn-next-hole-inline" onclick="gotoNextHole()">
-          <div class="nhi-icon">→</div>
-          <div id="nhi-lbl">NEXT</div>
-        </button>
-      </div>
-    </div>
-
-    <!-- Export Section v6.4.4 -->
+    <!-- Export Section -->
     <div id="export-section">
       <div class="stitle" id="export-title">Export</div>
-
-      <!-- Shots group -->
       <div class="exp-group">
-        <div class="exp-group-lbl">Shots</div>
         <div class="exp-btn-row" style="position:relative">
-          <button class="exp-indiv-btn" id="btn-export-shot" onclick="doExportShotOnly()">
-            🖼 <span id="lbl-exp-shot">Shot PNG</span>
+          <button class="exp-minor-btn" id="btn-export-shot" onclick="doExportShotOnly()">
+            <span id="lbl-exp-shot">Shot PNG</span>
           </button>
           <button class="exp-batch-btn" id="btn-export-hole-seq" onclick="doExportHoleSequence()">
-            📦 <span id="lbl-exp-hole-seq">Hole Shots ZIP</span>
+            📦 <span id="lbl-exp-hole-seq">All Players ZIP</span>
           </button>
           <div id="exp-status"></div>
         </div>
       </div>
-
-      <!-- Scorecard group -->
       <div class="exp-group">
-        <div class="exp-group-lbl">Scorecard</div>
         <div class="exp-btn-row">
-          <button class="exp-indiv-btn" id="btn-export-sc" onclick="doExportScorecardOnly()">
-            📊 <span id="lbl-exp-sc">Scorecard PNG</span>
+          <button class="exp-minor-btn" id="btn-export-sc" onclick="doExportScorecardOnly()">
+            <span id="lbl-exp-sc">Scorecard PNG</span>
           </button>
           <button class="exp-batch-btn" id="btn-export-sc-seq" onclick="doExportScorecardSequence()">
             📦 <span id="lbl-exp-sc-seq">18 SC ZIP</span>
           </button>
         </div>
       </div>
-
-      <!-- Resolution + Opacity -->
-      <div class="res-group-inline">
-        <button class="res-btn active" data-res="2160" onclick="setRes(this)">4K</button>
-        <button class="res-btn" data-res="1440" onclick="setRes(this)">1440P</button>
-        <button class="res-btn" data-res="1080" onclick="setRes(this)">1080P</button>
-      </div>
-      <div class="opacity-row">
-        <label id="lbl-opa">Opacity</label>
-        <input type="range" id="overlay-opacity" min="0" max="100" value="100">
-        <span id="overlay-opacity-val">100%</span>
-      </div>
-
-      <!-- Progress bar -->
       <div id="exp-progress-wrap" style="display:none">
         <div id="exp-progress-bar-bg"><div id="exp-progress-bar"></div></div>
         <div id="exp-progress-txt"></div>
@@ -352,6 +286,45 @@
     <button id="sd-close" onclick="closeSettings()">×</button>
   </div>
   <div id="sd-body">
+    <!-- UI Appearance -->
+    <div class="sd-sec" id="sd-appearance-sec">
+      <div class="sd-sec-title" id="sd-appearance-title">Appearance</div>
+      <div id="ui-theme-group" style="display:flex;gap:4px">
+        <button class="ratio-btn active" data-ui-theme="dark" onclick="setUITheme('dark')">Dark</button>
+        <button class="ratio-btn" data-ui-theme="light" onclick="setUITheme('light')">Light</button>
+        <button class="ratio-btn" data-ui-theme="auto" onclick="setUITheme('auto')">Auto</button>
+      </div>
+    </div>
+    <!-- Overlay Show/Hide -->
+    <div class="sd-sec" id="sd-overlay-sec">
+      <div class="sd-sec-title" id="sd-overlay-title">Overlay</div>
+      <div class="sd-row">
+        <label class="ptool-toggle-lbl"><input type="checkbox" id="chk-shot" checked> <span id="lbl-shot">Shot Overlay</span></label>
+      </div>
+      <div class="sd-row">
+        <label class="ptool-toggle-lbl"><input type="checkbox" id="chk-score"> <span id="lbl-score">Scorecard</span></label>
+      </div>
+      <div id="score-range-sec" style="display:none;margin-left:8px">
+        <div class="sd-row" style="gap:8px;flex-wrap:wrap">
+          <label class="ptool-toggle-lbl sc-radio-lbl"><input type="radio" name="scr" value="front9"> <span id="lbl-front9">F9</span></label>
+          <label class="ptool-toggle-lbl sc-radio-lbl"><input type="radio" name="scr" value="back9"> <span id="lbl-back9">B9</span></label>
+          <label class="ptool-toggle-lbl sc-radio-lbl"><input type="radio" name="scr" value="18" checked> <span id="lbl-18h">18H</span></label>
+          <label class="ptool-toggle-lbl sc-radio-lbl" style="margin-left:4px"><input type="checkbox" id="chk-pname-nav"> <span id="lbl-pname-nav">Player</span></label>
+        </div>
+      </div>
+      <div class="sd-row">
+        <label class="ptool-toggle-lbl"><input type="checkbox" id="chk-total"> <span id="total-lbl">Total</span></label>
+      </div>
+    </div>
+    <!-- Aspect Ratio -->
+    <div class="sd-sec" id="sd-ratio-sec">
+      <div class="sd-sec-title" id="sd-ratio-title">Aspect Ratio</div>
+      <div id="ratio-group" style="display:flex;gap:4px">
+        <button class="ratio-btn active" data-ratio="16:9" onclick="setRatio('16:9')">16:9</button>
+        <button class="ratio-btn" data-ratio="9:16" onclick="setRatio('9:16')">9:16</button>
+        <button class="ratio-btn" data-ratio="1:1" onclick="setRatio('1:1')">1:1</button>
+      </div>
+    </div>
     <div class="sd-sec" id="sd-theme-sec">
       <div class="sd-sec-title">Overlay Style</div>
       <div id="sd-theme-btns" style="display:flex;flex-wrap:wrap;gap:4px">
@@ -380,6 +353,19 @@
         <input type="checkbox" id="chk-show-pname" style="accent-color:var(--mg)">
       </div>
     </div>
+    <div class="sd-sec" id="sd-export-sec">
+      <div class="sd-sec-title" id="sd-export-title">Export</div>
+      <div class="res-group-inline" style="margin-bottom:6px">
+        <button class="res-btn active" data-res="2160" onclick="setRes(this)">4K</button>
+        <button class="res-btn" data-res="1440" onclick="setRes(this)">1440P</button>
+        <button class="res-btn" data-res="1080" onclick="setRes(this)">1080P</button>
+      </div>
+      <div class="sd-row">
+        <label id="lbl-opa">Opacity</label>
+        <input type="range" id="overlay-opacity" min="0" max="100" value="100">
+        <span id="overlay-opacity-val">100%</span>
+      </div>
+    </div>
     <div class="sd-sec">
       <div class="sd-sec-title" id="sd-sz-title">Safe Zone</div>
       <div class="sd-row">
@@ -395,8 +381,13 @@
         </select>
       </div>
     </div>
-    <div class="sd-sec">
-      <div class="sd-sec-title" id="sd-par-title">Course Par</div>
+    <div class="sd-sec" id="sd-course-sec">
+      <div class="sd-sec-title" id="sd-course-title">Course</div>
+      <div class="sd-row">
+        <label for="inp-course" style="font-size:12px;color:var(--t2);flex-shrink:0">⛳</label>
+        <input type="text" id="inp-course" placeholder="COURSE" maxlength="24" onfocus="this.select()" style="flex:1;height:30px;font-size:13px;padding:0 8px;border-radius:5px;border:1px solid var(--bd);background:var(--s2);color:var(--t1)">
+      </div>
+      <div class="sd-sec-title" id="sd-par-title" style="margin-top:8px">Course Par</div>
       <button class="sd-btn" onclick="resetAllPars()">Reset All to Par 4</button>
     </div>
   </div>
@@ -418,8 +409,8 @@
 <div id="mini-toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="./js/scoreboard.js?v=8.0.3"></script>
-<script src="./js/ui.js?v=8.0.3"></script>
-<script src="./js/app.js?v=8.0.3"></script>
+<script src="./js/scoreboard.js?v=9.2.0"></script>
+<script src="./js/ui.js?v=9.2.0"></script>
+<script src="./js/app.js?v=9.2.0"></script>
 </body>
 </html>

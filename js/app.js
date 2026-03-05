@@ -41,7 +41,7 @@ const STRINGS = {
     nextHoleShort:'NEXT',
     parLbl:'Par',
     // canvas strings — ALL UPPERCASE
-    toeOff:'TEE SHOT', approach:'APPROACH', layup:'LAYUP', chip:'CHIP', putt:'PUTT',
+    toeOff:'TEE OFF', approach:'APPROACH', layup:'LAYUP', chip:'CHIP', putt:'PUTT',
     forBirdie:'FOR BIRDIE', forPar:'FOR PAR', forBogey:'FOR BOGEY',
     forDouble:'FOR DOUBLE', forTriple:'FOR TRIPLE+',
     // shot type button labels — abbreviated
@@ -274,12 +274,42 @@ function T(key,...args){
   return v??key;
 }
 
+const LANG_LABELS={en:'🇺🇸 EN',zh:'🇨🇳 中文',ja:'🇯🇵 日本語',ko:'🇰🇷 한국어',es:'🇪🇸 ES'};
+
+// ── UI Theme (dark/light/auto) ──
+function applyUITheme(mode){
+  const prefer=mode==='auto'?(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark'):mode;
+  document.documentElement.classList.toggle('light',prefer==='light');
+}
+function setUITheme(mode){
+  S.uiTheme=mode;
+  applyUITheme(mode);
+  document.querySelectorAll('[data-ui-theme]').forEach(b=>b.classList.toggle('active',b.dataset.uiTheme===mode));
+  scheduleSave();
+}
+window.matchMedia('(prefers-color-scheme:light)').addEventListener('change',()=>{
+  if(S.uiTheme==='auto') applyUITheme('auto');
+});
+
 function setLang(l){
   LANG=l; S.lang=l;
-  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===l));
+  const btn=document.getElementById('btn-lang');
+  if(btn) btn.textContent=LANG_LABELS[l]||l;
+  document.querySelectorAll('.lang-opt').forEach(b=>b.classList.toggle('active',b.dataset.lang===l));
+  const menu=document.getElementById('lang-menu');
+  if(menu) menu.classList.remove('open');
   applyLang(); render(); scheduleSave();
-  if(typeof updateNarrowLangBtn==='function') updateNarrowLangBtn();
 }
+
+function toggleLangMenu(){
+  const menu=document.getElementById('lang-menu');
+  if(menu) menu.classList.toggle('open');
+}
+document.addEventListener('click',e=>{
+  const wrap=document.getElementById('lang-wrap');
+  const menu=document.getElementById('lang-menu');
+  if(wrap&&menu&&!wrap.contains(e.target)) menu.classList.remove('open');
+});
 
 function applyLang(){
   const g=id=>document.getElementById(id);
@@ -290,8 +320,8 @@ function applyLang(){
   g('dist-lbl').textContent=T('distLabel')+':';
   g('dist-unit').textContent=T('distUnit');
   g('total-lbl').textContent=T('totalLabel');
-  g('delta-section-title').textContent=T('finalScore');
-  g('shot-section-title').innerHTML=T('shotSection')+' <span id="type-mode-badge" class="auto-badge">AUTO</span>';
+  const _dst=g('delta-section-title'); if(_dst) _dst.textContent=T('finalScore');
+  const _sst=g('shot-section-title'); if(_sst) _sst.textContent=T('shotSection');
   if(g('options-title')) g('options-title').textContent=T('optionsTitle');
   g('lbl-shot').textContent=T('shotOverlay');
   g('lbl-score').textContent=T('scorecardOverlay');
@@ -369,6 +399,7 @@ function defState(){
     // multi-player
     players:[], currentPlayerId:null, playerHistory:[], byPlayer:{},
     showPlayerName:false,
+    uiTheme:'dark',
     // x = 0.95 − SHOT_W/1920 = 0.695 (right edge at 5% safe zone), y = 0.05 (top safe zone)
     overlayPos:{
       '16:9':{x:0.695,y:0.05},
@@ -532,6 +563,7 @@ function loadSaved(){
     S.playerHistory=saved.playerHistory||[];
     S.byPlayer=saved.byPlayer||{};
     S.showPlayerName=!!saved.showPlayerName;
+    S.uiTheme=saved.uiTheme||'dark';
     // backward-compat: old saves had per-hole data in holes[], no byPlayer
     const pid=effectivePlayerId();
     if(!saved.byPlayer){
@@ -625,17 +657,21 @@ function clearHole(){
 
 function setMode(m){ S.displayMode=m; render(); scheduleSave(); }
 
+function focusToPin(){
+  const el=document.getElementById('inp-dist');
+  if(el){ el.focus(); el.select(); }
+}
 function prevShot(){
   const h=curHole(), g=getGross(h);
   if(h.delta===null||!g) return;
   h.shotIndex=h.shotIndex<=0?g-1:h.shotIndex-1;
-  render(); scheduleSave();
+  render(); scheduleSave(); focusToPin();
 }
 function nextShot(){
   const h=curHole(), g=getGross(h);
   if(h.delta===null||!g) return;
   h.shotIndex=h.shotIndex>=g-1?0:h.shotIndex+1;
-  render(); scheduleSave();
+  render(); scheduleSave(); focusToPin();
 }
 function setShotType(type){
   const h=curHole();
@@ -1418,7 +1454,28 @@ function onDragMove(e){
   }
   redrawOnly(); scheduleSave();
 }
-function onDragEnd(){ dragging=null; }
+function onDragEnd(e){
+  if(dragging==='scorecard'&&dragStart){
+    const pt=evPt(e);
+    const rect=cvEl.getBoundingClientRect();
+    const mx=(pt.x-rect.left)/rect.width*cvCssW;
+    const my=(pt.y-rect.top)/rect.height*cvCssH;
+    const moved=Math.abs(mx-dragStart.mx)+Math.abs(my-dragStart.my);
+    if(moved<4){
+      // Click (not drag) — check if on course name area (name row, right half)
+      const scale=cvCssW/1920;
+      const scX=getSCDrawX(scale);
+      const scY=S.scorecardPos[S.ratio].y*cvCssH;
+      const sw=getSCWidth(scale);
+      const nameRowH=40*scale;
+      if(mx>=scX+sw/2&&mx<=scX+sw&&my>=scY&&my<=scY+nameRowH){
+        const v=prompt('Course name:', S.courseName||'');
+        if(v!==null){ S.courseName=v; const inp=document.getElementById('inp-course'); if(inp) inp.value=v; redrawOnly(); scheduleSave(); }
+      }
+    }
+  }
+  dragging=null;
+}
 function onTouchStart(e){ if(e.touches.length===1) onDragStart(e); }
 function onTouchMove(e){ if(e.touches.length===1) onDragMove(e); }
 
@@ -1563,27 +1620,27 @@ function drawShotOverlay(ctx,X,Y,scale){
   }
 
   // ── ROW2: progress squares ──
+  // Show max(si+1, par): up to current shot, pad to par with outline if under par.
   const gross=getGross(h), si=h.shotIndex;
+  const sqCount=Math.max(si+1, h.par);
   const sqSz=24*scale, sqGap=5*scale;
-  const totalSqW=gross*(sqSz+sqGap)-sqGap;
+  const totalSqW=sqCount*(sqSz+sqGap)-sqGap;
   const sqStartX=X+W-rpad-totalSqW;
   const sqCY=Y+r1+r2/2;
 
-  for(let i=0;i<gross;i++){
+  for(let i=0;i<sqCount;i++){
     const bx=sqStartX+i*(sqSz+sqGap), by=sqCY-sqSz/2;
     const isCur=i===si, isPast=i<si;
+    rrect(ctx,bx,by,sqSz,sqSz,th.sqRadius*scale);
     if(isCur){
-      rrect(ctx,bx,by,sqSz,sqSz,th.sqRadius*scale);
       ctx.fillStyle=th.sqCurBg; ctx.fill();
       ctx.fillStyle=th.sqCurTextColor;
     } else if(isPast){
-      rrect(ctx,bx,by,sqSz,sqSz,th.sqRadius*scale);
       ctx.fillStyle=th.sqPastBg; ctx.fill();
       ctx.fillStyle=th.sqPastTextColor;
     } else {
-      rrect(ctx,bx,by,sqSz,sqSz,th.sqRadius*scale);
-      ctx.fillStyle=th.sqFutureBg; ctx.fill();
-      ctx.fillStyle=th.sqFutureTextColor;
+      ctx.fillStyle=th.sqPastBg; ctx.fill();
+      ctx.fillStyle=th.sqPastTextColor;
     }
     ctx.font=`${th.sqNumWeight} ${Math.round(th.sqNumSize*scale)}px ${SF}`;
     ctx.textAlign='center'; ctx.textBaseline='middle';
@@ -1771,58 +1828,87 @@ function doExportScorecardOnly(){
 
 // ── Batch: current hole shot sequence → ZIP ──
 async function doExportHoleSequence(){
-  const h=curHole();
-  if(h.delta===null){ miniToast('Set score first',true); return; }
-  const gross=getGross(h);
-  if(!gross||gross<=0){ miniToast('Invalid score',true); return; }
   if(typeof JSZip==='undefined'){ miniToast('JSZip not loaded',true); return; }
+  const players=S.players||[];
+  if(players.length===0){ miniToast('Add players first',true); return; }
+  // Collect players that have a score on this hole
+  const holeIdx=S.currentHole, holeNum=holeIdx+1;
+  const savedPid=S.currentPlayerId;
+  const exportPlayers=[];
+  for(const p of players){
+    const d=(p.id===effectivePlayerId())?S.holes[holeIdx].delta
+      :(S.byPlayer[p.id]?.holes?.[holeIdx]?.delta??null);
+    if(d!==null) exportPlayers.push(p);
+  }
+  if(exportPlayers.length===0){ miniToast('Set score first',true); return; }
 
   const{w,h:H}=expGetDims();
   const zip=new JSZip();
-  const holeNum=S.currentHole+1;
-  // save state
-  const savedIdx=h.shotIndex, savedMT=JSON.parse(JSON.stringify(h.manualTypes||{})), savedShots=JSON.parse(JSON.stringify(h.shots||[]));
+  let totalSteps=0;
+  exportPlayers.forEach(p=>{
+    const d=(p.id===effectivePlayerId())?S.holes[holeIdx].delta:(S.byPlayer[p.id].holes[holeIdx].delta);
+    totalSteps+=S.holes[holeIdx].par+d+1; // gross + final
+  });
+  let step=0;
 
   try{
-    // shot frames: indices 0..gross-1
-    for(let i=0;i<gross;i++){
-      h.shotIndex=i;
-      if(i===gross-1){
-        // last shot: show FOR_X mode
-        const ft=expGetForType(h.delta);
-        if(!h.shots[i]) h.shots[i]={type:null};
-        h.shots[i].type=ft; h.manualTypes[i]=true;
+    for(const p of exportPlayers){
+      // switch to this player
+      if(p.id!==effectivePlayerId()){
+        saveCurrentPlayerData();
+        S.currentPlayerId=p.id;
+        loadPlayerData(p.id);
       }
-      expShowProgress(`Shot ${i+1}/${gross+1}`,i/(gross+1));
-      const canvas=expMakeShotCanvas(w,H);
-      const st=(h.shots[i]?.type||'SHOT').replace(/ /g,'_').toUpperCase();
-      const fname=expShotFile(holeNum,i+1,st);
-      const blob=await expCanvasToBlob(canvas);
-      zip.file(fname,blob);
-      await expSleep(10);
+      const h=S.holes[holeIdx];
+      const gross=getGross(h);
+      if(!gross||gross<=0) continue;
+      const savedIdx=h.shotIndex, savedMT=JSON.parse(JSON.stringify(h.manualTypes||{})), savedShots=JSON.parse(JSON.stringify(h.shots||[]));
+      const pName=expTitleCase(expSanitize(p.name));
+
+      for(let i=0;i<gross;i++){
+        h.shotIndex=i;
+        if(i===gross-1){
+          const ft=expGetForType(h.delta);
+          if(!h.shots[i]) h.shots[i]={type:null};
+          h.shots[i].type=ft; h.manualTypes[i]=true;
+        }
+        step++;
+        expShowProgress(`${pName} S${i+1}`,step/totalSteps);
+        const canvas=expMakeShotCanvas(w,H);
+        const st=(h.shots[i]?.type||'SHOT').replace(/ /g,'_').toUpperCase();
+        zip.file(`${expCourse()}_${pName}_H${String(holeNum).padStart(2,'0')}_S${String(i+1).padStart(2,'0')}_${expShotType(st)}_${expResLabel()}.png`,await expCanvasToBlob(canvas));
+        await expSleep(10);
+      }
+      // FINAL frame
+      h.shotIndex=gross-1;
+      delete h.manualTypes[gross-1];
+      step++;
+      expShowProgress(`${pName} Final`,step/totalSteps);
+      const fcanvas=expMakeShotCanvas(w,H);
+      const resultStr=deltaLabel(h.delta).replace(/\s+/g,'_').toUpperCase();
+      zip.file(`${expCourse()}_${pName}_H${String(holeNum).padStart(2,'0')}_ZFinal_${resultStr}_${expResLabel()}.png`,await expCanvasToBlob(fcanvas));
+      // restore this player's state
+      h.shotIndex=savedIdx; h.manualTypes=savedMT; h.shots=JSON.parse(JSON.stringify(savedShots));
     }
-    // FINAL frame
-    h.shotIndex=gross-1;
-    delete h.manualTypes[gross-1]; // exit FOR mode → result mode
-    expShowProgress(`Final ${gross+1}/${gross+1}`,gross/(gross+1));
-    const fcanvas=expMakeShotCanvas(w,H);
-    const resultStr=deltaLabel(h.delta).replace(/\s+/g,'_').toUpperCase();
-    const ffname=expFinalFile(holeNum,resultStr);
-    const fblob=await expCanvasToBlob(fcanvas);
-    zip.file(ffname,fblob);
+    // restore original player
+    saveCurrentPlayerData();
+    S.currentPlayerId=savedPid;
+    loadPlayerData(effectivePlayerId());
 
     expShowProgress('Packaging ZIP…',0.97);
     const zblob=await zip.generateAsync({type:'blob'});
-    expDownloadBlob(zblob,`${expCourse()}_${expPlayer()}_H${String(holeNum).padStart(2,'0')}_shots.zip`);
+    expDownloadBlob(zblob,`${expCourse()}_H${String(holeNum).padStart(2,'0')}_AllPlayers.zip`);
     expShowProgress('Done ✓',1);
     setTimeout(expHideProgress,2500);
   } catch(err){
     miniToast('Export error: '+err.message,true);
     expHideProgress();
+    // restore original player
+    S.currentPlayerId=savedPid;
+    loadPlayerData(effectivePlayerId());
   } finally{
-    // restore
-    h.shotIndex=savedIdx; h.manualTypes=savedMT; h.shots=savedShots;
     redrawOnly();
+    if(typeof buildPlayerArea==='function') buildPlayerArea();
   }
 }
 
@@ -2277,20 +2363,6 @@ function initMobKeyboard(){
 // ============================================================
 // NARROW SCREEN HELPERS (≤480px — iPhone adaptation)
 // ============================================================
-const LANG_ORDER = ['en','zh','ja','ko','es'];
-const LANG_SHORT = {en:'EN',zh:'中',ja:'JP',ko:'KR',es:'ES'};
-
-function cycleNarrowLang(){
-  const cur = LANG_ORDER.indexOf(LANG);
-  const next = LANG_ORDER[(cur + 1) % LANG_ORDER.length];
-  setLang(next);
-  updateNarrowLangBtn();
-}
-
-function updateNarrowLangBtn(){
-  const btn = document.getElementById('btn-lang-narrow');
-  if(btn) btn.textContent = LANG_SHORT[LANG] || 'EN';
-}
 
 function toggleNarrowOpts(){
   const ptool = document.getElementById('ptool');
@@ -2337,9 +2409,13 @@ function init(){
   document.getElementById('sz-size').value=S.szSize||'10';
 
   LANG=S.lang||'en';
-  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===LANG));
+  document.querySelectorAll('.lang-opt').forEach(b=>b.classList.toggle('active',b.dataset.lang===LANG));
+  const _langBtn=document.getElementById('btn-lang');
+  if(_langBtn) _langBtn.textContent=LANG_LABELS[LANG]||LANG;
 
   applyLang();
+  applyUITheme(S.uiTheme);
+  document.querySelectorAll('[data-ui-theme]').forEach(b=>b.classList.toggle('active',b.dataset.uiTheme===S.uiTheme));
   applyBg();
   if(typeof buildPlayerArea==='function') buildPlayerArea();
   render();
@@ -2351,7 +2427,7 @@ function init(){
   updateMobUI();
 
   // Narrow screen init
-  updateNarrowLangBtn();
+  // lang button init handled above
   if(isMobile()){
     const ptool = document.getElementById('ptool');
     if(ptool) ptool.classList.add('narrow-hidden');
