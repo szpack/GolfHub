@@ -154,14 +154,6 @@ function drawScorecardOverlay(ctx,X,Y,scale){
     ctx.fillStyle=th.nameBadgeTextColor;
     ctx.fillText(dn,nameX,Y+nameRowH/2);
   }
-  // Course name — always right aligned, gray
-  const _courseTxt=(S.courseName||'szpack@qq.com').toUpperCase();
-  const _courseFontSz=Math.round(th.nameBadgeSize*scale*0.7);
-  ctx.font=`400 ${_courseFontSz}px ${SF}`;
-  ctx.textAlign='right'; ctx.textBaseline='middle';
-  ctx.fillStyle='rgba(0,0,0,0.3)';
-  ctx.fillText(_courseTxt,X+W-_padX,Y+nameRowH/2);
-
   // ── HOLE header row ──
   const hdrY=Y+nameRowH;
   ctx.fillStyle=th.hdrBg; ctx.fillRect(X,hdrY,W,hdrH);

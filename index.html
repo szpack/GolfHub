@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Golf Overlay Tool v9.7.0</title>
+<title>Golf Overlay Tool v10.4.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/overlay.css?v=9.7.0">
+<link rel="stylesheet" href="./css/overlay.css?v=10.4.1">
 <script>
 /* Narrow-screen detection: use screen.width (physical device pixels)
    — immune to Safari "Request Desktop Website" which inflates viewport to ~980px */
@@ -22,7 +22,7 @@
 <!-- HEADER -->
 <div id="hdr">
   <div class="logo" id="logo-text">⛳ GOLF <span>OVERLAY</span></div>
-  <span class="logo-meta">v9.7.0<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
+  <span class="logo-meta">v10.4.1<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
   <span style="flex:1"></span>
   <div id="lang-wrap">
     <button id="btn-lang" onclick="toggleLangMenu()">🇺🇸 EN</button>
@@ -70,73 +70,84 @@
 
   <!-- RIGHT PANEL -->
   <div id="right">
-    <!-- Hole + Par (vertical) + Next -->
-    <div id="hole-banner">
-      <div id="hole-hero">
-        <span id="hole-num-big"><span id="hole-lbl">HOLE</span><span id="hole-num">1</span></span>
-        <div class="hole-par-col">
-          <span id="par-hero-lbl">Par</span>
-          <div class="par-grp">
-            <button class="par-btn" id="par3" onclick="setPar(3)">3</button>
-            <button class="par-btn" id="par4" onclick="setPar(4)">4</button>
-            <button class="par-btn" id="par5" onclick="setPar(5)">5</button>
-          </div>
-        </div>
-        <button id="btn-next-hole-top" onclick="gotoNextHole()">NEXT</button>
+    <!-- 1. Course & Hole info -->
+    <div class="rp-sec" id="rp-course-sec">
+      <div class="rp-row">
+        <span class="rp-sec-label">Course</span>
+        <button class="rp-edit-btn" onclick="editCourseName()">EDIT</button>
+      </div>
+      <div class="rp-row">
+        <span id="rp-course-name" onclick="editCourseName()"></span>
+      </div>
+      <div id="rp-hole-row">
+        <span id="rp-hole-lbl">HOLE</span>
+        <span id="rp-hole-num">1</span>
+        <span id="rp-par-tap" onclick="cycleParFocus()">Par <span id="rp-par-val">4</span></span>
+        <span style="flex:1"></span>
+        <button class="rp-hn-btn" onclick="gotoPrevHole()">PREV</button>
+        <button class="rp-hn-btn rp-hn-next" onclick="gotoNextHole()">NEXT</button>
       </div>
     </div>
 
-    <!-- Players with inline delta controls -->
-    <div id="player-section" class="sec">
-      <div id="player-mgr-row">
-        <span id="player-section-lbl" class="stitle" style="margin-bottom:0;flex:1">Players</span>
-        <button id="btn-player-mgr" onclick="openPlayerManager()">Edit</button>
+    <!-- 2. Players -->
+    <div class="rp-sec" id="rp-players-sec">
+      <div class="rp-row">
+        <span class="rp-sec-label" id="rp-players-lbl">Players</span>
+        <button class="rp-edit-btn" id="btn-player-mgr" onclick="openPlayerManager()">EDIT</button>
       </div>
-      <hr style="border:none;border-top:1px solid var(--panel-border);margin:6px 0">
-      <div id="player-btn-grid"></div>
+      <div id="rp-player-btns"></div>
     </div>
 
-    <!-- Shot (with To Pin inside) -->
-    <div class="sec" id="shot-section">
-      <div class="stitle" id="every-shot-title">EVERY SHOT</div>
-      <div class="dist-row" style="margin-top:0;margin-bottom:10px">
-        <span id="dist-lbl" class="stitle" style="margin-bottom:0;flex-shrink:0"></span>
-        <input type="number" id="inp-dist" placeholder="" min="0" max="999" onfocus="this.select()" style="width:66px;height:28px;flex-shrink:0;font-size:12px">
-        <span class="dist-unit tbtn" id="dist-unit" style="cursor:default;padding:0;min-height:0">yds</span>
+    <!-- 3. Score & Shot -->
+    <div class="rp-sec" id="shot-section">
+      <div class="rp-row">
+        <span class="rp-sec-label">Score</span>
+        <button class="rp-more-btn" id="btn-score-more" onclick="openPicker(event)">…</button>
       </div>
-      <div class="shot-nav" style="margin-bottom:8px">
-        <button class="shot-nav-btn" id="btn-prev">◀</button>
+      <div id="rp-score-btns"></div>
+      <div class="rp-divider"></div>
+      <div class="rp-row">
+        <span class="rp-sec-label" id="rp-shot-lbl">Shot</span>
+        <span style="flex:1"></span>
+        <span class="rp-topin-lbl">To Pin</span>
+        <input type="number" id="inp-dist" placeholder="" min="0" max="999" onfocus="this.select()" class="rp-topin-input">
+        <span id="dist-unit" class="rp-dist-unit">yds</span>
+      </div>
+      <div id="rp-shot-progress">
         <div id="shot-btns"></div>
-        <button class="shot-nav-btn" id="btn-next">▶</button>
+        <span style="flex:1"></span>
+        <button class="rp-shot-nav rp-shot-nav-next" id="btn-next-shot" onclick="nextShot()">&gt;</button>
       </div>
-      <div id="type-row1" class="type-row" style="margin-bottom:4px"></div>
-      <div id="type-row2" class="type-row" style="margin-bottom:4px"></div>
+      <div id="type-row1" class="type-row"></div>
+      <div id="type-row2" class="type-row"></div>
       <div id="type-row3" class="type-row"></div>
     </div>
 
-    <!-- Export Section -->
-    <div id="export-section">
-      <div class="stitle" id="export-title">Export</div>
-      <div class="exp-group">
-        <div class="exp-btn-row" style="position:relative">
-          <button class="exp-minor-btn" id="btn-export-shot" onclick="doExportShotOnly()">
-            <span id="lbl-exp-shot">Shot PNG</span>
-          </button>
-          <button class="exp-batch-btn" id="btn-export-hole-seq" onclick="doExportHoleSequence()">
-            📦 <span id="lbl-exp-hole-seq">All Players ZIP</span>
-          </button>
-          <div id="exp-status"></div>
-        </div>
+    <!-- 4. Export -->
+    <div class="rp-sec" id="export-section">
+      <div class="rp-sec-label">Single</div>
+      <div class="exp-line" style="position:relative">
+        <button class="exp-minor-btn" id="btn-export-shot" onclick="doExportShotOnly()"><span id="lbl-exp-shot">Shot PNG</span></button>
+        <span class="exp-desc">Current shot overlay</span>
+        <div id="exp-status"></div>
       </div>
-      <div class="exp-group">
-        <div class="exp-btn-row">
-          <button class="exp-minor-btn" id="btn-export-sc" onclick="doExportScorecardOnly()">
-            <span id="lbl-exp-sc">Scorecard PNG</span>
-          </button>
-          <button class="exp-batch-btn" id="btn-export-sc-seq" onclick="doExportScorecardSequence()">
-            📦 <span id="lbl-exp-sc-seq">18 SC ZIP</span>
-          </button>
-        </div>
+      <div class="exp-line">
+        <button class="exp-minor-btn" id="btn-export-sc" onclick="doExportScorecardOnly()"><span id="lbl-exp-sc">Scorecard PNG</span></button>
+        <span class="exp-desc">Current scorecard overlay</span>
+      </div>
+      <div class="rp-sec-label" style="margin-top:8px">Batch</div>
+      <div class="exp-line">
+        <button class="exp-minor-btn" id="btn-export-hole-seq" onclick="doExportHoleSequence()"><span id="lbl-exp-hole-seq">Hole Shots ZIP</span></button>
+        <span class="exp-desc">All players on this hole</span>
+      </div>
+      <div class="exp-line">
+        <button class="exp-minor-btn" id="btn-export-sc-seq" onclick="doExportScorecardSequence()"><span id="lbl-exp-sc-seq">Scorecard ZIP</span></button>
+        <span class="exp-desc">18-hole scorecard sequence</span>
+      </div>
+      <div class="rp-sec-label" style="margin-top:8px">All</div>
+      <div class="exp-line">
+        <button class="exp-minor-btn" id="btn-export-all" onclick="doExportAll()"><span>Export All ZIP</span></button>
+        <span class="exp-desc">All players × all holes</span>
       </div>
       <div id="exp-progress-wrap" style="display:none">
         <div id="exp-progress-bar-bg"><div id="exp-progress-bar"></div></div>
@@ -227,6 +238,21 @@
   <div id="mob-pv-area">
     <img id="mob-pv-bg">
     <canvas id="mob-pv-cv"></canvas>
+  </div>
+</div>
+
+<!-- SCORE DRAWER (from scorecard grid click) -->
+<div id="score-drawer-bg" onclick="closeScoreDrawer()"></div>
+<div id="score-drawer">
+  <div id="score-drawer-hdr">
+    <h3 id="score-drawer-title">HOLE 1</h3>
+    <button id="score-drawer-close" onclick="closeScoreDrawer()">×</button>
+  </div>
+  <div id="score-drawer-body"></div>
+  <div id="score-drawer-footer">
+    <button class="sd-foot-btn sd-foot-clear" onclick="scoreDrawerClear()">清空</button>
+    <button class="sd-foot-btn sd-foot-cancel" onclick="closeScoreDrawer()">取消</button>
+    <button class="sd-foot-btn sd-foot-ok" onclick="scoreDrawerConfirm()">确定</button>
   </div>
 </div>
 
@@ -408,8 +434,8 @@
 <div id="mini-toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="./js/scoreboard.js?v=9.7.0"></script>
-<script src="./js/ui.js?v=9.7.0"></script>
-<script src="./js/app.js?v=9.7.0"></script>
+<script src="./js/scoreboard.js?v=10.4.1"></script>
+<script src="./js/ui.js?v=10.4.1"></script>
+<script src="./js/app.js?v=10.4.1"></script>
 </body>
 </html>

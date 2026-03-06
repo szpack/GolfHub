@@ -47,7 +47,7 @@ const STRINGS = {
     forDouble:'FOR DOUBLE', forTriple:'FOR TRIPLE+',
     // shot type button labels — abbreviated
     typeTee:'TEE OFF', typeAppr:'APPROACH', typeLayup:'LAYUP', typeChip:'CHIP', typePutt:'PUTT', typeProv:'PROVISIONAL',
-    typeFB:'FOR BIRDIE', typeFP:'FOR PAR', typeFBo:'FOR BOGEY',
+    typeFB:'FOR BIRDIE', typeFP:'FOR PAR', typeFBo:'FOR BOGEY', typePenalty:'PENALTY',
     provisional:'PROVISIONAL',
     pickerRows:d=>{
       if(d==='clear') return 'CLEAR';
@@ -98,7 +98,7 @@ const STRINGS = {
     forBirdie:'抓鸟推', forPar:'保帕推', forBogey:'保柏忌推',
     forDouble:'保双推', forTriple:'保三+推',
     typeTee:'开球', typeAppr:'攻果岭', typeLayup:'过渡', typeChip:'切杆', typePutt:'推杆', typeProv:'暂定球',
-    typeFB:'抓鸟推', typeFP:'保帕推', typeFBo:'保柏忌推',
+    typeFB:'抓鸟推', typeFP:'保帕推', typeFBo:'保柏忌推', typePenalty:'罚杆',
     provisional:'暂定球',
     pickerRows:d=>{
       if(d==='clear') return '清除';
@@ -149,7 +149,7 @@ const STRINGS = {
     forBirdie:'バーディーパット', forPar:'パーパット', forBogey:'ボギーパット',
     forDouble:'ダブルパット', forTriple:'トリプル+パット',
     typeTee:'TEE OFF', typeAppr:'APPROACH', typeLayup:'LAYUP', typeChip:'CHIP', typePutt:'PUTT', typeProv:'PROVISIONAL',
-    typeFB:'バーディー', typeFP:'パー', typeFBo:'ボギー',
+    typeFB:'バーディー', typeFP:'パー', typeFBo:'ボギー', typePenalty:'ペナルティ',
     provisional:'プロビジョナル',
     pickerRows:d=>{
       if(d==='clear') return 'クリア';
@@ -200,7 +200,7 @@ const STRINGS = {
     forBirdie:'버디 퍼트', forPar:'파 퍼트', forBogey:'보기 퍼트',
     forDouble:'더블 퍼트', forTriple:'트리플+ 퍼트',
     typeTee:'TEE OFF', typeAppr:'APPROACH', typeLayup:'LAYUP', typeChip:'CHIP', typePutt:'PUTT', typeProv:'PROVISIONAL',
-    typeFB:'버디', typeFP:'파', typeFBo:'보기',
+    typeFB:'버디', typeFP:'파', typeFBo:'보기', typePenalty:'페널티',
     provisional:'잠정구',
     pickerRows:d=>{
       if(d==='clear') return '지우기';
@@ -251,7 +251,7 @@ const STRINGS = {
     forBirdie:'P/ BIRDIE', forPar:'P/ PAR', forBogey:'P/ BOGEY',
     forDouble:'P/ DOBLE', forTriple:'P/ TRIPLE+',
     typeTee:'SALIDA', typeAppr:'APROX', typeLayup:'LAYUP', typeChip:'CHIP', typePutt:'PUTT', typeProv:'PROVISIONAL',
-    typeFB:'P/BIRDIE', typeFP:'P/PAR', typeFBo:'P/BOGEY',
+    typeFB:'P/BIRDIE', typeFP:'P/PAR', typeFBo:'P/BOGEY', typePenalty:'PENALTI',
     provisional:'PROVISIONAL',
     pickerRows:d=>{
       if(d==='clear') return 'BORRAR';
@@ -323,8 +323,8 @@ function applyLang(){
   g('hint-main').textContent=T('hintMain');
   g('hint-sub').textContent=T('hintSub');
   const _es=g('every-shot-title'); if(_es) _es.textContent=T('everyShot');
-  g('dist-lbl').textContent=T('distLabel')+':';
-  g('dist-unit').textContent=T('distUnit');
+  const _distLbl=g('dist-lbl'); if(_distLbl) _distLbl.textContent=T('distLabel')+':';
+  const _distUnit=g('dist-unit'); if(_distUnit) _distUnit.textContent=T('distUnit');
   g('total-lbl').textContent=T('totalLabel');
   const _dst=g('delta-section-title'); if(_dst) _dst.textContent=T('finalScore');
   const _sst=g('shot-section-title'); if(_sst) _sst.textContent=T('shotSection');
@@ -352,7 +352,7 @@ function applyLang(){
   g('nr-confirm').textContent=T('nrConfirm');
   g('picker-title').textContent=T('pickerTitle');
   g('picker-cancel').textContent=T('pickerCancel');
-  g('export-title').textContent=T('exportTitle');
+  const _expTitle=g('export-title'); if(_expTitle) _expTitle.textContent=T('exportTitle');
   const _expBtnTxt=g('export-btn-txt'); if(_expBtnTxt) _expBtnTxt.textContent=T('exportBtn');
   g('lbl-opa').textContent=T('opaLbl');
   g('settings-lbl').textContent=T('settingsLbl');
@@ -377,6 +377,7 @@ function applyLang(){
   const pSecLbl=g('player-section-lbl'); if(pSecLbl) pSecLbl.textContent=LANG==='zh'?'球员':LANG==='ja'?'プレーヤー':LANG==='ko'?'플레이어':'Players';
   const showPNLbl=g('sd-show-pname-lbl'); if(showPNLbl) showPNLbl.textContent=LANG==='zh'?'显示球员名字':'Show Player Name';
   if(typeof buildPlayerArea==='function') buildPlayerArea();
+  if(typeof buildFocusPlayerBtns==='function') buildFocusPlayerBtns();
   buildTypeButtons();
   buildDeltaBtn();
 }
@@ -403,7 +404,7 @@ function defState(){
     safeZone:false, szSize:'10', lang:'en', theme:'classic',
     userBg:null,
     // multi-player
-    players:[], currentPlayerId:null, playerHistory:[], byPlayer:{},
+    players:[], currentPlayerId:null, playerHistory:[], byPlayer:{}, recentPlayerIds:[], focusSlots:[],
     showPlayerName:false,
     uiTheme:'dark',
     // x = 0.95 − SHOT_W/1920 = 0.695 (right edge at 5% safe zone), y = 0.05 (top safe zone)
@@ -479,12 +480,20 @@ function loadPlayerData(pid){
   });
 }
 
+function trackRecentPlayer(pid){
+  if(!pid||pid===SESSION_ID) return;
+  if(!S.recentPlayerIds) S.recentPlayerIds=[];
+  S.recentPlayerIds=[pid,...S.recentPlayerIds.filter(id=>id!==pid)].slice(0,8);
+}
+
 function switchToPlayer(pid){
   if(pid===effectivePlayerId()) return;
   saveCurrentPlayerData();
   S.currentPlayerId=(pid===SESSION_ID)?null:pid;
   loadPlayerData(effectivePlayerId());
+  trackRecentPlayer(pid);
   if(typeof buildPlayerArea==='function') buildPlayerArea();
+  if(typeof buildFocusPlayerBtns==='function') buildFocusPlayerBtns();
   render(); scheduleSave();
 }
 
@@ -592,6 +601,25 @@ function loadSaved(){
     if(!S.courseName) S.courseName='';
     if(!S.theme) S.theme='classic';
   } catch(e){ console.warn('loadSaved error',e); }
+}
+
+// ============================================================
+// COURSE NAME (right panel)
+// ============================================================
+function updateCourseDisplay(){
+  const el=document.getElementById('rp-course-name');
+  if(!el) return;
+  el.textContent=S.courseName||'';
+}
+function editCourseName(){
+  const v=prompt(LANG==='zh'?'球场名称：':'Course name:', S.courseName||'');
+  if(v!==null){
+    S.courseName=v;
+    const inp=document.getElementById('inp-course');
+    if(inp) inp.value=v;
+    updateCourseDisplay();
+    redrawOnly(); scheduleSave();
+  }
 }
 
 // ============================================================
@@ -1482,14 +1510,7 @@ function onDragEnd(e){
     if(moved<4){
       // Click (not drag) — check if on course name area (name row, right half)
       const scale=cvCssW/1920;
-      const scX=getSCDrawX(scale);
-      const scY=S.scorecardPos[S.ratio].y*cvCssH;
-      const sw=getSCWidth(scale);
-      const nameRowH=40*scale;
-      if(mx>=scX+sw/2&&mx<=scX+sw&&my>=scY&&my<=scY+nameRowH){
-        const v=prompt('Course name:', S.courseName||'');
-        if(v!==null){ S.courseName=v; const inp=document.getElementById('inp-course'); if(inp) inp.value=v; redrawOnly(); scheduleSave(); }
-      }
+      // (course name editing moved to right panel)
     }
   }
   dragging=null;
@@ -1985,6 +2006,66 @@ async function doExportScorecardSequence(){
     S.currentHole=savedHole; S.scorecardSummary=savedSummary;
     redrawOnly();
   }
+}
+
+// ── EXPORT ALL (all players × all holes) ──
+async function doExportAll(){
+  if(typeof JSZip==='undefined'){ miniToast('JSZip not loaded',true); return; }
+  const zip=new JSZip();
+  const{w,h}=expGetDims();
+  const savedHole=S.currentHole, savedPid=S.currentPlayerId, savedSummary=S.scorecardSummary;
+  const players=(S.players&&S.players.length>0)?S.players:[{id:effectivePlayerId(),name:S.playerName||'Player'}];
+  const totalSteps=players.length*18+players.length*19;
+  let step=0;
+  try{
+    // Per player: hole sequence (shot overlays)
+    for(const p of players){
+      if(p.id!==effectivePlayerId()){ saveCurrentPlayerData(); S.currentPlayerId=(p.id===SESSION_ID)?null:p.id; loadPlayerData(effectivePlayerId()); }
+      for(let hi=0;hi<18;hi++){
+        S.currentHole=hi; S.scorecardSummary=null;
+        step++; expShowProgress(`${p.name} Shot H${hi+1}`,step/totalSteps);
+        redrawOnly();
+        const cv=expMakeShotCanvas(w,h);
+        const fn=`${expCourse()}_${expSanitize(p.name)}_H${hi+1}_Shot_${expModeLabel()}_${expResLabel()}.png`;
+        const blob=await expCanvasToBlob(cv);
+        zip.file(fn,blob);
+        await expSleep(10);
+      }
+      // Scorecard sequence
+      S.scorecardSummary=null;
+      for(let k=1;k<=18;k++){
+        S.currentHole=k;
+        step++; expShowProgress(`${p.name} SC ${k}/18`,step/totalSteps);
+        const scCv=expMakeSCCanvas(w,h);
+        const rangeStr=k<=1?'0':`1-${k-1}`;
+        const fn=expSCFile(k,rangeStr).replace(expPlayer(),expSanitize(p.name));
+        const blob=await expCanvasToBlob(scCv);
+        zip.file(fn,blob);
+        await expSleep(10);
+      }
+      // TOT
+      S.scorecardSummary='tot';
+      step++; expShowProgress(`${p.name} SC TOT`,step/totalSteps);
+      const totCv=expMakeSCCanvas(w,h);
+      const totFn=`${expCourse()}_${expSanitize(p.name)}_SC_TOT_1-18_${expModeLabel()}_${expResLabel()}.png`;
+      const totBlob=await expCanvasToBlob(totCv);
+      zip.file(totFn,totBlob);
+    }
+    // Restore
+    if(savedPid!==S.currentPlayerId){ saveCurrentPlayerData(); S.currentPlayerId=savedPid; loadPlayerData(effectivePlayerId()); }
+    S.currentHole=savedHole; S.scorecardSummary=savedSummary;
+    expShowProgress('Packaging ZIP…',0.99);
+    const zblob=await zip.generateAsync({type:'blob'});
+    expDownloadBlob(zblob,`${expCourse()}_ALL_export.zip`);
+    expShowProgress('Done ✓',1);
+    setTimeout(expHideProgress,2500);
+  } catch(err){
+    miniToast('Export error: '+err.message,true);
+    expHideProgress();
+    if(savedPid!==S.currentPlayerId){ saveCurrentPlayerData(); S.currentPlayerId=savedPid; loadPlayerData(effectivePlayerId()); }
+    S.currentHole=savedHole; S.scorecardSummary=savedSummary;
+  }
+  redrawOnly();
 }
 
 // ============================================================

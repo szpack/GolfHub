@@ -34,21 +34,19 @@ html.light{
   --text-primary:#1a1a1a; --text-muted:#6b7280;
 }
 html.light #preview{background:#e0e0e0}
-html.light #hole-banner{background:linear-gradient(135deg,#e8ede9 0%,#f0f2f0 100%)}
+/* (hole-banner removed — see rp-focus) */
 html.light .hc-empty{background:#e8ecf0;color:#9aa5b0;border:1px solid #d0d5da!important}
 html.light .stat-active{background:#e8f5e9!important}
 html.light #upload-hint .uh-box{background:rgba(255,255,255,.7)}
 html.light .snum-btn.cur{background:var(--mg);color:#fff;border-color:var(--mg)}
+html.light .tbtn.active{background:#1a2e1a;color:#fff;border-color:#1a2e1a}
 html.light #mini-toast{background:rgba(240,250,240,.95);color:#1a5e3b;border-color:#b0d8b0}
 html.light #mini-toast.err-toast{background:rgba(255,240,240,.95);color:#a00;border-color:#e0a0a0}
+html.light .logo{color:#6b5a10}
+html.light .logo span{color:#1a1a1a}
 html.light #btn-new{background:#c0392b;border-color:#a02e22;color:#fff}
 html.light .delta-adj-btn:active,html.light .shot-nav-btn:active,html.light .pr-adj:active{background:rgba(0,0,0,.06)}
-html.light #btn-next-hole-top:active{background:#388E3C}
-html.light #hole-num-big{color:#1a2e1a}
-html.light #hole-lbl{opacity:.45}
-html.light #par-hero-lbl{color:#8a7200}
-html.light #hole-hero .par-btn{color:#8a7200;border-color:rgba(138,114,0,.25)}
-html.light #hole-hero .par-btn.active{background:#1a2e1a;border-color:#1a2e1a;color:#fff}
+/* (rp-par-row par-btn removed — now using #rp-par-tap) */
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden}
@@ -116,42 +114,43 @@ select:focus,input:focus{border-color:#2ea043}
 /* ── PGA-style Scorecard Grid ── */
 #sc-grid{display:grid;grid-template-columns:80px repeat(9,1fr) 38px repeat(9,1fr) 38px 38px;gap:1px;background:var(--bd);min-width:720px;font-family:'Roboto',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif}
 .sg-cell{background:var(--panel-bg);display:flex;align-items:center;justify-content:center;padding:3px 1px;min-height:28px;font:500 11px/1 'Roboto',Arial,sans-serif;color:var(--text-muted);user-select:none;cursor:pointer;transition:background 100ms ease-out,box-shadow 100ms ease-out}
-.sg-cell:hover{background:var(--s2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
 .sg-cell:active{transform:scale(.96);transition:transform 60ms ease-out}
 /* Header row (HOLE numbers) */
 .sg-hdr{background:#1B5E3B;color:#fff;font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase}
-.sg-hdr:hover{background:#24704a}
+.sg-hdr:hover{background:rgba(255,215,0,.55);color:#1a2e1a}
 .sg-hdr.sg-active{background:#FFD700;color:#1a2e1a;font-weight:700}
 /* Label column (HOLE/PAR/player name) */
 .sg-label{justify-content:flex-start;padding-left:8px;font-weight:700;font-size:12px;cursor:default;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.04em}
-.sg-label:hover{background:var(--panel-bg)}
+/* sg-label no hover change */
 /* Subtotal columns (OUT/IN/TOT) */
 .sg-sub{font-weight:700;font-size:11px;color:var(--accent-gold);background:rgba(255,215,0,.06)}
-.sg-sub:hover{background:rgba(255,215,0,.14)}
+/* sg-sub no hover change */
 /* PAR row */
 .sg-par-label{color:var(--accent-gold);font-weight:700}
-.sg-par-val{color:rgba(255,255,255,.65);font-weight:500;font-size:11px}
-.sg-par-val:hover{background:#3a3a3a}
+.sg-par-val{color:rgba(255,255,255,.65);font-weight:bold;font-size:12px}
 html.light .sg-par-val{color:rgba(0,0,0,.55)}
-html.light .sg-par-val:hover{background:#d8d8d8}
 /* Player name in label */
 .sg-player{color:var(--text-muted);cursor:pointer!important;font-weight:500;font-size:11px;letter-spacing:.02em}
 .sg-player:hover{background:var(--s2)!important;color:var(--text-primary)}
-.sg-player-active{color:var(--text-primary);font-weight:700}
+.sg-player-active{background:#FFD700!important;color:#1a2e1a!important;font-weight:700}
 /* Score cells */
 .sg-score-cell{position:relative}
 /* Column active (current hole) */
 .sg-col-active{background:rgba(27,94,59,.12)}
-/* Column hover */
-.sg-col-hover{background:rgba(255,255,255,.06)}
-.sg-col-active.sg-col-hover{background:rgba(27,94,59,.20)}
+/* Single-cell hover — yellow tint (no column-wide hover) */
+.sg-score-cell:hover{background:rgba(255,215,0,.18)}
+/* Selected cell (current hole + current player) — same yellow as player name */
+.sg-cell-selected{background:#FFD700!important;color:#1a2e1a!important}
+.sg-cell-selected .sg-score{color:#1a2e1a}
+.sg-cell-selected:hover{background:#ffe44d!important}
 html.light .sg-col-active{background:rgba(27,94,59,.08)}
-html.light .sg-col-hover{background:rgba(0,0,0,.04)}
-html.light .sg-col-active.sg-col-hover{background:rgba(27,94,59,.14)}
-.sg-empty{color:var(--t3);cursor:default}
-.sg-empty:hover{background:var(--panel-bg);box-shadow:none}
+html.light .sg-score-cell:hover{background:rgba(255,215,0,.20)}
+html.light .sg-cell-selected{background:#FFD700!important;color:#1a2e1a!important}
+html.light .sg-cell-selected .sg-score{color:#1a2e1a}
+.sg-empty{color:var(--t3)}
+.sg-empty:hover{background:rgba(255,215,0,.10)}
 /* PGA score decorations — monochrome */
-.sg-score{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;font:700 10px/1 'Roboto',Arial,sans-serif;color:var(--text-primary)}
+.sg-score{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;font-family:'Roboto',Arial,sans-serif;font-size:12px;font-weight:bold;line-height:1;color:var(--text-primary)}
 .sg-eagle{border-radius:50%;border:1.5px solid var(--text-muted);outline:1.5px solid var(--text-muted);outline-offset:1.5px}
 .sg-birdie{border-radius:50%;border:1.5px solid var(--text-muted)}
 .sg-par-score{}
@@ -161,28 +160,91 @@ html.light .sg-col-active.sg-col-hover{background:rgba(27,94,59,.14)}
 .sg-triple::after{content:'';position:absolute;inset:-5px;border:1.5px solid var(--text-muted)}
 /* Light theme adjustments */
 html.light .sg-hdr{background:#1B5E3B;color:#fff}
-html.light .sg-hdr:hover{background:#24704a}
+html.light .sg-hdr:hover{background:rgba(255,215,0,.55);color:#1a2e1a}
 html.light .sg-hdr.sg-active{background:#FFD700;color:#1a2e1a}
-html.light .sg-cell:hover{box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
 
 /* ── RIGHT PANEL ── */
-#right{display:flex;flex-direction:column;overflow-y:auto;background:var(--panel-bg)}
+#right{display:flex;flex-direction:column;overflow-y:auto;background:var(--panel-bg);font-family:'Roboto',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif}
 #right::-webkit-scrollbar{width:4px}
 #right::-webkit-scrollbar-thumb{background:var(--bd)}
 
-/* hole hero — vertical par + next */
-#hole-banner{padding:14px 16px 12px;background:linear-gradient(135deg,#1e2820 0%,#1a1e1a 100%);border-bottom:1px solid var(--panel-border);flex-shrink:0}
-#hole-hero{display:flex;align-items:flex-end;gap:12px;margin-bottom:0}
-#hole-num-big{font-family:'SF Pro Display',-apple-system,Impact,'Arial Black',sans-serif;color:#fff;letter-spacing:.5px;text-align:center;min-width:56px;display:flex;flex-direction:column;align-items:center;line-height:1}
-#hole-lbl{font-size:22px;font-weight:300;opacity:.6;letter-spacing:.05em}
-#hole-num{font-size:36px;font-weight:700}
-.hole-par-col{display:flex;flex-direction:column;align-items:flex-start;gap:4px;flex:1}
-#par-hero-lbl{font:600 10px/1 inherit;color:var(--accent-gold);text-transform:uppercase;letter-spacing:.08em}
-#hole-hero .par-grp{gap:6px}
-#hole-hero .par-btn{width:38px;height:34px;font-size:18px!important;font-weight:700!important;color:#FFD700;background:transparent;border-color:rgba(255,215,0,.25)}
-#hole-hero .par-btn.active{background:#fff;border-color:#fff;color:#111}
-#btn-next-hole-top{height:34px;padding:0 16px;border-radius:8px;border:1px solid #43a047;background:#4CAF50;color:#fff;font:600 13px/1 inherit;cursor:pointer;white-space:nowrap;letter-spacing:.03em;transition:background 80ms ease-out}
-#btn-next-hole-top:active{background:#388E3C}
+/* (rp-bar-edit replaced by rp-edit-btn) */
+
+/* ── Right panel common ── */
+.rp-sec-label{font:700 11px/1 'Roboto',Arial,sans-serif;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;flex-shrink:0}
+.rp-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.rp-edit-btn{height:22px;padding:0 10px;border-radius:5px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:600 9px/1 'Roboto',Arial,sans-serif;cursor:pointer;text-transform:uppercase;letter-spacing:.08em;flex-shrink:0;margin-left:auto;transition:color 80ms,border-color 80ms}
+.rp-edit-btn:hover{color:var(--text-primary);border-color:var(--text-muted)}
+.rp-edit-btn:active{background:rgba(255,255,255,.06)}
+html.light .rp-edit-btn:active{background:rgba(0,0,0,.05)}
+
+/* ── Course & Hole info ── */
+#rp-course-name{flex:1;font:500 15px/1.2 'Roboto',Arial,sans-serif;color:var(--text-primary);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:18px}
+#rp-course-name:empty::after{content:'(tap to set)';color:var(--t3);font-style:italic;font-weight:400;font-size:13px}
+#rp-hole-row{display:flex;align-items:center;gap:6px}
+#rp-hole-lbl{font:700 18px/1 'Roboto',Arial,sans-serif;color:#fff;text-transform:uppercase;letter-spacing:.06em}
+#rp-hole-num{font:700 18px/1 'Roboto',Arial,sans-serif;color:#fff;letter-spacing:.5px;margin-right:6px}
+html.light #rp-hole-lbl{color:#1a2e1a}
+html.light #rp-hole-num{color:#1a2e1a}
+#rp-par-tap{font:700 12px/1 'Roboto',Arial,sans-serif;color:var(--accent-gold);cursor:pointer;padding:3px 8px;border-radius:5px;border:1px solid rgba(255,215,0,.25);white-space:nowrap;user-select:none;transition:background 80ms}
+#rp-par-tap:hover{background:rgba(255,215,0,.12)}
+#rp-par-tap:active{background:rgba(255,215,0,.22)}
+html.light #rp-par-tap{color:#8a7200;border-color:rgba(138,114,0,.25)}
+html.light #rp-par-tap:hover{background:rgba(138,114,0,.08)}
+.rp-hn-btn{height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:700 10px/1 'Roboto',Arial,sans-serif;cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:background 80ms;flex-shrink:0}
+.rp-hn-btn:active{background:rgba(255,255,255,.07)}
+.rp-hn-next{background:var(--accent-green);color:#fff;border-color:var(--accent-green)}
+.rp-hn-next:active{background:#16a34a}
+
+/* ── Players section ── */
+.rp-row .rp-sec-label{margin-bottom:0}
+#rp-player-btns{display:flex;gap:4px}
+.rp-plyr-btn{height:28px;padding:0 8px;border-radius:5px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:500 11px/1 'Roboto',Arial,sans-serif;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1 1 0;min-width:0;text-align:center;letter-spacing:.02em;transition:background 80ms,color 80ms}
+.rp-plyr-btn:hover{background:rgba(255,255,255,.06);color:var(--text-primary)}
+.rp-plyr-btn.active{background:#FFD700;color:#1a2e1a;border-color:#FFD700;font-weight:700}
+html.light .rp-plyr-btn.active{background:#FFD700;color:#1a2e1a;border-color:#d4b800}
+
+/* ── Section divider ── */
+.rp-divider{height:1px;background:var(--panel-border);margin:8px 0}
+
+/* ── More button (…) ── */
+.rp-more-btn{height:22px;padding:0 10px;border-radius:5px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:700 14px/1 'Roboto',Arial,sans-serif;cursor:pointer;flex-shrink:0;margin-left:auto;transition:background 80ms}
+.rp-more-btn:hover{background:rgba(255,255,255,.06);color:var(--text-primary)}
+.rp-more-btn:active{background:rgba(255,255,255,.10)}
+
+/* ── Score buttons (delta quick-set) ── */
+#rp-score-btns{display:flex;gap:3px;flex-wrap:wrap}
+.rp-score-btn{height:26px;padding:0 8px;border-radius:5px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:600 10px/1 'Roboto',Arial,sans-serif;cursor:pointer;white-space:nowrap;letter-spacing:.03em;transition:background 80ms,color 80ms}
+.rp-score-btn:hover{background:rgba(255,255,255,.06);color:var(--text-primary)}
+.rp-score-btn.active{color:#fff;border-color:transparent}
+
+/* ── To Pin inline ── */
+.rp-topin-lbl{font:500 11px/1 'Roboto',Arial,sans-serif;color:var(--text-muted);white-space:nowrap}
+.rp-topin-input{width:52px;height:24px;font:500 12px/1 'Roboto',Arial,sans-serif;border-radius:5px;border:1px solid var(--bd);background:var(--s2);color:var(--t1);padding:0 5px;flex-shrink:0;-moz-appearance:textfield}
+.rp-topin-input::-webkit-outer-spin-button,.rp-topin-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+/* ── Shot nav buttons (< >) ── */
+.rp-shot-nav{width:28px;height:26px;border-radius:6px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:700 13px/1 'Roboto',Arial,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 80ms}
+.rp-shot-nav:active{background:rgba(255,255,255,.07)}
+.rp-shot-nav-next{width:40px;background:var(--s2);color:var(--text-primary);border-color:var(--panel-border)}
+.rp-shot-nav-next:active{background:var(--bd)}
+
+/* ── Export lines ── */
+.exp-line{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+.exp-desc{font:400 10px/1 'Roboto',Arial,sans-serif;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── Right panel sections ── */
+.rp-sec{padding:10px 14px;border-bottom:1px solid var(--panel-border)}
+
+/* ── Shot progress bar ── */
+#rp-shot-progress{display:flex;align-items:center;gap:4px;margin-bottom:6px;min-height:28px}
+
+/* ── Dist unit ── */
+.rp-dist-unit{font:400 10px/1 'Roboto',Arial,sans-serif;color:var(--t3);letter-spacing:.03em}
+
+/* (Prev/Next merged into focus row — old #rp-hole-nav removed) */
+
+/* (export sub-labels and rp-exp-all removed) */
 
 /* player row with inline delta */
 .player-row{display:flex;align-items:center;gap:0;margin-bottom:3px;min-height:34px;border-radius:8px;padding:3px 4px;transition:background 80ms}
@@ -197,11 +259,11 @@ html.light .player-row.pr-active{background:rgba(34,197,94,.08)}
 .player-row .pr-adj:active{background:rgba(255,255,255,.07)}
 
 /* export minor button (single) — smaller, outlined, subtle */
-.exp-minor-btn{flex:0 0 110px;width:110px;height:30px;padding:0 10px;border-radius:6px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:500 10px/1 inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px;letter-spacing:.02em;transition:background 80ms ease-out}
+.exp-minor-btn{flex:0 0 110px;width:110px;height:30px;padding:0 10px;border-radius:6px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:500 11px/1 'Roboto',Arial,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px;letter-spacing:.02em;transition:background 80ms ease-out}
 .exp-minor-btn:active{background:rgba(255,255,255,.06)}
 
 .sec{padding:14px 16px 16px;border-bottom:1px solid var(--panel-border)}
-.stitle{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-bottom:10px}
+.stitle{font:700 12px/1 'Roboto',Arial,sans-serif;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:10px}
 
 /* par */
 .par-grp{display:flex;gap:4px}
@@ -210,7 +272,7 @@ html.light .player-row.pr-active{background:rgba(34,197,94,.08)}
 
 /* dist row */
 .dist-row{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;margin-top:7px}
-.dist-row label{display:flex;align-items:center;gap:3px;font:500 11px/1 inherit;color:var(--t2);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.dist-row label{display:flex;align-items:center;gap:3px;font:500 12px/1 'Roboto',Arial,sans-serif;color:var(--t2);cursor:pointer;white-space:nowrap;flex-shrink:0}
 .dist-row input[type=checkbox]{width:15px;height:15px;accent-color:var(--mg);flex-shrink:0}
 .dist-row input[type=number]{width:64px;height:30px;flex-shrink:0;font-size:13px}
 .dist-row input[type=number]::-webkit-outer-spin-button,
@@ -218,7 +280,7 @@ html.light .player-row.pr-active{background:rgba(34,197,94,.08)}
 .dist-row input[type=number]{-moz-appearance:textfield}
 .dist-unit{font:400 10px/1 inherit;color:var(--t3);white-space:nowrap;flex-shrink:0;letter-spacing:.03em}
 .dist-divider{width:1px;height:20px;background:var(--bd);margin:0 3px;flex-shrink:0}
-.total-label{display:flex;align-items:center;gap:3px;font:500 11px/1 inherit;color:var(--t2);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.total-label{display:flex;align-items:center;gap:3px;font:500 12px/1 'Roboto',Arial,sans-serif;color:var(--t2);cursor:pointer;white-space:nowrap;flex-shrink:0}
 .total-label input{width:15px;height:15px;accent-color:var(--mg)}
 
 /* ── FINAL SCORE ── */
@@ -257,11 +319,11 @@ html.light .player-row.pr-active{background:rgba(34,197,94,.08)}
 
 /* shot nav */
 .shot-nav{display:flex;align-items:center;gap:5px;margin-bottom:5px}
-.shot-nav-btn{width:30px;flex-shrink:0;height:26px;border-radius:6px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:500 10px/1 inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 80ms ease-out,color 80ms ease-out}
+.shot-nav-btn{width:30px;flex-shrink:0;height:26px;border-radius:6px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:500 11px/1 'Roboto',Arial,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 80ms ease-out,color 80ms ease-out}
 .shot-nav-btn:active{background:rgba(255,255,255,.07)}
 /* shot number buttons */
 #shot-btns{flex:1;display:flex;gap:3px;justify-content:center;flex-wrap:wrap}
-.snum-btn{flex:0 0 auto;width:24px;height:24px;border-radius:6px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:600 10px/1 inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 80ms ease-out,color 80ms ease-out,border-color 80ms ease-out}
+.snum-btn{flex:0 0 auto;width:24px;height:24px;border-radius:6px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:700 10px/1 'Roboto',Arial,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 80ms ease-out,color 80ms ease-out,border-color 80ms ease-out}
 .snum-btn.cur{background:#fff;color:#1B5E3B;border-color:#fff}
 .snum-btn.past{background:rgba(255,255,255,.18);color:var(--t1);border-color:transparent}
 .snum-btn.future{background:rgba(255,255,255,.05);color:var(--t3);border-color:transparent}
@@ -269,9 +331,9 @@ html.light .player-row.pr-active{background:rgba(34,197,94,.08)}
 .snum-btn:active{opacity:.7}
 /* type buttons */
 .type-row{display:flex;gap:3px;flex-wrap:nowrap;margin-bottom:3px}
-.tbtn{padding:4px 6px;border-radius:6px;border:none;background:transparent;color:var(--text-muted);font:500 10px/1 inherit;cursor:pointer;min-height:24px;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;transition:background 80ms ease-out,color 80ms ease-out;flex:1;text-align:center}
+.tbtn{padding:4px 6px;border-radius:6px;border:none;background:transparent;color:var(--text-muted);font:500 11px/1 'Roboto',Arial,sans-serif;cursor:pointer;min-height:24px;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;transition:background 80ms ease-out,color 80ms ease-out;flex:1;text-align:center}
 .tbtn:hover{background:var(--s2)}
-.tbtn.active{color:var(--text-primary);font-weight:600;background:var(--s2)}
+.tbtn.active{color:#1a2e1a;font-weight:700;background:#fff;border-color:#fff}
 .auto-badge{font:500 9px/1 inherit;padding:1px 5px;border-radius:3px;background:#2a3a2a;color:#5c8c5c;border:1px solid #3a5a3a;margin-left:4px;vertical-align:middle;letter-spacing:.02em}
 
 /* options */
@@ -308,7 +370,7 @@ html.light .player-row.pr-active{background:rgba(34,197,94,.08)}
 #picker-close{background:none;border:none;color:var(--t2);font-size:18px;cursor:pointer;line-height:1;padding:2px 5px}
 #picker-scroll{height:180px;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none}
 #picker-scroll::-webkit-scrollbar{display:none}
-.picker-item{height:42px;display:flex;align-items:center;justify-content:center;font:600 14px/1 inherit;cursor:pointer;scroll-snap-align:start;color:var(--t2);border-radius:6px;margin:1px 8px;transition:background .1s,color .1s}
+.picker-item{height:42px;display:flex;align-items:center;justify-content:center;font:700 12px/1 'Roboto',Arial,sans-serif;cursor:pointer;scroll-snap-align:start;color:var(--t2);border-radius:6px;margin:1px 8px;transition:background .1s,color .1s}
 .picker-item:active{opacity:.7}
 .pi-purple{background:#7c3aed;color:#fff}
 .pi-red{background:#C0392B;color:#fff}
@@ -321,6 +383,33 @@ html.light .player-row.pr-active{background:rgba(34,197,94,.08)}
 #picker-cancel{width:calc(100% - 16px);margin:4px 8px 8px;height:34px;border-radius:8px;border:1px solid var(--bd);background:var(--s2);color:var(--t1);font:500 13px/1 inherit;cursor:pointer}
 #picker-backdrop{display:none;position:fixed;inset:0;z-index:499}
 #picker-backdrop.show{display:block}
+
+/* ── SCORE DRAWER (scorecard grid click) ── */
+/* Golden ratio: φ=1.618 — width:height ≈ φ:1 (landscape) */
+#score-drawer-bg{display:none;position:fixed;inset:0;z-index:449}
+#score-drawer-bg.show{display:block}
+#score-drawer{display:none;position:fixed;z-index:450;width:369px;min-height:228px;background:var(--s1);border:1px solid var(--bd);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.5);flex-direction:column;font-family:'Roboto',Arial,sans-serif;left:50%;top:50%;transform:translate(-50%,-50%) scale(.92);opacity:0;transition:transform .2s ease,opacity .2s ease}
+#score-drawer.open{display:flex;transform:translate(-50%,-50%) scale(1);opacity:1}
+#score-drawer-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 10px;border-bottom:1px solid var(--bd)}
+#score-drawer-hdr h3{font:700 13px/1 'Roboto',Arial,sans-serif;letter-spacing:.04em;color:var(--text-primary)}
+#score-drawer-close{background:none;border:none;color:var(--t2);font-size:16px;cursor:pointer;line-height:1;padding:2px 4px}
+#score-drawer-body{overflow-y:auto;flex:1;padding:10px 16px 8px}
+.sd-player-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-height:32px;border-radius:6px;padding:3px 6px}
+.sd-player-row .sd-pr-name{flex:1 1 0;min-width:0;font:600 12px/1 'Roboto',Arial,sans-serif;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.02em}
+.sd-player-row .sd-pr-controls{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.sd-player-row .sd-pr-adj{width:28px;height:28px;border-radius:7px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:500 16px/1 'Roboto',Arial,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.sd-player-row .sd-pr-adj:active{background:rgba(255,255,255,.07)}
+html.light .sd-player-row .sd-pr-adj:active{background:rgba(0,0,0,.06)}
+.sd-player-row .sd-pr-delta{min-width:48px;height:28px;border-radius:7px;border:none;font:700 12px/1 'Roboto',Arial,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity 80ms}
+.sd-player-row .sd-pr-delta:active{opacity:.7}
+.sd-pr-delta.sd-default{background:#1a5bb5!important;color:#fff!important;border:none!important}
+/* Score drawer footer — OK anchored right */
+#score-drawer-footer{display:flex;gap:6px;padding:10px 16px 14px;border-top:1px solid var(--bd);justify-content:flex-end}
+.sd-foot-btn{height:30px;border-radius:7px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:600 11px/1 'Roboto',Arial,sans-serif;cursor:pointer;letter-spacing:.03em;transition:opacity 80ms,background 80ms}
+.sd-foot-btn:active{opacity:.7}
+.sd-foot-clear{padding:0 14px;color:var(--red);border-color:var(--red);margin-right:auto}
+.sd-foot-cancel{padding:0 16px}
+.sd-foot-ok{padding:0 24px;background:var(--accent-green);color:#fff;border-color:var(--accent-green);font-weight:700;letter-spacing:.05em}
 
 /* ── SETTINGS DRAWER ── */
 #sd-overlay{display:none;position:fixed;inset:0;z-index:399;background:rgba(0,0,0,.5)}
@@ -367,10 +456,11 @@ input[type=range]{accent-color:var(--mg);flex:1}
 
 /* ── PLAYER SECTION ── */
 #player-section{padding:12px 16px 16px}
+#course-mgr-row{margin-bottom:6px;display:flex;align-items:center;gap:6px}
 #player-mgr-row{margin-bottom:6px;display:flex;align-items:center;gap:6px}
 #btn-player-mgr{height:24px;padding:0 10px;border-radius:6px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:500 10px/1 inherit;cursor:pointer;text-transform:uppercase;letter-spacing:.08em;flex-shrink:0;transition:color 80ms ease-out,border-color 80ms ease-out}
 #btn-player-mgr:hover{color:var(--text-primary);border-color:var(--text-muted)}
-#player-btn-grid{display:flex;flex-direction:column;gap:0}
+/* (player-btn-grid removed — now rp-player-btns) */
 .player-btn{height:32px;padding:0 8px;border-radius:6px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:500 13px/1 inherit;cursor:pointer;width:calc(25% - 3px);min-width:44px;overflow:hidden;white-space:nowrap;text-align:center;transition:background 80ms ease-out,color 80ms ease-out,border-color 80ms ease-out}
 .player-btn:hover{border-color:var(--text-muted);color:var(--text-primary)}
 .player-btn.active{background:var(--accent-green);border-color:var(--accent-green);color:#fff}
@@ -408,8 +498,7 @@ input[type=range]{accent-color:var(--mg);flex:1}
 .exp-btn-row{display:flex;gap:8px;margin-bottom:0}
 .exp-indiv-btn{flex:1;height:34px;border-radius:8px;border:1px solid var(--accent-green);background:transparent;color:var(--accent-green);font:600 11px/1 inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;letter-spacing:.02em;transition:background 80ms ease-out}
 .exp-indiv-btn:active{background:rgba(34,197,94,.12)}
-.exp-batch-btn{flex:1;height:34px;border-radius:8px;border:1px solid var(--accent-green);background:var(--accent-green);color:#fff;font:600 11px/1 inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;letter-spacing:.02em;transition:background 80ms ease-out}
-.exp-batch-btn:active{background:#16a34a}
+/* batch buttons — same outlined style as minor */
 #exp-progress-wrap{margin-top:4px}
 #exp-progress-bar-bg{height:3px;background:var(--s2);border-radius:2px;overflow:hidden;margin-bottom:4px}
 #exp-progress-bar{height:100%;width:0%;background:var(--accent-green);border-radius:2px;transition:width .25s}
@@ -491,17 +580,18 @@ html.narrow .sg-cell{min-height:22px;font-size:9px;padding:2px 0}
 html.narrow .sg-hdr{font-size:10px}
 html.narrow .sg-label{padding-left:4px;font-size:9px}
 html.narrow .sg-player{font-size:9px}
-html.narrow .sg-score{width:16px;height:16px;font-size:8px}
+html.narrow .sg-score{width:16px;height:16px;font-size:10px}
 
 /* ── Right panel ── */
 html.narrow #right{overflow-y:visible}
-html.narrow #hole-banner{padding:8px 10px 6px}
-html.narrow #hole-lbl{font-size:16px}
-html.narrow #hole-num{font-size:22px}
-html.narrow #hole-num-big{min-width:42px}
-html.narrow #par-hero-lbl{font-size:10px;padding-bottom:6px}
-html.narrow #hole-hero .par-btn{width:36px;height:32px;font-size:16px!important}
-html.narrow .sec{padding:8px 10px 10px}
+html.narrow #rp-course-sec{padding:6px 10px}
+html.narrow #rp-hole-lbl,html.narrow #rp-hole-num{font-size:16px}
+html.narrow .rp-hn-btn{height:24px;padding:0 8px;font-size:9px}
+html.narrow .rp-plyr-btn{height:24px;font-size:10px;padding:0 6px}
+html.narrow .rp-sec-label{margin-bottom:3px;font-size:10px}
+html.narrow .rp-score-btn{height:24px;padding:0 6px;font-size:9px}
+html.narrow .rp-sec{padding:6px 10px}
+/* (rp-bar removed) */
 html.narrow .stitle{font-size:10px;margin-bottom:6px}
 
 /* ── Player section compact ── */
