@@ -38,7 +38,8 @@ html.light #preview{background:#e0e0e0}
 html.light .hc-empty{background:#e8ecf0;color:#9aa5b0;border:1px solid #d0d5da!important}
 html.light .stat-active{background:#e8f5e9!important}
 html.light #upload-hint .uh-box{background:rgba(255,255,255,.7)}
-html.light .snum-btn.cur{background:var(--mg);color:#fff;border-color:var(--mg)}
+html.light .snum-btn.cur{background:#FFD700;color:#1a1a1a;border-color:#FFD700}
+html.light .snum-btn.ready{background:transparent;color:#b8960a;border:2px solid #cca800}
 /* tbtn replaced by sp-btn */
 html.light #mini-toast{background:rgba(240,250,240,.95);color:#1a5e3b;border-color:#b0d8b0}
 html.light #mini-toast.err-toast{background:rgba(255,240,240,.95);color:#a00;border-color:#e0a0a0}
@@ -181,6 +182,7 @@ html.light .rp-edit-btn:active{background:rgba(0,0,0,.05)}
 /* ── Course & Hole info ── */
 #rp-course-name{flex:1;font:500 15px/1.2 'Roboto',Arial,sans-serif;color:var(--text-primary);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:18px}
 #rp-course-name:empty::after{content:'(tap to set)';color:var(--t3);font-style:italic;font-weight:400;font-size:13px}
+#rp-hole-sec.rp-sec-no-border{padding-top:0;padding-bottom:4px}
 #rp-hole-row{display:flex;align-items:center;gap:6px;padding:4px 0}
 #rp-hole-lbl{font:700 18px/1 'Roboto',Arial,sans-serif;color:#fff;text-transform:uppercase;letter-spacing:.06em}
 #rp-hole-num{font:700 18px/1 'Roboto',Arial,sans-serif;color:#fff;letter-spacing:.5px;margin-right:6px}
@@ -207,6 +209,7 @@ html.light .rp-plyr-btn.active{background:#FFD700;color:#1a2e1a;border-color:#d4
 
 /* ── Section divider ── */
 .rp-divider{height:1px;background:var(--panel-border);margin:8px 0}
+#rp-players-sec .rp-divider{margin-bottom:0}
 
 /* ── More button (…) ── */
 .rp-more-btn{height:22px;padding:0 10px;border-radius:5px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:700 14px/1 'Roboto',Arial,sans-serif;cursor:pointer;flex-shrink:0;margin-left:auto;transition:background 80ms}
@@ -323,7 +326,8 @@ html.light .player-row.pr-active{background:rgba(34,197,94,.08)}
 /* shot number buttons */
 #shot-btns{flex:1;display:flex;gap:5px;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto}
 .snum-btn{flex:0 0 auto;width:26px;height:26px;border-radius:6px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:700 12px/1 'Roboto',Arial,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 80ms ease-out,color 80ms ease-out,border-color 80ms ease-out}
-.snum-btn.cur{background:#fff;color:#1B5E3B;border-color:#fff}
+.snum-btn.cur{background:#FFD700;color:#1a1a1a;border-color:#FFD700;font-weight:700}
+.snum-btn.ready{background:transparent;color:#FFD700;border:2px solid #FFD700;font-weight:700}
 .snum-btn.past{background:rgba(255,255,255,.18);color:var(--t1);border-color:transparent}
 .snum-btn.future{background:rgba(255,255,255,.05);color:var(--t3);border-color:transparent}
 .snum-btn.unused{background:transparent;color:var(--t3);border:1px dashed var(--panel-border);opacity:.45;cursor:default}
@@ -335,6 +339,7 @@ html.light .player-row.pr-active{background:rgba(34,197,94,.08)}
 .sp-header{display:flex;align-items:center;gap:6px;margin-bottom:6px}
 .sp-title{font:700 12px/1 'Roboto',Arial,sans-serif;color:#8a8f96;text-transform:uppercase;letter-spacing:.05em}
 .sp-btn-row{display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+#sp-landing-btns{flex-wrap:wrap}
 .sp-btn-row::-webkit-scrollbar{display:none}
 .sp-btn{padding:6px 10px;border-radius:6px;border:none;background:#2a2f35;color:var(--text-muted);font:500 11px/1 'Roboto',Arial,sans-serif;cursor:pointer;white-space:nowrap;text-transform:uppercase;letter-spacing:.04em;transition:background 80ms ease-out,color 80ms ease-out}
 .sp-btn:hover{background:#3a4047}

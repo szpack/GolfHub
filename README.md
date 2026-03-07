@@ -117,6 +117,20 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v10.15.1 — 2026-03-07
+- 取消 Shot Type / Purpose / Result 的自动推断高亮，点什么显示什么，纯手动模式
+
+### v10.15.0 — 2026-03-07
+- 重构Shot状态录入逻辑：Shot Type支持连续录入模式（下一杆准备态，黄色描边）
+- Purpose/Result/Flags/Note始终只修改当前杆，并自动取消准备态
+- 进度条新增ready状态（黄色描边），点击进度条/←→/切洞/切球员均取消准备态
+- 当前杆改为黄色填充背景（与准备态黄色描边区分）
+- 删除所有3PUTT相关逻辑（UI显示和Canvas badge）
+
+### v10.14.1 — 2026-03-07
+- HOLE X上方留白减少
+- RESULT落点区按钮支持自动换行显示
+
 ### v10.14.0 — 2026-03-07
 - RESULT区改名为PURPOSE（目标），保留FOR BIRDIE/FOR PAR/FOR BOGEY
 - 新增RESULT（结果/落点）区：上果岭、上球道、下沙、二级草、三级草、下水、进树林

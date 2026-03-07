@@ -120,23 +120,18 @@ function getHolePuttCount(h){
 
 // Get effective values for a shot (manual overrides auto)
 function getEffectiveShot(h, idx){
-  const gross=getGross(h);
-  const inf=inferShot(h.par, h.delta, gross, idx+1, h.shots);
   const s=h.shots[idx]||{};
-  const shotType=s.manualShotType ?? inf.autoShotType;
-  const result=s.manualResult ?? inf.autoResult;
+  const shotType=s.manualShotType||null;
+  const result=s.manualResult||null;
   const customStatus=s.manualCustomStatus||null;
-  // Display primary: which group gets auto-highlight (single highlight rule)
-  // Manual overrides always show solid gold; this controls auto-active only
   let displayPrimary='type';
   if(s.manualCustomStatus) displayPrimary='flag';
   else if(s.manualResult) displayPrimary='result';
   else if(s.manualShotType) displayPrimary='type';
-  else if(inf.autoResult) displayPrimary='result';
   return {
     shotType, result, customStatus,
-    autoShotType: inf.autoShotType,
-    autoResult:   inf.autoResult,
+    autoShotType: null,
+    autoResult:   null,
     isManualType:   !!s.manualShotType,
     isManualResult: !!s.manualResult,
     isManualStatus: !!s.manualCustomStatus,

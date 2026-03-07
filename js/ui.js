@@ -275,6 +275,7 @@ function buildHoleNav(){
       S.currentHole=i;
       S.scorecardSummary=null;
       resetAllShotIndex(i);
+      clearReady();
       render(); scheduleSave();
     };
   }
@@ -445,21 +446,20 @@ function buildTypeButtons(){
   const hasDelta=h.delta!==null;
   const si=h.shotIndex;
   const overviewMode=si<0;
+  const ri=getReadyIndex();
   const s=(hasDelta&&!overviewMode)?(h.shots[si]||{}):{};
-  const eff=(hasDelta&&!overviewMode)?getEffectiveShot(h,si):{};
-  const primary=eff.displayPrimary||'type';
-  // Single auto-highlight rule: auto result takes priority over auto type
-  const hasAutoResult=!!eff.autoResult&&!s.manualResult;
 
-  // SHOT TYPE buttons — auto-active only when no auto result showing
+  // Shot Type target: ready shot if active, otherwise current shot
+  const typeTargetIdx=(ri>=0)?ri:si;
+  const ts=(hasDelta&&typeTargetIdx>=0)?(h.shots[typeTargetIdx]||{}):{};
+
+  // SHOT TYPE buttons — only manual highlight
   const typeCont=document.getElementById('sp-type-btns');
   if(typeCont){
     typeCont.innerHTML='';
     SP_TYPES.forEach(item=>{
       const btn=document.createElement('button');
-      const isManual=(s.manualShotType===item.type);
-      const isAuto=(!s.manualShotType && !hasAutoResult && eff.autoShotType===item.type);
-      btn.className='sp-btn'+(isManual||isAuto?' active':'');
+      btn.className='sp-btn'+(ts.manualShotType===item.type?' active':'');
       btn.dataset.type=item.type;
       btn.textContent=item.labelKey?T(item.labelKey).toUpperCase():'';
       btn.onclick=()=>setShotType(item.type);
@@ -467,15 +467,13 @@ function buildTypeButtons(){
     });
   }
 
-  // RESULT buttons — auto highlight only when no manual shot type override
+  // PURPOSE buttons — only manual highlight
   const resCont=document.getElementById('sp-result-btns');
   if(resCont){
     resCont.innerHTML='';
     SP_RESULTS.forEach(item=>{
       const btn=document.createElement('button');
-      const isManual=(s.manualResult===item.type);
-      const isAuto=(!s.manualResult && !s.manualShotType && eff.autoResult===item.type);
-      btn.className='sp-btn'+(isManual||isAuto?' active':'');
+      btn.className='sp-btn'+(s.manualResult===item.type?' active':'');
       btn.dataset.type=item.type;
       btn.textContent=item.labelKey?T(item.labelKey).toUpperCase():'';
       btn.onclick=()=>setShotType(item.type);
@@ -513,15 +511,6 @@ function buildTypeButtons(){
     });
   }
 
-  // 3PUTT hole summary (not per-shot override)
-  const statusEl=document.getElementById('sp-status-display');
-  if(statusEl){
-    const puttCount=hasDelta?getHolePuttCount(h):0;
-    const cs=puttCount>=3?puttCount+'PUTT':'';
-    statusEl.textContent=cs;
-    statusEl.style.display=cs?'':'none';
-  }
-
   // Note input
   const noteInp=document.getElementById('inp-shot-note');
   if(noteInp){
@@ -538,6 +527,7 @@ function buildShotButtons(){
   const h=curHole(), gross=getGross(h), si=h.shotIndex;
   const noScore=(h.delta===null);
   const overviewMode=si<0;
+  const ri=getReadyIndex();
   const count=noScore?h.par:Math.max(gross, h.par);
   for(let i=0;i<count;i++){
     const btn=document.createElement('button');
@@ -546,9 +536,18 @@ function buildShotButtons(){
       btn.disabled=true;
     } else {
       const isUnused=i>=gross;
-      const isCur=!overviewMode&&!isUnused&&i===si, isPast=!overviewMode&&!isUnused&&i<si;
-      btn.className='snum-btn '+(isUnused?'unused':isCur?'cur':overviewMode?'past':isPast?'past':'future');
-      if(!isUnused) btn.onclick=(()=>{ const idx=i; return ()=>{ curHole().shotIndex=idx; render(); scheduleSave(); focusToPin(); }; })();
+      const isCur=!overviewMode&&!isUnused&&i===si;
+      const isReady=!overviewMode&&!isUnused&&ri>=0&&i===ri;
+      const isPast=!overviewMode&&!isUnused&&i<si;
+      let cls='snum-btn ';
+      if(isUnused) cls+='unused';
+      else if(isCur) cls+='cur';
+      else if(isReady) cls+='ready';
+      else if(overviewMode) cls+='past';
+      else if(isPast) cls+='past';
+      else cls+='future';
+      btn.className=cls;
+      if(!isUnused) btn.onclick=(()=>{ const idx=i; return ()=>{ clearReady(); curHole().shotIndex=idx; render(); scheduleSave(); focusToPin(); }; })();
       else btn.disabled=true;
     }
     btn.textContent=String(i+1);

@@ -9,6 +9,11 @@
 const SF = `ui-sans-serif,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Helvetica,Arial,sans-serif`;
 const SHOT_W=490, SHOT_H=132, ROW1=46, ROW2=42, ROW3=44, COL_W=148, RPAD=12;
 
+// Transient UI state: next-shot-ready index for quick Shot Type input (-1 = inactive)
+let _readyIndex = -1;
+function clearReady(){ _readyIndex=-1; }
+function getReadyIndex(){ return _readyIndex; }
+
 // ============================================================
 // I18N
 // ============================================================
@@ -799,6 +804,7 @@ function switchToPlayer(pid){
   S.currentPlayerId=(pid===SESSION_ID)?null:pid;
   loadPlayerData(effectivePlayerId());
   trackRecentPlayer(pid);
+  clearReady();
   if(typeof buildPlayerArea==='function') buildPlayerArea();
   if(typeof buildFocusPlayerBtns==='function') buildFocusPlayerBtns();
   render(); scheduleSave();
@@ -983,6 +989,7 @@ function setDelta(d){
   h.delta=d; h.manualTypes={};
   reconcileShots(h);
   h.shotIndex=-1;
+  clearReady();
   render(); scheduleSave();
 }
 
@@ -1039,6 +1046,7 @@ function focusToPin(){
 function prevShot(){
   const h=curHole(), g=getGross(h);
   if(h.delta===null||!g) return;
+  clearReady();
   if(h.shotIndex<0) { h.shotIndex=g-1; }
   else { h.shotIndex=h.shotIndex<=0?g-1:h.shotIndex-1; }
   render(); scheduleSave(); focusToPin();
@@ -1046,6 +1054,7 @@ function prevShot(){
 function nextShot(){
   const h=curHole(), g=getGross(h);
   if(h.delta===null||!g) return;
+  clearReady();
   if(h.shotIndex<0) { h.shotIndex=0; }
   else { h.shotIndex=h.shotIndex>=g-1?-1:h.shotIndex+1; }
   render(); scheduleSave(); focusToPin();
@@ -1053,34 +1062,46 @@ function nextShot(){
 function setShotType(type){
   const h=curHole();
   if(h.delta===null||h.shotIndex<0) return;
-  if(!h.shots[h.shotIndex]) h.shots[h.shotIndex]={};
-  const s=h.shots[h.shotIndex];
-  const eff=getEffectiveShot(h,h.shotIndex);
   const category=getShotCategory(type);
+  const gross=getGross(h);
 
   if(category==='type'){
-    // Toggle off if clicking the same manual type, or if it matches auto
-    if(s.manualShotType===type){ s.manualShotType=null; }
-    else if(!s.manualShotType && eff.autoShotType===type){ /* already auto, ignore */ }
-    else { s.manualShotType=type; }
-  } else if(category==='result'){
-    if(s.manualResult===type) s.manualResult=null;
-    else s.manualResult=type;
-  } else if(category==='flag'){
-    // Flags: toggle on/off as manual custom status
-    if(s.manualCustomStatus===type) s.manualCustomStatus=null;
-    else s.manualCustomStatus=type;
-  }
-
-  // Keep legacy type field in sync
-  const newEff=getEffectiveShot(h,h.shotIndex);
-  s.type=newEff.shotType;
-  h.manualTypes[h.shotIndex]=!!s.manualShotType;
-
-  // Auto-advance to next shot for quick sequential editing
-  const gross=getGross(h);
-  if(gross && h.shotIndex < gross-1){
-    h.shotIndex++;
+    // Shot Type: supports ready-mode continuous input
+    let targetIdx;
+    if(_readyIndex>=0 && _readyIndex<gross){
+      // Write to ready shot
+      targetIdx=_readyIndex;
+    } else {
+      // Write to current shot
+      targetIdx=h.shotIndex;
+    }
+    if(!h.shots[targetIdx]) h.shots[targetIdx]={};
+    const ts=h.shots[targetIdx];
+    if(ts.manualShotType===type){ ts.manualShotType=null; clearReady(); }
+    else { ts.manualShotType=type; }
+    // Sync legacy type
+    const tEff=getEffectiveShot(h,targetIdx);
+    ts.type=tEff.shotType;
+    h.manualTypes[targetIdx]=!!ts.manualShotType;
+    // Activate ready for next shot
+    if(ts.manualShotType && targetIdx+1<gross) _readyIndex=targetIdx+1;
+    else clearReady();
+  } else {
+    // Purpose / Result / Flag: always modify current shot, cancel ready
+    clearReady();
+    const si=h.shotIndex;
+    if(!h.shots[si]) h.shots[si]={};
+    const s=h.shots[si];
+    if(category==='result'){
+      if(s.manualResult===type) s.manualResult=null;
+      else s.manualResult=type;
+    } else if(category==='flag'){
+      if(s.manualCustomStatus===type) s.manualCustomStatus=null;
+      else s.manualCustomStatus=type;
+    }
+    const newEff=getEffectiveShot(h,si);
+    s.type=newEff.shotType;
+    h.manualTypes[si]=!!s.manualShotType;
   }
 
   render(); scheduleSave();
@@ -1089,12 +1110,10 @@ function setShotType(type){
 function setLanding(type){
   const h=curHole();
   if(h.delta===null||h.shotIndex<0) return;
+  clearReady();
   if(!h.shots[h.shotIndex]) h.shots[h.shotIndex]={};
   const s=h.shots[h.shotIndex];
   s.landing=(s.landing===type)?null:type;
-  // Auto-advance
-  const gross=getGross(h);
-  if(gross && h.shotIndex < gross-1) h.shotIndex++;
   render(); scheduleSave();
 }
 
@@ -1107,6 +1126,7 @@ function getShotCategory(type){
 function onShotNoteInput(val){
   const h=curHole();
   if(h.delta===null||h.shotIndex<0) return;
+  clearReady();
   if(!h.shots[h.shotIndex]) h.shots[h.shotIndex]={type:null};
   h.shots[h.shotIndex].note=val||'';
   render(); scheduleSave();
@@ -1132,11 +1152,11 @@ function setShotToPin(val){
 function resetAllPars(){ S.holes.forEach(h=>h.par=4); render(); scheduleSave(); closeSettings(); }
 
 function gotoNextHole(){
-  // v5.1: always go to sequentially next hole (not next empty)
   const next=(S.currentHole+1)%18;
   S.currentHole=next;
   S.scorecardSummary=null;
   resetAllShotIndex(next);
+  clearReady();
   render(); scheduleSave();
 }
 function gotoPrevHole(){
@@ -1144,6 +1164,7 @@ function gotoPrevHole(){
   S.currentHole=prev;
   S.scorecardSummary=null;
   resetAllShotIndex(prev);
+  clearReady();
   render(); scheduleSave();
 }
 
@@ -2097,16 +2118,6 @@ function drawShotOverlay(ctx,X,Y,scale){
     ctx.font=`${th.sqNumWeight} ${Math.round(th.sqNumSize*scale)}px ${SF}`;
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(String(i+1),bx+sqSz/2,sqCY);
-  }
-
-  // 3PUTT hole summary badge (small indicator left of squares)
-  const puttCount=getHolePuttCount(h);
-  if(puttCount>=3){
-    const ptTxt=puttCount+'P';
-    ctx.font=`700 ${Math.round(11*scale)}px ${SF}`;
-    ctx.fillStyle='#e74c3c';
-    ctx.textAlign='right'; ctx.textBaseline='middle';
-    ctx.fillText(ptTxt,sqStartX-4*scale,sqCY);
   }
 
   // DIVIDER (gold)
