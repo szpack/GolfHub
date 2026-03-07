@@ -117,6 +117,12 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v10.10.2 — 2026-03-07
+- 修复移动端页面自动跳动：禁用移动端To Pin自动聚焦、移除距离输入scrollIntoView、导航滚动改用scrollTo避免垂直跳动
+
+### v10.10.1 — 2026-03-07
+- Player Name 和 Total 显示默认开启
+
 ### v10.10.0 — 2026-03-07
 - NEXT按钮加长，提升点击体验
 - 移动端标题区恢复版本号与邮箱显示（小字）

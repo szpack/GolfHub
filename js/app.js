@@ -1017,6 +1017,7 @@ function clearHole(){
 function setMode(m){ S.displayMode=m; render(); scheduleSave(); }
 
 function focusToPin(){
+  if(isMobile()) return; // prevent page jump on mobile
   const el=document.getElementById('inp-dist');
   if(el){ el.focus(); el.select(); }
 }
@@ -2744,7 +2745,11 @@ function buildMobHoleNav(){
   }
   setTimeout(() => {
     const active = cont.querySelector('.active');
-    if(active) active.scrollIntoView({inline:'center', behavior:'smooth'});
+    if(active){
+      const parent=cont.parentElement||cont;
+      const left=active.offsetLeft - parent.clientWidth/2 + active.offsetWidth/2;
+      parent.scrollTo({left:Math.max(0,left), behavior:'smooth'});
+    }
   }, 50);
 }
 
@@ -2779,13 +2784,7 @@ function wireMobDist(){
     setShotToPin(isNaN(val) ? null : val);
     updateMobUI();
   };
-  // scrollIntoView when keyboard opens
-  inp.addEventListener('focus', () => {
-    setTimeout(() => {
-      const sec = document.getElementById('mob-dist-sec');
-      if(sec) sec.scrollIntoView({behavior:'smooth', block:'center'});
-    }, 300);
-  });
+  // (removed auto scrollIntoView on focus — causes page jump on mobile)
   // Long-press support for distance +/- buttons
   const adjMap = {
     'mob-adj-m5': -5, 'mob-adj-m1': -1,
@@ -2841,7 +2840,11 @@ function narrowAutoScrollNav(){
   const cont = document.getElementById('sc-grid');
   if(!cont) return;
   const active = cont.querySelector('.sg-active');
-  if(active) setTimeout(() => active.scrollIntoView({inline:'center', behavior:'smooth'}), 60);
+  if(active) setTimeout(() => {
+    const parent=cont.parentElement||cont;
+    const left=active.offsetLeft - parent.clientWidth/2 + active.offsetWidth/2;
+    parent.scrollTo({left:Math.max(0,left), behavior:'smooth'});
+  }, 60);
 }
 
 // ============================================================
