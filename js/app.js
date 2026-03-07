@@ -641,7 +641,7 @@ function applyLang(){
   const sdCan=g('sd-foot-cancel'); if(sdCan) sdCan.textContent=T('cancelBtn');
   const sdOk=g('sd-foot-ok'); if(sdOk) sdOk.textContent=T('okBtn');
   // To Pin label
-  const tpLbl=g('rp-topin-lbl'); if(tpLbl) tpLbl.textContent=T('distLabel');
+  // (rp-topin-lbl removed — distance input now inline after SHOT label)
   // Note placeholder
   const noteInp=g('inp-shot-note'); if(noteInp) noteInp.placeholder=T('noteLbl').toLowerCase()+'…';
   // Course edit modal
@@ -1001,11 +1001,20 @@ function adjDelta(inc){
 function reconcileShots(h){
   const gross=getGross(h);
   if(gross===null){ h.shots=[]; h.shotIndex=0; return; }
+  // Trim or extend shots array
   while(h.shots.length>gross) h.shots.pop();
-  while(h.shots.length<gross) h.shots.push({type:null,toPin:null});
+  while(h.shots.length<gross) h.shots.push({});
   if(h.shotIndex>=gross) h.shotIndex=gross-1;
   if(h.shotIndex<0) h.shotIndex=0;
-  h.shots.forEach((s,i)=>{ if(!s.type) s.type=autoType(h,i); });
+  // Migrate legacy data: old `type` field → manualShotType (if manually set)
+  h.shots.forEach((s,i)=>{
+    if(s.type && !s.manualShotType && h.manualTypes && h.manualTypes[i]){
+      s.manualShotType=s.type;
+    }
+    // Auto-populate legacy `type` for canvas rendering compatibility
+    const eff=getEffectiveShot(h,i);
+    s.type=eff.shotType;
+  });
 }
 
 function clearHole(){
@@ -1036,10 +1045,37 @@ function nextShot(){
 function setShotType(type){
   const h=curHole();
   if(h.delta===null) return;
-  if(!h.shots[h.shotIndex]) h.shots[h.shotIndex]={type:null};
-  h.shots[h.shotIndex].type=type;
-  h.manualTypes[h.shotIndex]=true;
+  if(!h.shots[h.shotIndex]) h.shots[h.shotIndex]={};
+  const s=h.shots[h.shotIndex];
+  const eff=getEffectiveShot(h,h.shotIndex);
+  const category=getShotCategory(type);
+
+  if(category==='type'){
+    // Toggle off if clicking the same manual type, or if it matches auto
+    if(s.manualShotType===type){ s.manualShotType=null; }
+    else if(!s.manualShotType && eff.autoShotType===type){ /* already auto, ignore */ }
+    else { s.manualShotType=type; }
+  } else if(category==='result'){
+    if(s.manualResult===type) s.manualResult=null;
+    else s.manualResult=type;
+  } else if(category==='flag'){
+    // Flags: toggle on/off as manual custom status
+    if(s.manualCustomStatus===type) s.manualCustomStatus=null;
+    else s.manualCustomStatus=type;
+  }
+
+  // Keep legacy type field in sync
+  const newEff=getEffectiveShot(h,h.shotIndex);
+  s.type=newEff.shotType;
+  h.manualTypes[h.shotIndex]=!!s.manualShotType;
+
   render(); scheduleSave();
+}
+
+function getShotCategory(type){
+  if(['PENALTY','PROV'].includes(type)) return 'flag';
+  if(['FOR_BIRDIE','FOR_PAR','FOR_BOGEY','FOR_DOUBLE','FOR_TRIPLE'].includes(type)) return 'result';
+  return 'type';
 }
 
 function onShotNoteInput(val){
@@ -2052,11 +2088,14 @@ function drawShotOverlay(ctx,X,Y,scale){
   const toPinFontSz=Math.round(th.distValSize*scale);
   const resultFontSz=Math.round(th.resultBadgeSize*scale);
 
+  // ── NEW: use inference engine for display ──
+  const eff=getEffectiveShot(h,si);
   const isLast=si===gross-1;
-  const curType=h.shots[si]?.type||'';
-  const isManualLastShot=isLast && !!h.manualTypes[si];
-  const isForMode=isLast && isManualLastShot && curType.startsWith('FOR_');
-  const isResultMode=isLast && !isForMode;
+  // Display priority: customStatus > result > shotType
+  const hasCustomStatus=!!eff.customStatus;
+  const hasResult=!!eff.result;
+  // Show result badge on last shot (unless custom status overrides)
+  const isResultMode=isLast && !hasCustomStatus;
 
   // LEFT: To Pin distance
   const shotToPin=getShotToPin(h,si);
@@ -2073,9 +2112,19 @@ function drawShotOverlay(ctx,X,Y,scale){
     ctx.fillText(unit,rx+dw+3*scale,r3y+r3h/2);
   }
 
-  // CENTER: shot type label or note
+  // CENTER: display label with priority
   let centerTxt='';
-  if(isForMode || !isLast) centerTxt=shotTypeLabel(curType);
+  if(hasCustomStatus){
+    // Custom status (3PUTT etc.) takes priority
+    centerTxt=eff.customStatus;
+  } else if(hasResult && !isLast){
+    // Result tag on second-last shot
+    centerTxt=shotTypeLabel(eff.result);
+  } else if(!isLast || (isLast && hasResult)){
+    // Shot type label
+    centerTxt=shotTypeLabel(eff.shotType);
+  }
+  // Note can override if no other label
   if(!centerTxt){
     const shotNote=h.shots[si]?.note||'';
     if(shotNote) centerTxt=shotNote.toUpperCase();

@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Golf Overlay Tool v10.10.2</title>
+<title>Golf Overlay Tool v10.11.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/overlay.css?v=10.10.2">
+<link rel="stylesheet" href="./css/overlay.css?v=10.11.0">
 <script>
 /* Narrow-screen detection: use screen.width (physical device pixels)
    — immune to Safari "Request Desktop Website" which inflates viewport to ~980px */
@@ -22,7 +22,7 @@
 <!-- HEADER -->
 <div id="hdr">
   <div class="logo" id="logo-text">⛳ GOLF <span>OVERLAY</span></div>
-  <span class="logo-meta">v10.10.2<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
+  <span class="logo-meta">v10.11.0<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
   <span style="flex:1"></span>
   <div id="lang-wrap">
     <button id="btn-lang" onclick="toggleLangMenu()">🇺🇸 EN</button>
@@ -110,15 +110,14 @@
       <div class="sp-group">
         <div class="sp-header">
           <span class="sp-title" id="rp-shot-lbl">SHOT</span>
-          <span style="flex:1"></span>
-          <span class="rp-topin-lbl" id="rp-topin-lbl">To Pin</span>
           <input type="number" id="inp-dist" placeholder="" min="0" max="999" onfocus="this.select()" class="rp-topin-input">
           <span id="dist-unit" class="rp-dist-unit">yds</span>
+          <span style="flex:1"></span>
         </div>
         <div id="rp-shot-progress">
-          <button class="sp-nav-btn" id="btn-prev-shot" onclick="prevShot()">&lt;</button>
+          <button class="sp-nav-btn" id="btn-prev-shot" onclick="prevShot()">&larr;</button>
           <div id="shot-btns"></div>
-          <button class="sp-nav-btn sp-nav-next" id="btn-next-shot" onclick="nextShot()">&gt;</button>
+          <button class="sp-nav-btn sp-nav-next" id="btn-next-shot" onclick="nextShot()">&rarr;</button>
         </div>
       </div>
       <!-- Shot Type -->
@@ -469,8 +468,8 @@
 <div id="mini-toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="./js/scoreboard.js?v=10.10.2"></script>
-<script src="./js/ui.js?v=10.10.2"></script>
-<script src="./js/app.js?v=10.10.2"></script>
+<script src="./js/scoreboard.js?v=10.11.0"></script>
+<script src="./js/ui.js?v=10.11.0"></script>
+<script src="./js/app.js?v=10.11.0"></script>
 </body>
 </html>

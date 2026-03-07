@@ -62,6 +62,80 @@ function deltaLabel(d){
   return (map[String(d)]||(d>0?'+'+d:String(d))).toUpperCase();
 }
 
+// ── SHOT INFERENCE ENGINE ──
+// Auto-infer shotType, result, customStatus for each shot based on hole data.
+// Manual overrides always take priority: effective = manual ?? auto
+
+function inferShot(par, delta, gross, shotNo, allShots){
+  // shotNo is 1-based
+  const out = { autoShotType:null, autoResult:null, autoCustomStatus:null };
+  if(!gross || gross<1 || shotNo<1 || shotNo>gross) return out;
+
+  // ── SHOT TYPE ──
+  if(shotNo===1){
+    out.autoShotType='TEE';
+  } else if(shotNo===gross || shotNo===gross-1){
+    out.autoShotType='PUTT';
+  } else if(par>=5 && shotNo===2 && shotNo<gross-1){
+    out.autoShotType='LAYUP';
+  } else {
+    out.autoShotType='APPR';
+  }
+
+  // ── RESULT (only on second-last shot) ──
+  if(shotNo===gross-1 && gross>=2){
+    if(delta===-1)      out.autoResult='FOR_BIRDIE';
+    else if(delta===0)  out.autoResult='FOR_PAR';
+    else if(delta===1)  out.autoResult='FOR_BOGEY';
+    // other deltas: no result tag
+  }
+
+  // ── MULTI-PUTT DETECTION ──
+  // Count consecutive PUTTs from the end of the hole
+  if(allShots && allShots.length===gross){
+    let puttCount=0;
+    for(let i=gross-1;i>=0;i--){
+      const s=allShots[i];
+      const effType=s.manualShotType||inferShot(par,delta,gross,i+1,null).autoShotType;
+      if(effType==='PUTT') puttCount++;
+      else break;
+    }
+    if(puttCount>=3){
+      out.autoCustomStatus=puttCount+'PUTT';
+    }
+  }
+
+  return out;
+}
+
+// Get effective values for a shot (manual overrides auto)
+function getEffectiveShot(h, idx){
+  const gross=getGross(h);
+  const inf=inferShot(h.par, h.delta, gross, idx+1, h.shots);
+  const s=h.shots[idx]||{};
+  return {
+    shotType:    s.manualShotType  ?? inf.autoShotType,
+    result:      s.manualResult    ?? inf.autoResult,
+    customStatus:s.manualCustomStatus ?? inf.autoCustomStatus,
+    // expose auto values for UI indication
+    autoShotType: inf.autoShotType,
+    autoResult:   inf.autoResult,
+    autoCustomStatus: inf.autoCustomStatus,
+    isManualType:   !!s.manualShotType,
+    isManualResult: !!s.manualResult,
+    isManualStatus: !!s.manualCustomStatus,
+  };
+}
+
+// Display label with priority: customStatus > result > shotType
+function shotDisplayLabel(h, idx){
+  const eff=getEffectiveShot(h, idx);
+  if(eff.customStatus) return eff.customStatus;
+  if(eff.result) return shotTypeLabel(eff.result);
+  if(eff.shotType) return shotTypeLabel(eff.shotType);
+  return '';
+}
+
 // ── SCORECARD GEOMETRY ──
 function getSCRange(){
   // summary view (triggered by clicking F/B/T stat cards)

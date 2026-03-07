@@ -117,6 +117,20 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v10.11.0 — 2026-03-07
+- 新增自动击球推断系统 (Shot Inference Engine)
+  - 自动推断 SHOT TYPE: TEE → APPR/LAYUP → PUTT（基于洞Par、成绩、杆号）
+  - 自动推断 RESULT: FOR BIRDIE / FOR PAR / FOR BOGEY（倒数第二杆）
+  - 自动检测 MULTI-PUTT: 3PUTT / 4PUTT 等
+  - 显示优先级: customStatus > result > shotType
+  - 支持手动覆盖 (manual override)，effective = manual ?? auto
+  - 自动推断按钮以半透明金色高亮 (auto-active)，手动选择为实色金色 (active)
+  - FLAGS (PENALTY/PROVISIONAL) 仅支持手动设置
+
+### v10.10.3 — 2026-03-07
+- SHOT区：移除To Pin标签，码数输入移至SHOT标题后方
+- SHOT区：上/下一杆按钮改为← →箭头，尺寸加大（36×30px）
+
 ### v10.10.2 — 2026-03-07
 - 修复移动端页面自动跳动：禁用移动端To Pin自动聚焦、移除距离输入scrollIntoView、导航滚动改用scrollTo避免垂直跳动
 

@@ -9,24 +9,12 @@ function shotTypeLabel(t){
     FW:'FAIRWAY',ROUGH:'ROUGH',BUNKER:'BUNKER',TREES:'TREES',WATER:'WATER',OB:'OB',DROP:'DROP',GREEN:'GREEN'};
   return (map[t]||t||'').toUpperCase();
 }
+// autoType: legacy wrapper — now delegates to inferShot engine
 function autoType(h,idx){
   const gross=getGross(h);
   if(!gross) return 'TEE';
-  if(idx===0) return 'TEE';
-  if(idx===gross-1){
-    if(h.delta<=-1) return 'FOR_BIRDIE';
-    if(h.delta===0) return 'FOR_PAR';
-    if(h.delta===1) return 'FOR_BOGEY';
-    if(h.delta===2) return 'FOR_DOUBLE';
-    return 'FOR_TRIPLE';
-  }
-  // Par 5: shot[1]=LAYUP, shot[2]=APPR
-  if(h.par>=5){
-    if(idx===1) return 'LAYUP';
-    if(idx===2) return 'APPR';
-  }
-  if(idx===1&&h.par>=4) return 'APPR';
-  return 'CHIP';
+  const inf=inferShot(h.par, h.delta, gross, idx+1, null);
+  return inf.autoShotType||'TEE';
 }
 
 // ── PLAYER AREA ──
@@ -441,24 +429,69 @@ const SP_FLAGS=[
 function buildTypeButtons(){
   const h=curHole();
   const hasDelta=h.delta!==null;
-  const curType=hasDelta?(h.shots[h.shotIndex]?.type||''):'';
+  const si=h.shotIndex;
+  const s=hasDelta?(h.shots[si]||{}):{};
+  const eff=hasDelta?getEffectiveShot(h,si):{};
 
-  const groups=[[SP_TYPES,'sp-type-btns'],[SP_RESULTS,'sp-result-btns'],[SP_FLAGS,'sp-flag-btns']];
-  groups.forEach(([items,id])=>{
-    const cont=document.getElementById(id); if(!cont) return; cont.innerHTML='';
-    items.forEach(item=>{
+  // SHOT TYPE buttons
+  const typeCont=document.getElementById('sp-type-btns');
+  if(typeCont){
+    typeCont.innerHTML='';
+    SP_TYPES.forEach(item=>{
       const btn=document.createElement('button');
-      btn.className='sp-btn'+(curType===item.type?' active':'');
+      const isAuto=(!s.manualShotType && eff.autoShotType===item.type);
+      const isManual=(s.manualShotType===item.type);
+      btn.className='sp-btn'+(isManual?' active':isAuto?' auto-active':'');
       btn.dataset.type=item.type;
       btn.textContent=item.labelKey?T(item.labelKey).toUpperCase():'';
       btn.onclick=()=>setShotType(item.type);
-      cont.appendChild(btn);
+      typeCont.appendChild(btn);
     });
-  });
+  }
+
+  // RESULT buttons
+  const resCont=document.getElementById('sp-result-btns');
+  if(resCont){
+    resCont.innerHTML='';
+    SP_RESULTS.forEach(item=>{
+      const btn=document.createElement('button');
+      const isAuto=(!s.manualResult && eff.autoResult===item.type);
+      const isManual=(s.manualResult===item.type);
+      btn.className='sp-btn'+(isManual?' active':isAuto?' auto-active':'');
+      btn.dataset.type=item.type;
+      btn.textContent=item.labelKey?T(item.labelKey).toUpperCase():'';
+      btn.onclick=()=>setShotType(item.type);
+      resCont.appendChild(btn);
+    });
+  }
+
+  // FLAGS buttons
+  const flagCont=document.getElementById('sp-flag-btns');
+  if(flagCont){
+    flagCont.innerHTML='';
+    SP_FLAGS.forEach(item=>{
+      const btn=document.createElement('button');
+      const isActive=(s.manualCustomStatus===item.type);
+      btn.className='sp-btn'+(isActive?' active':'');
+      btn.dataset.type=item.type;
+      btn.textContent=item.labelKey?T(item.labelKey).toUpperCase():'';
+      btn.onclick=()=>setShotType(item.type);
+      flagCont.appendChild(btn);
+    });
+  }
+
+  // Custom status display (3PUTT etc.)
+  const statusEl=document.getElementById('sp-status-display');
+  if(statusEl){
+    const cs=eff.customStatus||'';
+    statusEl.textContent=cs;
+    statusEl.style.display=cs?'':'none';
+  }
+
   // Note input
   const noteInp=document.getElementById('inp-shot-note');
   if(noteInp){
-    const note=hasDelta?(h.shots[h.shotIndex]?.note||''):'';
+    const note=hasDelta?(s.note||''):'';
     noteInp.value=note;
   }
 }
