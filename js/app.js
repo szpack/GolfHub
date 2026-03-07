@@ -975,7 +975,7 @@ function setDelta(d){
   const h=curHole();
   h.delta=d; h.manualTypes={};
   reconcileShots(h);
-  h.shotIndex=0;
+  h.shotIndex=-1;
   render(); scheduleSave();
 }
 
@@ -1004,7 +1004,7 @@ function reconcileShots(h){
   while(h.shots.length>gross) h.shots.pop();
   while(h.shots.length<gross) h.shots.push({});
   if(h.shotIndex>=gross) h.shotIndex=gross-1;
-  if(h.shotIndex<0) h.shotIndex=0;
+  if(h.shotIndex<-1) h.shotIndex=-1;
   // Migrate legacy data: old `type` field → manualShotType (if manually set)
   h.shots.forEach((s,i)=>{
     if(s.type && !s.manualShotType && h.manualTypes && h.manualTypes[i]){
@@ -1032,18 +1032,20 @@ function focusToPin(){
 function prevShot(){
   const h=curHole(), g=getGross(h);
   if(h.delta===null||!g) return;
-  h.shotIndex=h.shotIndex<=0?g-1:h.shotIndex-1;
+  if(h.shotIndex<0) { h.shotIndex=g-1; }
+  else { h.shotIndex=h.shotIndex<=0?g-1:h.shotIndex-1; }
   render(); scheduleSave(); focusToPin();
 }
 function nextShot(){
   const h=curHole(), g=getGross(h);
   if(h.delta===null||!g) return;
-  h.shotIndex=h.shotIndex>=g-1?0:h.shotIndex+1;
+  if(h.shotIndex<0) { h.shotIndex=0; }
+  else { h.shotIndex=h.shotIndex>=g-1?-1:h.shotIndex+1; }
   render(); scheduleSave(); focusToPin();
 }
 function setShotType(type){
   const h=curHole();
-  if(h.delta===null) return;
+  if(h.delta===null||h.shotIndex<0) return;
   if(!h.shots[h.shotIndex]) h.shots[h.shotIndex]={};
   const s=h.shots[h.shotIndex];
   const eff=getEffectiveShot(h,h.shotIndex);
@@ -1079,7 +1081,7 @@ function getShotCategory(type){
 
 function onShotNoteInput(val){
   const h=curHole();
-  if(h.delta===null) return;
+  if(h.delta===null||h.shotIndex<0) return;
   if(!h.shots[h.shotIndex]) h.shots[h.shotIndex]={type:null};
   h.shots[h.shotIndex].note=val||'';
   render(); scheduleSave();
@@ -2046,7 +2048,8 @@ function drawShotOverlay(ctx,X,Y,scale){
   // ── ROW2: progress squares ──
   // Show max(si+1, par): up to current shot, pad to par with outline if under par.
   const gross=getGross(h), si=h.shotIndex;
-  const sqCount=Math.max(si+1, h.par);
+  const overviewMode=si<0;
+  const sqCount=overviewMode?Math.max(gross||0, h.par):Math.max(si+1, h.par);
   const sqSz=24*scale, sqGap=5*scale;
   const totalSqW=sqCount*(sqSz+sqGap)-sqGap;
   const sqStartX=X+W-rpad-totalSqW;
@@ -2054,12 +2057,12 @@ function drawShotOverlay(ctx,X,Y,scale){
 
   for(let i=0;i<sqCount;i++){
     const bx=sqStartX+i*(sqSz+sqGap), by=sqCY-sqSz/2;
-    const isCur=i===si, isPast=i<si;
+    const isCur=!overviewMode&&i===si, isPast=!overviewMode&&i<si;
     rrect(ctx,bx,by,sqSz,sqSz,th.sqRadius*scale);
     if(isCur){
       ctx.fillStyle=th.sqCurBg; ctx.fill();
       ctx.fillStyle=th.sqCurTextColor;
-    } else if(isPast){
+    } else if(isPast||overviewMode){
       ctx.fillStyle=th.sqPastBg; ctx.fill();
       ctx.fillStyle=th.sqPastTextColor;
     } else {
@@ -2069,6 +2072,16 @@ function drawShotOverlay(ctx,X,Y,scale){
     ctx.font=`${th.sqNumWeight} ${Math.round(th.sqNumSize*scale)}px ${SF}`;
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(String(i+1),bx+sqSz/2,sqCY);
+  }
+
+  // 3PUTT hole summary badge (small indicator left of squares)
+  const puttCount=getHolePuttCount(h);
+  if(puttCount>=3){
+    const ptTxt=puttCount+'P';
+    ctx.font=`700 ${Math.round(11*scale)}px ${SF}`;
+    ctx.fillStyle='#e74c3c';
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText(ptTxt,sqStartX-4*scale,sqCY);
   }
 
   // DIVIDER (gold)
@@ -2087,17 +2100,18 @@ function drawShotOverlay(ctx,X,Y,scale){
   const toPinFontSz=Math.round(th.distValSize*scale);
   const resultFontSz=Math.round(th.resultBadgeSize*scale);
 
-  // ── NEW: use inference engine for display ──
-  const eff=getEffectiveShot(h,si);
-  const isLast=si===gross-1;
-  // Display priority: customStatus > result > shotType
-  const hasCustomStatus=!!eff.customStatus;
+  // ── Use inference engine for display ──
+  const effSi=overviewMode?Math.max((gross||1)-1,0):si;
+  const eff=getEffectiveShot(h,effSi);
+  const isLast=overviewMode||si===gross-1;
+  // Display priority: flags > result > shotType
+  const hasFlag=!overviewMode&&!!eff.customStatus;  // manual flags only (PENALTY, PROV)
   const hasResult=!!eff.result;
-  // Show result badge on last shot (unless custom status overrides)
-  const isResultMode=isLast && !hasCustomStatus;
+  // Show result badge on last shot or overview mode (unless flag overrides)
+  const isResultMode=isLast && !hasFlag;
 
   // LEFT: To Pin distance
-  const shotToPin=getShotToPin(h,si);
+  const shotToPin=overviewMode?null:getShotToPin(h,si);
   if(!isResultMode && shotToPin!==null){
     const distVal=String(shotToPin);
     const unit=T('ydsLabel');
@@ -2113,9 +2127,9 @@ function drawShotOverlay(ctx,X,Y,scale){
 
   // CENTER: display label with priority
   let centerTxt='';
-  if(hasCustomStatus){
-    // Custom status (3PUTT etc.) takes priority
-    centerTxt=eff.customStatus;
+  if(hasFlag){
+    // Manual flags (PENALTY, PROV) take priority
+    centerTxt=shotTypeLabel(eff.customStatus);
   } else if(hasResult && !isLast){
     // Result tag on second-last shot
     centerTxt=shotTypeLabel(eff.result);
@@ -2125,7 +2139,7 @@ function drawShotOverlay(ctx,X,Y,scale){
   }
   // Note can override if no other label
   if(!centerTxt){
-    const shotNote=h.shots[si]?.note||'';
+    const shotNote=overviewMode?'':(h.shots[si]?.note||'');
     if(shotNote) centerTxt=shotNote.toUpperCase();
   }
   if(centerTxt){
@@ -2266,8 +2280,9 @@ function doExportShotOnly(){
   if(h.delta===null){ miniToast(T('setScoreFirst'),true); return; }
   const{w,h:H}=expGetDims();
   const canvas=expMakeShotCanvas(w,H);
-  const st=(h.shots[h.shotIndex]?.type||'SHOT').toUpperCase();
-  const fname=expShotFile(S.currentHole+1,h.shotIndex+1,st);
+  const effIdx=h.shotIndex<0?Math.max((getGross(h)||1)-1,0):h.shotIndex;
+  const st=(h.shots[effIdx]?.type||'SHOT').toUpperCase();
+  const fname=expShotFile(S.currentHole+1,effIdx+1,st);
   expCanvasToBlob(canvas).then(blob=>{ expDownloadBlob(blob,fname); showExpStatus(true); }).catch(()=>showExpStatus(false));
 }
 
@@ -2676,7 +2691,7 @@ function updateMobUI(){
   // Header
   document.getElementById('mob-hole-lbl').textContent = T('holeHero', idx+1);
   document.getElementById('mob-par-lbl').textContent = T('parLabel', h.par);
-  const tp = getShotToPin(h, h.shotIndex);
+  const tp = h.shotIndex<0?null:getShotToPin(h, h.shotIndex);
   document.getElementById('mob-tp-val').textContent = tp !== null ? tp : '\u2014';
   document.getElementById('mob-tp-unit').textContent = T('distUnit').charAt(0);
 
@@ -2718,7 +2733,7 @@ function buildMobLieCapsules(){
   if(!cont) return;
   cont.innerHTML = '';
   const h = curHole();
-  const curType = h.delta !== null ? (h.shots[h.shotIndex]?.type || '') : '';
+  const curType = (h.delta !== null && h.shotIndex >= 0) ? (h.shots[h.shotIndex]?.type || '') : '';
   const allTypes = [
     ...ACTION_TYPES.map(t => ({type:t.type, label:T(t.labelKey)})),
     ...MOB_LIE_TYPES,

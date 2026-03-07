@@ -5,7 +5,7 @@
 
 // ── SHOT LABEL HELPERS ──
 function shotTypeLabel(t){
-  const map={TEE:T('toeOff'),APPR:T('approach'),LAYUP:T('layup'),CHIP:T('chip'),PUTT:T('putt'),PROV:T('provisional'),PENALTY:T('typePenalty'),FOR_BIRDIE:T('forBirdie'),FOR_PAR:T('forPar'),FOR_BOGEY:T('forBogey'),FOR_DOUBLE:T('forDouble'),FOR_TRIPLE:T('forTriple'),
+  const map={TEE:T('toeOff'),APPR:T('approach'),LAYUP:T('layup'),CHIP:T('chip'),PUTT:T('putt'),PROV:T('provisional'),PENALTY:T('typePenalty'),FOR_BIRDIE:T('forBirdie'),FOR_PAR:T('forPar'),FOR_BOGEY:T('forBogey'),FOR_DOUBLE:T('forDouble'),FOR_TRIPLE:T('forTriple'),FOR_DOUBLE:T('forDouble'),FOR_TRIPLE:T('forTriple'),
     FW:'FAIRWAY',ROUGH:'ROUGH',BUNKER:'BUNKER',TREES:'TREES',WATER:'WATER',OB:'OB',DROP:'DROP',GREEN:'GREEN'};
   return (map[t]||t||'').toUpperCase();
 }
@@ -436,18 +436,22 @@ function buildTypeButtons(){
   const h=curHole();
   const hasDelta=h.delta!==null;
   const si=h.shotIndex;
-  const s=hasDelta?(h.shots[si]||{}):{};
-  const eff=hasDelta?getEffectiveShot(h,si):{};
+  const overviewMode=si<0;
+  const s=(hasDelta&&!overviewMode)?(h.shots[si]||{}):{};
+  const eff=(hasDelta&&!overviewMode)?getEffectiveShot(h,si):{};
+  const primary=eff.displayPrimary||'type';
+  // Single auto-highlight rule: auto result takes priority over auto type
+  const hasAutoResult=!!eff.autoResult&&!s.manualResult;
 
-  // SHOT TYPE buttons
+  // SHOT TYPE buttons — auto-active only when no auto result showing
   const typeCont=document.getElementById('sp-type-btns');
   if(typeCont){
     typeCont.innerHTML='';
     SP_TYPES.forEach(item=>{
       const btn=document.createElement('button');
-      const isAuto=(!s.manualShotType && eff.autoShotType===item.type);
       const isManual=(s.manualShotType===item.type);
-      btn.className='sp-btn'+(isManual?' active':isAuto?' auto-active':'');
+      const isAuto=(!s.manualShotType && !hasAutoResult && eff.autoShotType===item.type);
+      btn.className='sp-btn'+(isManual||isAuto?' active':'');
       btn.dataset.type=item.type;
       btn.textContent=item.labelKey?T(item.labelKey).toUpperCase():'';
       btn.onclick=()=>setShotType(item.type);
@@ -455,15 +459,15 @@ function buildTypeButtons(){
     });
   }
 
-  // RESULT buttons
+  // RESULT buttons — auto-active freely (higher priority)
   const resCont=document.getElementById('sp-result-btns');
   if(resCont){
     resCont.innerHTML='';
     SP_RESULTS.forEach(item=>{
       const btn=document.createElement('button');
-      const isAuto=(!s.manualResult && eff.autoResult===item.type);
       const isManual=(s.manualResult===item.type);
-      btn.className='sp-btn'+(isManual?' active':isAuto?' auto-active':'');
+      const isAuto=(!s.manualResult && eff.autoResult===item.type);
+      btn.className='sp-btn'+(isManual||isAuto?' active':'');
       btn.dataset.type=item.type;
       btn.textContent=item.labelKey?T(item.labelKey).toUpperCase():'';
       btn.onclick=()=>setShotType(item.type);
@@ -486,10 +490,11 @@ function buildTypeButtons(){
     });
   }
 
-  // Custom status display (3PUTT etc.)
+  // 3PUTT hole summary (not per-shot override)
   const statusEl=document.getElementById('sp-status-display');
   if(statusEl){
-    const cs=eff.customStatus||'';
+    const puttCount=hasDelta?getHolePuttCount(h):0;
+    const cs=puttCount>=3?puttCount+'PUTT':'';
     statusEl.textContent=cs;
     statusEl.style.display=cs?'':'none';
   }
@@ -509,6 +514,7 @@ function buildShotButtons(){
   cont.innerHTML='';
   const h=curHole(), gross=getGross(h), si=h.shotIndex;
   const noScore=(h.delta===null);
+  const overviewMode=si<0;
   const count=noScore?h.par:Math.max(gross, h.par);
   for(let i=0;i<count;i++){
     const btn=document.createElement('button');
@@ -517,8 +523,8 @@ function buildShotButtons(){
       btn.disabled=true;
     } else {
       const isUnused=i>=gross;
-      const isCur=!isUnused&&i===si, isPast=!isUnused&&i<si;
-      btn.className='snum-btn '+(isUnused?'unused':isCur?'cur':isPast?'past':'future');
+      const isCur=!overviewMode&&!isUnused&&i===si, isPast=!overviewMode&&!isUnused&&i<si;
+      btn.className='snum-btn '+(isUnused?'unused':isCur?'cur':overviewMode?'past':isPast?'past':'future');
       if(!isUnused) btn.onclick=(()=>{ const idx=i; return ()=>{ curHole().shotIndex=idx; render(); scheduleSave(); focusToPin(); }; })();
       else btn.disabled=true;
     }
@@ -616,7 +622,8 @@ function updateRightPanel(){
   // Shot progress + nav
   buildShotButtons();
   // To Pin
-  const shotToPin=getShotToPin(h,h.shotIndex);
+  const overviewMode=h.shotIndex<0;
+  const shotToPin=overviewMode?null:getShotToPin(h,h.shotIndex);
   const distInput=document.getElementById('inp-dist');
   if(distInput){ distInput.value=shotToPin!==null?shotToPin:''; distInput.placeholder=''; }
   // Type buttons

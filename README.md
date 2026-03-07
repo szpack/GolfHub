@@ -117,6 +117,22 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v10.13.2 — 2026-03-07
+- Shot Type和Result按钮统一使用实心黄底高亮，不再区分手动/自动推断的淡黄色样式
+
+### v10.13.1 — 2026-03-07
+- 点击Score按钮后不再自动选中第一杆，进入总览模式（显示整洞得分而非某一杆过程）
+- 总览模式下Shot Type/Result按钮不选中任何项
+- 通过点击杆号按钮或prev/next可进入具体某一杆
+
+### v10.13.0 — 2026-03-07
+- 重构击球推断引擎：基于模板的shot type自动推断（Par 3/4/5 × 各种gross组合）
+- 修复黄色高亮优先级：同一时刻仅一个按钮组显示auto-active（RESULT优先于SHOT TYPE）
+- 3PUTT改为洞级摘要标签，不再覆盖逐杆shot type/result显示
+- 新增FOR DOUBLE / FOR TRIPLE自动推断（delta +2/+3时倒数第二杆）
+- Canvas击球信息版增加3PUTT小标签（红色，进度条左侧）
+- 修复birdie及更优成绩时错误显示双推杆模板（改为单推杆）
+
 ### v10.12.0 — 2026-03-07
 - 计分卡导航区：点击PAR/HOLE列打开成绩编辑抽屉；成绩数字字号加大
 - 导出弹窗：按钮改为并排布局，每个按钮上方添加功能说明

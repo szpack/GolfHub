@@ -62,50 +62,60 @@ function deltaLabel(d){
   return (map[String(d)]||(d>0?'+'+d:String(d))).toUpperCase();
 }
 
-// ── SHOT INFERENCE ENGINE ──
-// Auto-infer shotType, result, customStatus for each shot based on hole data.
-// Manual overrides always take priority: effective = manual ?? auto
+// ── SHOT TEMPLATE ENGINE ──
+// Build expected shot types based on par and gross using real golf patterns.
+// TEE → [LAYUP] → [APPR] → [CHIP...] → PUTT [→ PUTT]
+function buildShotTemplate(par, gross){
+  if(!gross || gross<1) return [];
+  if(gross===1) return ['TEE'];
+  const tmpl=new Array(gross).fill(null);
+  tmpl[0]='TEE';
+  tmpl[gross-1]='PUTT';
+  // Two-putt assumption for par or worse (gross >= par)
+  if(gross>=3 && gross>=par) tmpl[gross-2]='PUTT';
+  // Par 5+: LAYUP (shot 2) then APPR (shot 3)
+  if(par>=5 && gross>=4){
+    if(tmpl[1]===null) tmpl[1]='LAYUP';
+    if(tmpl[2]===null) tmpl[2]='APPR';
+  }
+  // Par 4+: APPR after TEE
+  else if(par>=4 && gross>=3){
+    if(tmpl[1]===null) tmpl[1]='APPR';
+  }
+  // Fill remaining gaps with CHIP
+  for(let i=0;i<gross;i++) if(tmpl[i]===null) tmpl[i]='CHIP';
+  return tmpl;
+}
 
 function inferShot(par, delta, gross, shotNo, allShots){
-  // shotNo is 1-based
-  const out = { autoShotType:null, autoResult:null, autoCustomStatus:null };
+  const out={autoShotType:null, autoResult:null};
   if(!gross || gross<1 || shotNo<1 || shotNo>gross) return out;
-
-  // ── SHOT TYPE ──
-  if(shotNo===1){
-    out.autoShotType='TEE';
-  } else if(shotNo===gross || shotNo===gross-1){
-    out.autoShotType='PUTT';
-  } else if(par>=5 && shotNo===2 && shotNo<gross-1){
-    out.autoShotType='LAYUP';
-  } else {
-    out.autoShotType='APPR';
-  }
-
-  // ── RESULT (only on second-last shot) ──
+  // Template-based shot type
+  const tmpl=buildShotTemplate(par, gross);
+  out.autoShotType=tmpl[shotNo-1]||'CHIP';
+  // Result tag on penultimate shot
   if(shotNo===gross-1 && gross>=2){
     if(delta===-1)      out.autoResult='FOR_BIRDIE';
     else if(delta===0)  out.autoResult='FOR_PAR';
     else if(delta===1)  out.autoResult='FOR_BOGEY';
-    // other deltas: no result tag
+    else if(delta===2)  out.autoResult='FOR_DOUBLE';
+    else if(delta===3)  out.autoResult='FOR_TRIPLE';
   }
-
-  // ── MULTI-PUTT DETECTION ──
-  // Count consecutive PUTTs from the end of the hole
-  if(allShots && allShots.length===gross){
-    let puttCount=0;
-    for(let i=gross-1;i>=0;i--){
-      const s=allShots[i];
-      const effType=s.manualShotType||inferShot(par,delta,gross,i+1,null).autoShotType;
-      if(effType==='PUTT') puttCount++;
-      else break;
-    }
-    if(puttCount>=3){
-      out.autoCustomStatus=puttCount+'PUTT';
-    }
-  }
-
   return out;
+}
+
+// Hole-level putt count for 3PUTT summary (not per-shot override)
+function getHolePuttCount(h){
+  const gross=getGross(h);
+  if(!gross || gross<1) return 0;
+  const tmpl=buildShotTemplate(h.par, gross);
+  let count=0;
+  for(let i=gross-1;i>=0;i--){
+    const s=h.shots[i]||{};
+    const effType=s.manualShotType||tmpl[i]||'CHIP';
+    if(effType==='PUTT') count++; else break;
+  }
+  return count;
 }
 
 // Get effective values for a shot (manual overrides auto)
@@ -113,24 +123,31 @@ function getEffectiveShot(h, idx){
   const gross=getGross(h);
   const inf=inferShot(h.par, h.delta, gross, idx+1, h.shots);
   const s=h.shots[idx]||{};
+  const shotType=s.manualShotType ?? inf.autoShotType;
+  const result=s.manualResult ?? inf.autoResult;
+  const customStatus=s.manualCustomStatus||null;
+  // Display primary: which group gets auto-highlight (single highlight rule)
+  // Manual overrides always show solid gold; this controls auto-active only
+  let displayPrimary='type';
+  if(s.manualCustomStatus) displayPrimary='flag';
+  else if(s.manualResult) displayPrimary='result';
+  else if(s.manualShotType) displayPrimary='type';
+  else if(inf.autoResult) displayPrimary='result';
   return {
-    shotType:    s.manualShotType  ?? inf.autoShotType,
-    result:      s.manualResult    ?? inf.autoResult,
-    customStatus:s.manualCustomStatus ?? inf.autoCustomStatus,
-    // expose auto values for UI indication
+    shotType, result, customStatus,
     autoShotType: inf.autoShotType,
     autoResult:   inf.autoResult,
-    autoCustomStatus: inf.autoCustomStatus,
     isManualType:   !!s.manualShotType,
     isManualResult: !!s.manualResult,
     isManualStatus: !!s.manualCustomStatus,
+    displayPrimary,
   };
 }
 
-// Display label with priority: customStatus > result > shotType
+// Display label: flags > result > shotType
 function shotDisplayLabel(h, idx){
   const eff=getEffectiveShot(h, idx);
-  if(eff.customStatus) return eff.customStatus;
+  if(eff.customStatus) return shotTypeLabel(eff.customStatus);
   if(eff.result) return shotTypeLabel(eff.result);
   if(eff.shotType) return shotTypeLabel(eff.shotType);
   return '';
