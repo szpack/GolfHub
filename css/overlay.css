@@ -179,25 +179,34 @@ html.light .sg-hdr.sg-active{background:#FFD700;color:#1a2e1a}
 .rp-edit-btn:active{background:rgba(255,255,255,.06)}
 html.light .rp-edit-btn:active{background:rgba(0,0,0,.05)}
 
-/* ── Course & Hole info ── */
-#rp-course-name{flex:1;font:500 15px/1.2 'Roboto',Arial,sans-serif;color:var(--text-primary);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:18px}
-#rp-course-name:empty::after{content:'(tap to set)';color:var(--t3);font-style:italic;font-weight:400;font-size:13px}
-#rp-hole-sec.rp-sec-no-border{padding-top:0;padding-bottom:4px}
-#rp-hole-row{display:flex;align-items:center;gap:6px;padding:4px 0}
-#rp-hole-lbl{font:700 18px/1 'Roboto',Arial,sans-serif;color:#fff;text-transform:uppercase;letter-spacing:.06em}
-#rp-hole-num{font:700 18px/1 'Roboto',Arial,sans-serif;color:#fff;letter-spacing:.5px;margin-right:6px}
+/* ── Hole Info ── */
+#rp-hole-line1{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
+#rp-hole-lbl{font:700 20px/1 'Roboto',Arial,sans-serif;color:#fff;text-transform:uppercase;letter-spacing:.06em}
+#rp-hole-num{font:700 20px/1 'Roboto',Arial,sans-serif;color:#fff;letter-spacing:.5px}
 html.light #rp-hole-lbl{color:#1a2e1a}
 html.light #rp-hole-num{color:#1a2e1a}
+#rp-hole-line2{display:flex;align-items:center;gap:6px}
 #rp-par-tap{font:700 12px/1 'Roboto',Arial,sans-serif;color:var(--accent-gold);cursor:pointer;padding:3px 8px;border-radius:5px;border:1px solid rgba(255,215,0,.25);white-space:nowrap;user-select:none;transition:background 80ms}
 #rp-par-tap:hover{background:rgba(255,215,0,.12)}
 #rp-par-tap:active{background:rgba(255,215,0,.22)}
 html.light #rp-par-tap{color:#8a7200;border-color:rgba(138,114,0,.25)}
 html.light #rp-par-tap:hover{background:rgba(138,114,0,.08)}
-.rp-hn-btn{height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:700 10px/1 'Roboto',Arial,sans-serif;cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:background 80ms,color 80ms,border-color 80ms;flex-shrink:0}
+.rp-hole-sep{color:var(--t3);font-size:12px;margin:0 2px}
+#rp-topin-lbl{font:600 11px/1 'Roboto',Arial,sans-serif;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
+
+/* ── Score summary ── */
+#rp-score-summary{font:600 12px/1 'Roboto',Arial,sans-serif;color:var(--text-primary);margin-left:8px;flex:1}
+#rp-course-name{font:500 11px/1.2 'Roboto',Arial,sans-serif;color:var(--text-muted);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;text-align:center;padding:0 6px}
+#rp-course-name:empty::after{content:'(course)';color:var(--t3);font-style:italic;font-weight:400;font-size:10px}
+
+/* ── Hole Navigation (bottom) ── */
+#rp-hole-nav{display:flex;align-items:center;gap:8px;margin-top:20px;padding-top:12px;border-top:1px solid var(--panel-border)}
+.rp-hn-btn{height:30px;padding:0 12px;border-radius:6px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:600 11px/1 'Roboto',Arial,sans-serif;cursor:pointer;letter-spacing:.04em;transition:background 80ms,color 80ms,border-color 80ms;flex-shrink:0;display:flex;align-items:center;gap:4px}
 .rp-hn-btn:hover{background:rgba(255,255,255,.08);color:var(--text-primary);border-color:var(--text-muted)}
 .rp-hn-btn:active{background:rgba(255,255,255,.12)}
-.rp-hn-next{background:var(--accent-green);color:#fff;border-color:var(--accent-green);padding:0 20px;min-width:70px}
+.rp-hn-next{background:var(--accent-green);color:#fff;border-color:var(--accent-green);padding:0 16px}
 .rp-hn-next:active{background:#16a34a}
+.hn-arrow{font-size:14px;line-height:1}
 
 /* ── Players section ── */
 .rp-row .rp-sec-label{margin-bottom:0}
@@ -209,7 +218,6 @@ html.light .rp-plyr-btn.active{background:#FFD700;color:#1a2e1a;border-color:#d4
 
 /* ── Section divider ── */
 .rp-divider{height:1px;background:var(--panel-border);margin:8px 0}
-#rp-players-sec .rp-divider{margin-bottom:0}
 
 /* ── More button (…) ── */
 .rp-more-btn{height:22px;padding:0 10px;border-radius:5px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:700 14px/1 'Roboto',Arial,sans-serif;cursor:pointer;flex-shrink:0;margin-left:auto;transition:background 80ms}
@@ -239,7 +247,14 @@ html.light .rp-plyr-btn.active{background:#FFD700;color:#1a2e1a;border-color:#d4
 .rp-sec.rp-sec-no-border{border-bottom:none}
 
 /* ── Shot progress bar ── */
-#rp-shot-progress{display:flex;align-items:center;gap:4px;margin-top:6px;min-height:28px}
+#rp-shot-progress{display:flex;align-items:center;gap:4px;min-height:28px}
+
+/* ── TO PAR row ── */
+#rp-topar-row{display:flex;align-items:center;gap:4px;margin-top:3px;min-height:18px}
+.topar-arrow-spacer{width:36px;flex-shrink:0}
+#topar-cells{flex:1;display:flex;gap:5px;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto}
+.topar-cell{flex:0 0 auto;width:26px;height:18px;display:flex;align-items:center;justify-content:center;font:600 9px/1 'Roboto',Arial,sans-serif;color:var(--text-muted);border-radius:3px}
+.topar-cell.tp-active{color:var(--text-primary);font-weight:700}
 
 /* ── Dist unit ── */
 .rp-dist-unit{font:400 10px/1 'Roboto',Arial,sans-serif;color:var(--t3);letter-spacing:.03em}
@@ -641,7 +656,6 @@ html.narrow .sg-score{width:18px;height:18px;font-size:11px}
 
 /* ── Right panel ── */
 html.narrow #right{overflow-y:visible}
-html.narrow #rp-course-sec{padding:6px 10px}
 html.narrow #rp-hole-lbl,html.narrow #rp-hole-num{font-size:18px}
 html.narrow .rp-hn-btn{height:28px;padding:0 10px;font-size:11px}
 html.narrow .rp-plyr-btn{height:28px;font-size:12px;padding:0 8px}

@@ -624,6 +624,44 @@ function buildScoreBtns(){
   });
 }
 
+// ── TO PAR ROW ──
+function buildToParRow(){
+  const cont=document.getElementById('topar-cells');
+  if(!cont) return;
+  cont.innerHTML='';
+  const h=curHole(), gross=getGross(h), si=h.shotIndex;
+  const noScore=(h.delta===null);
+  const count=noScore?h.par:Math.max(gross, h.par);
+  // Compute cumulative to-par per shot
+  // Simple model: each shot adds 1 stroke; par is spread evenly
+  for(let i=0;i<count;i++){
+    const cell=document.createElement('div');
+    cell.className='topar-cell';
+    if(!noScore && i<gross){
+      // cumulative strokes = i+1, expected par strokes at this point
+      // Use simple model: to-par at shot i = (i+1) - par + delta_at_end * (i+1)/gross
+      // Simpler: show running delta = (strokes so far) - (expected par progress)
+      // Most useful: show overall to-par progression
+      const strokesSoFar=i+1;
+      const expectedPar=h.par*(strokesSoFar/gross);
+      const runningDelta=Math.round(strokesSoFar-expectedPar);
+      cell.textContent=runningDelta===0?'E':runningDelta>0?'+'+runningDelta:String(runningDelta);
+      if(i===si) cell.classList.add('tp-active');
+    }
+    cont.appendChild(cell);
+  }
+}
+
+// ── SCORE SUMMARY ──
+function buildScoreSummary(){
+  const el=document.getElementById('rp-score-summary');
+  if(!el) return;
+  const h=curHole(), gross=getGross(h);
+  if(h.delta===null){ el.textContent=''; return; }
+  const label=deltaLabel(h.delta);
+  el.textContent=gross+' ('+fmtDeltaDisplay(h.delta)+') '+label;
+}
+
 // ── RIGHT PANEL REFRESH ──
 function updateRightPanel(){
   const h=curHole(), idx=S.currentHole, gross=getGross(h);
@@ -639,15 +677,18 @@ function updateRightPanel(){
   if(parVal) parVal.textContent=String(h.par);
   // Players
   buildFocusPlayerBtns();
+  // Score summary
+  buildScoreSummary();
   // Score buttons
   buildScoreBtns();
-  // Shot progress + nav
+  // Shot progress + nav + to-par
   buildShotButtons();
+  buildToParRow();
   // To Pin
   const overviewMode=h.shotIndex<0;
   const shotToPin=overviewMode?null:getShotToPin(h,h.shotIndex);
   const distInput=document.getElementById('inp-dist');
-  if(distInput){ distInput.value=shotToPin!==null?shotToPin:''; distInput.placeholder=''; }
+  if(distInput){ distInput.value=shotToPin!==null?shotToPin:''; distInput.placeholder='—'; }
   // Type buttons
   buildTypeButtons();
   // Course display

@@ -601,19 +601,18 @@ function applyLang(){
   const pSecLbl=g('player-section-lbl'); if(pSecLbl) pSecLbl.textContent=T('playersLbl');
   const showPNLbl=g('sd-show-pname-lbl'); if(showPNLbl) showPNLbl.textContent=T('showPlayerName');
   // Right panel section labels
-  const rpCourseLbl=g('rp-course-lbl'); if(rpCourseLbl) rpCourseLbl.textContent=T('courseLbl');
-  const rpCourseEdit=g('btn-course-edit'); if(rpCourseEdit) rpCourseEdit.textContent=T('editBtn');
   const rpPlayersLbl=g('rp-players-lbl'); if(rpPlayersLbl) rpPlayersLbl.textContent=T('playersLbl');
-  const rpShotLbl=g('rp-shot-lbl'); if(rpShotLbl) rpShotLbl.textContent=T('shotLbl');
   const rpScoreLbl=g('rp-score-lbl'); if(rpScoreLbl) rpScoreLbl.textContent=T('scoreLbl');
   const btnScoreMore=g('btn-score-more'); if(btnScoreMore) btnScoreMore.textContent=T('editBtn');
+  const rpToPinLbl=g('rp-topin-lbl'); if(rpToPinLbl) rpToPinLbl.textContent=T('toPinLabel');
+  const distUnit=g('dist-unit'); if(distUnit) distUnit.textContent=T('ydsLabel');
   const spTypeLbl=g('sp-type-lbl'); if(spTypeLbl) spTypeLbl.textContent=T('shotTypeLbl');
   const spPurposeLbl=g('sp-purpose-lbl'); if(spPurposeLbl) spPurposeLbl.textContent=T('purposeLbl');
   const spResultLbl=g('sp-result-lbl'); if(spResultLbl) spResultLbl.textContent=T('resultLbl');
   const spFlagLbl=g('sp-flag-lbl'); if(spFlagLbl) spFlagLbl.textContent=T('flagsLbl');
   const spNoteLbl=g('sp-note-lbl'); if(spNoteLbl) spNoteLbl.textContent=T('noteLbl');
-  const rpPrevBtn=g('btn-prev-hole'); if(rpPrevBtn) rpPrevBtn.textContent=T('prevBtn');
-  const rpNextBtn=g('btn-next-hole'); if(rpNextBtn) rpNextBtn.textContent=T('nextBtn');
+  const rpPrevText=g('btn-prev-text'); if(rpPrevText) rpPrevText.textContent=T('prevBtn');
+  const rpNextText=g('btn-next-text'); if(rpNextText) rpNextText.textContent=T('nextBtn');
   // Settings drawer — appearance, themes, safe zone, etc.
   const sdAppLbl=g('sd-appearance-title'); if(sdAppLbl) sdAppLbl.textContent=T('appearanceLbl');
   const sdOvlLbl=g('sd-overlay-title'); if(sdOvlLbl) sdOvlLbl.textContent=T('overlayLbl');
@@ -653,7 +652,7 @@ function applyLang(){
   const sdCan=g('sd-foot-cancel'); if(sdCan) sdCan.textContent=T('cancelBtn');
   const sdOk=g('sd-foot-ok'); if(sdOk) sdOk.textContent=T('okBtn');
   // To Pin label
-  // (rp-topin-lbl removed — distance input now inline after SHOT label)
+  // (legacy distance labels handled above)
   // Note placeholder
   const noteInp=g('inp-shot-note'); if(noteInp) noteInp.placeholder=T('noteLbl').toLowerCase()+'…';
   // Course edit modal

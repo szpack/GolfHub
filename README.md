@@ -117,6 +117,14 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v10.16.0 — 2026-03-07
+- 重构右侧 Hole/Shot 控制区 UI 布局
+- Hole 信息区：HOLE N 独立行 + PAR | TO PIN 第二行
+- 新增 Hole Score 显示行（杆数 + to par + 名称）
+- Shot 进度条下方新增 TO PAR 对齐行，每杆累计差值
+- 洞导航移至底部，中间显示球场名
+- 移除 Course 独立区域，整合至底部导航栏
+
 ### v10.15.1 — 2026-03-07
 - 取消 Shot Type / Purpose / Result 的自动推断高亮，点什么显示什么，纯手动模式
 
