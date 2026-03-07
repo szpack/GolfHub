@@ -117,6 +117,9 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v10.13.3 — 2026-03-07
+- 手动设置Shot Type后，自动推断的Result（如FOR PAR）不再高亮，Canvas也优先显示手动Shot Type
+
 ### v10.13.2 — 2026-03-07
 - Shot Type和Result按钮统一使用实心黄底高亮，不再区分手动/自动推断的淡黄色样式
 

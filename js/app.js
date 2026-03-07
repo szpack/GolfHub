@@ -2126,12 +2126,16 @@ function drawShotOverlay(ctx,X,Y,scale){
   }
 
   // CENTER: display label with priority
+  // Manual shot type overrides auto result display
   let centerTxt='';
   if(hasFlag){
     // Manual flags (PENALTY, PROV) take priority
     centerTxt=shotTypeLabel(eff.customStatus);
+  } else if(eff.isManualType && !isLast){
+    // Manual shot type takes priority over auto result
+    centerTxt=shotTypeLabel(eff.shotType);
   } else if(hasResult && !isLast){
-    // Result tag on second-last shot
+    // Result tag on second-last shot (only auto result when no manual type)
     centerTxt=shotTypeLabel(eff.result);
   } else if(!isLast || (isLast && hasResult)){
     // Shot type label

@@ -459,14 +459,14 @@ function buildTypeButtons(){
     });
   }
 
-  // RESULT buttons — auto-active freely (higher priority)
+  // RESULT buttons — auto highlight only when no manual shot type override
   const resCont=document.getElementById('sp-result-btns');
   if(resCont){
     resCont.innerHTML='';
     SP_RESULTS.forEach(item=>{
       const btn=document.createElement('button');
       const isManual=(s.manualResult===item.type);
-      const isAuto=(!s.manualResult && eff.autoResult===item.type);
+      const isAuto=(!s.manualResult && !s.manualShotType && eff.autoResult===item.type);
       btn.className='sp-btn'+(isManual||isAuto?' active':'');
       btn.dataset.type=item.type;
       btn.textContent=item.labelKey?T(item.labelKey).toUpperCase():'';
