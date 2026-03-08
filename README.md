@@ -117,6 +117,10 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v12.0.3 — 2026-03-08
+- 修复Canvas击球进度条：鸟/低于标准杆时overview模式只显示实际杆数（不再补齐到标准杆）
+- 无成绩时进度条区分标准杆区（深色）与超标准杆区（浅色），使用sqFutureBg/sqFutureTextColor
+
 ### v12.0.2 — 2026-03-08
 - 明确 status↔gross 约束规则，mutation API 自动维护 status（`_syncStatus`）
 - 明确 `totals` 为派生缓存容器，不可存储 holes 无法派生的数据

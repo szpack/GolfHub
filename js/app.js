@@ -2255,10 +2255,12 @@ function drawShotOverlay(ctx,X,Y,scale){
   }
 
   // ── ROW2: progress squares ──
-  // Show max(si+1, par): up to current shot, pad to par with outline if under par.
   const gross=getGross(h), si=h.shotIndex;
   const overviewMode=si<0;
-  const sqCount=overviewMode?Math.max(gross||0, safePar(h)):Math.max(si+1, safePar(h));
+  const noScore=(h.delta===null);
+  const hp=safePar(h);
+  // Overview+score: show exactly gross squares; overview+no-score: show par*2+1; per-shot: max(si+1, par*2+1)
+  const sqCount=overviewMode?(noScore?Math.max(hp*2+1,1):(gross||0)):Math.max(si+1, hp*2+1);
   const sqSz=24*scale, sqGap=5*scale;
   const totalSqW=sqCount*(sqSz+sqGap)-sqGap;
   const sqStartX=X+W-rpad-totalSqW;
@@ -2267,16 +2269,22 @@ function drawShotOverlay(ctx,X,Y,scale){
   for(let i=0;i<sqCount;i++){
     const bx=sqStartX+i*(sqSz+sqGap), by=sqCY-sqSz/2;
     const isCur=!overviewMode&&i===si, isPast=!overviewMode&&i<si;
+    const isParZone=i<hp; // within par strokes
     rrect(ctx,bx,by,sqSz,sqSz,th.sqRadius*scale);
     if(isCur){
       ctx.fillStyle=th.sqCurBg; ctx.fill();
       ctx.fillStyle=th.sqCurTextColor;
-    } else if(isPast||overviewMode){
+    } else if(isPast||(overviewMode&&!noScore)){
+      ctx.fillStyle=th.sqPastBg; ctx.fill();
+      ctx.fillStyle=th.sqPastTextColor;
+    } else if(isParZone){
+      // Par-zone squares: darker (prominent)
       ctx.fillStyle=th.sqPastBg; ctx.fill();
       ctx.fillStyle=th.sqPastTextColor;
     } else {
-      ctx.fillStyle=th.sqPastBg; ctx.fill();
-      ctx.fillStyle=th.sqPastTextColor;
+      // Beyond-par squares: lighter (subdued)
+      ctx.fillStyle=th.sqFutureBg; ctx.fill();
+      ctx.fillStyle=th.sqFutureTextColor;
     }
     ctx.font=`${th.sqNumWeight} ${Math.round(th.sqNumSize*scale)}px ${SF}`;
     ctx.textAlign='center'; ctx.textBaseline='middle';
