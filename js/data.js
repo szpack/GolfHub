@@ -1,5 +1,5 @@
 // ============================================================
-// data.js — v4.0 Data Access Layer
+// data.js — v4.0 Data Access Layer (Player Schema v4.1)
 // Unified data model: scorecardData (business) + workspaceState (UI)
 // No dependencies — load before all other JS files
 // ============================================================
@@ -12,6 +12,23 @@ const D = (function(){
   const LS_OLD  = 'golf_v531';
   const LS_BG   = 'golf_v531_bg';
   const SESSION = '__session__';
+
+  // ── Player status enum ──
+  const PLAYER_STATUS = ['active','withdrawn','inactive','guest','deleted'];
+
+  // ── Color key → hex mapping (default, overridden by theme) ──
+  var DEFAULT_PLAYER_COLORS = {
+    blue:'#1a5bb5', red:'#C0392B', green:'#2e7d32', orange:'#e67e22',
+    purple:'#7c3aed', teal:'#00897b', pink:'#e91e63', gold:'#f9a825'
+  };
+
+  // ── Hex → colorKey reverse map for migration ──
+  var HEX_TO_KEY = {};
+  (function(){
+    for(var k in DEFAULT_PLAYER_COLORS){
+      HEX_TO_KEY[DEFAULT_PLAYER_COLORS[k].toLowerCase()] = k;
+    }
+  })();
 
   let _sc = null;   // scorecardData
   let _ws = null;   // workspaceState
@@ -64,31 +81,238 @@ const D = (function(){
   }
 
   /**
-   * Player record — extensible structure.
+   * Generate a roundPlayerId.
+   * @param {string} [prefix] - 'rp' (app default) | 'imp' (import) | 'p' (legacy compat)
+   * @param {number} [index]  - optional index for batch generation (e.g. import)
+   * @returns {string}
+   */
+  function genRoundPlayerId(prefix, index){
+    prefix = prefix || 'rp';
+    var ts = Date.now();
+    var rand = Math.random().toString(36).slice(2, 5);
+    return index != null
+      ? prefix + '_' + ts + '_' + index + '_' + rand
+      : prefix + '_' + ts + '_' + rand;
+  }
+
+  /**
+   * RoundPlayer — 本局参赛实体快照。
+   *
+   * 这是 round player instance，不是长期 profile。
+   * roundPlayerId 是局内唯一标识，scores / shots / focusSlots 均以此为 key。
+   * playerId 是可选的长期身份 ID，可为 null（匿名球员/旧数据）。
    *
    * 排序规则: players[] 数组索引是唯一排序真相。
-   *   order 字段仅为冗余标记（方便调试/导出阅读），不参与运行时排序逻辑。
-   *   如需重排球员顺序，直接操作 players[] 数组（splice/sort），
-   *   然后调用 _reindex() 让 order 跟随数组索引同步。
+   *   不再使用 order 字段参与运行时排序逻辑。
+   *
+   * @param {string} roundPlayerId - 必填，局内唯一
+   * @param {string} name - 必填，原始姓名
+   * @param {Object} [overrides] - 可选覆盖字段
+   * @returns {RoundPlayer}
    */
-  function defPlayer(id, name, order){
-    return {
-      id:id,
-      name:name||'',
-      order:(order!=null)?order:0,
-      nickname:'',
-      team:'',
-      color:'',
-      handicapIndex:null,
-      courseHandicap:null,
-      notes:''
+  function defPlayer(roundPlayerId, name, overrides){
+    var base = {
+      roundPlayerId: roundPlayerId,
+      playerId:      null,          // 可空，长期身份 ID（跨局复用）
+      name:          name || '',    // 原始姓名
+      displayName:   null,          // 可空，本局显示名（优先于 name）
+      shortName:     null,          // 可空，缩写名
+      status:        'active',      // active | withdrawn | inactive | guest | deleted
+      teamId:        null,          // 可空，队伍 ID
+      side:          null,          // 可空，阵营标识
+      groupId:       null,          // 可空，发球分组 ID
+      colorKey:      null,          // 可空，语义色键
+      hcpSnapshot:   null,          // 可空，差点快照 { handicapIndex, courseHandicap, playingHandicap }
+      avatar:        null,          // 可空，头像
+      role:          null,          // 可空，角色
+      isGuest:       false,         // 是否访客
+      notes:         ''             // 备注
     };
+    if(overrides){
+      for(var k in overrides){
+        if(overrides[k] !== undefined) base[k] = overrides[k];
+      }
+    }
+    return base;
+  }
+
+  /** Team definition — optional grouping structure */
+  function defTeam(teamId, name){
+    return { teamId:teamId, name:name||'', side:null, colorKey:null, notes:'' };
+  }
+
+  /** Tee group definition — optional grouping structure */
+  function defGroup(groupId, label){
+    return { groupId:groupId, label:label||'', teeTime:null, notes:'' };
+  }
+
+  // ── Player display helpers ──
+
+  /**
+   * Get the display name for a player (priority: displayName > name).
+   * @param {RoundPlayer} p
+   * @returns {string}
+   */
+  function playerDisplayName(p){
+    if(!p) return 'Player';
+    return (p.displayName || p.name || '').trim() || 'Player';
+  }
+
+  /**
+   * Get the short name for a player (priority: shortName > first char of displayName/name).
+   * @param {RoundPlayer} p
+   * @returns {string}
+   */
+  function playerShortName(p){
+    if(!p) return '?';
+    if(p.shortName) return p.shortName;
+    var full = p.displayName || p.name || '';
+    return full.charAt(0) || '?';
+  }
+
+  /**
+   * Get the UI color hex for a player via colorKey → theme mapping.
+   * @param {RoundPlayer} p
+   * @returns {string} hex color
+   */
+  function playerUIColor(p){
+    if(!p || !p.colorKey) return '#888888';
+    var theme = (typeof getTheme === 'function') ? getTheme() : null;
+    var map = (theme && theme.playerColors) || DEFAULT_PLAYER_COLORS;
+    return map[p.colorKey] || '#888888';
+  }
+
+  // ── Player migration helpers ──
+
+  /**
+   * Migrate legacy 'team' field to separate teamId / side / groupId.
+   * @param {string} oldTeam
+   * @returns {{ teamId:string|null, side:string|null, groupId:string|null }}
+   */
+  function migrateTeamField(oldTeam){
+    if(!oldTeam) return { teamId:null, side:null, groupId:null };
+    var s = String(oldTeam).trim();
+    if(!s) return { teamId:null, side:null, groupId:null };
+    // 纯数字 → 发球分组
+    if(/^\d+$/.test(s)){
+      return { teamId:null, side:null, groupId:'g' + s };
+    }
+    // 常见阵营标识 → side
+    var sides = ['red','blue','a','b','home','away'];
+    if(sides.indexOf(s.toLowerCase()) >= 0){
+      return { teamId:null, side:s.toLowerCase(), groupId:null };
+    }
+    // 其他 → teamId
+    return { teamId:s, side:null, groupId:null };
+  }
+
+  /**
+   * Migrate legacy hex color to colorKey.
+   * @param {string} oldColor - hex string like '#1a5bb5'
+   * @returns {string|null} colorKey or null
+   */
+  function migrateColor(oldColor){
+    if(!oldColor) return null;
+    var key = HEX_TO_KEY[oldColor.toLowerCase()];
+    return key || null;
+  }
+
+  /**
+   * Normalize a player object from any source (load, import, paste).
+   * Fills missing fields with defaults, fixes types, handles old→new migration.
+   * @param {Object} raw - raw player data (may be old or new format)
+   * @param {number} index - array position (for ID generation fallback)
+   * @returns {RoundPlayer}
+   */
+  function normalizePlayer(raw, index){
+    if(!raw) return defPlayer(genRoundPlayerId('rp', index), '');
+
+    // ── ID 兼容: roundPlayerId / id ──
+    var rpId = raw.roundPlayerId || raw.id || genRoundPlayerId('rp', index);
+
+    // ── 差点兼容: flat fields → hcpSnapshot ──
+    var hcp = raw.hcpSnapshot || null;
+    if(!hcp && (raw.handicapIndex != null || raw.courseHandicap != null)){
+      hcp = {
+        handicapIndex:   raw.handicapIndex != null ? raw.handicapIndex : null,
+        courseHandicap:   raw.courseHandicap != null ? raw.courseHandicap : null,
+        playingHandicap: null
+      };
+    }
+
+    // ── team 字段兼容: old team → teamId / side / groupId ──
+    var teamId = raw.teamId || null;
+    var side = raw.side || null;
+    var groupId = raw.groupId || null;
+    if(!teamId && !side && !groupId && raw.team){
+      var migrated = migrateTeamField(raw.team);
+      teamId = migrated.teamId;
+      side = migrated.side;
+      groupId = migrated.groupId;
+    }
+
+    // ── color 兼容: hex → colorKey ──
+    var colorKey = raw.colorKey || null;
+    if(!colorKey && raw.color){
+      colorKey = migrateColor(raw.color);
+    }
+
+    // ── status 校验 ──
+    var status = (raw.status && PLAYER_STATUS.indexOf(raw.status) >= 0) ? raw.status : 'active';
+
+    // ── displayName / shortName: 空字符串 normalize 为 null ──
+    var displayName = raw.displayName || raw.nickname || null;
+    if(displayName === '') displayName = null;
+    var shortName = raw.shortName || null;
+    if(shortName === '') shortName = null;
+
+    return defPlayer(rpId, raw.name || '', {
+      playerId:    raw.playerId || null,
+      displayName: displayName,
+      shortName:   shortName,
+      status:      status,
+      teamId:      teamId,
+      side:        side,
+      groupId:     groupId,
+      colorKey:    colorKey,
+      hcpSnapshot: hcp,
+      avatar:      raw.avatar || null,
+      role:        raw.role || null,
+      isGuest:     !!raw.isGuest,
+      notes:       raw.notes || ''
+    });
+  }
+
+  /**
+   * Validate a raw player object and return warnings.
+   * Does not throw — always returns result with warnings array.
+   * @param {Object} raw
+   * @param {number} index
+   * @returns {{ warnings: string[] }}
+   */
+  function validatePlayer(raw, index){
+    var warnings = [];
+    if(!raw){
+      warnings.push('Player[' + index + ']: null/undefined, will use defaults');
+      return { warnings:warnings };
+    }
+    if(!raw.roundPlayerId && !raw.id){
+      warnings.push('Player[' + index + ']: missing roundPlayerId, auto-generated');
+    }
+    if(!raw.name || !(raw.name||'').trim()){
+      warnings.push('Player[' + index + ']: name is empty');
+    }
+    if(raw.status && PLAYER_STATUS.indexOf(raw.status) < 0){
+      warnings.push('Player[' + index + ']: invalid status "' + raw.status + '", reset to active');
+    }
+    return { warnings:warnings };
   }
 
   /** Full scorecard data — business data only, exportable */
   function defScorecard(){
     return {
       version:'4.0',
+      playerSchemaVersion:'4.1',
       course:{
         // Course snapshot for this round — frozen copy from courseDB at round creation.
         // Changes to the course database do NOT retroactively affect this snapshot.
@@ -105,7 +329,11 @@ const D = (function(){
         holeSnapshot:Array.from({length:18},(_,i)=>defCourseHole(i))
       },
       players:[],
-      // scores[playerId] = { holes: [...], totals: {} }
+      // teams[]: optional team definitions for team-based play
+      teams:[],
+      // groups[]: optional tee group definitions
+      groups:[],
+      // scores[roundPlayerId] = { holes: [...], totals: {} }
       // ⚠️ totals 是派生缓存容器（如 totalPutts, GIR% 等），不是独立业务真相。
       //    totals 必须始终可由 holes[] 重新计算得出，不可存储 holes 无法派生的数据。
       //    持久化时一并保存以避免重复计算，但 load 后可随时从 holes 重建。
@@ -182,6 +410,14 @@ const D = (function(){
   function sc(){ return _sc; }
   function ws(){ return _ws; }
   function pid(){ return _ws.currentPlayerId || SESSION; }
+
+  /**
+   * Resolve roundPlayerId from a player object.
+   * Handles both old (p.id) and new (p.roundPlayerId) formats.
+   * @param {Object} p
+   * @returns {string}
+   */
+  function rpid(p){ return p ? (p.roundPlayerId || p.id) : null; }
 
   // ══════════════════════════════════════════
   // COURSE HOLE ACCESS
@@ -466,29 +702,61 @@ const D = (function(){
   // PLAYER MANAGEMENT
   // ══════════════════════════════════════════
 
-  /** Sync order field to match array index (array is the single truth for ordering) */
-  function _reindex(){
-    _sc.players.forEach(function(p, i){ p.order = i; });
-  }
-
-  function addPlayer(id, name, order){
-    var p = defPlayer(id, name, order != null ? order : _sc.players.length);
+  /**
+   * Add a player to the current round.
+   * @param {string} name
+   * @param {Object} [overrides] - optional field overrides for defPlayer()
+   * @returns {RoundPlayer} the new player object
+   */
+  function addPlayer(name, overrides){
+    var rpId = genRoundPlayerId('rp');
+    var p = defPlayer(rpId, name, overrides);
     _sc.players.push(p);
-    _reindex();
-    ensureScores(id);
+    ensureScores(rpId);
     _touch();
     return p;
   }
 
-  function removePlayer(id){
-    _sc.players = _sc.players.filter(function(p){ return p.id !== id; });
-    _reindex();
-    delete _sc.scores[id];
+  /**
+   * Remove a player by roundPlayerId.
+   * @param {string} roundPlayerId
+   */
+  function removePlayer(roundPlayerId){
+    _sc.players = _sc.players.filter(function(p){ return rpid(p) !== roundPlayerId; });
+    delete _sc.scores[roundPlayerId];
     _touch();
   }
 
-  function getPlayer(id){
-    return _sc.players.find(function(p){ return p.id === id; }) || null;
+  /**
+   * Find a player by roundPlayerId.
+   * Also checks legacy 'id' field for backward compat.
+   * @param {string} roundPlayerId
+   * @returns {RoundPlayer|null}
+   */
+  function getPlayer(roundPlayerId){
+    return _sc.players.find(function(p){ return rpid(p) === roundPlayerId; }) || null;
+  }
+
+  /**
+   * Update player fields (except roundPlayerId which is immutable).
+   * @param {string} roundPlayerId
+   * @param {Object} patch - fields to update
+   * @returns {RoundPlayer|null}
+   */
+  function updatePlayer(roundPlayerId, patch){
+    var p = getPlayer(roundPlayerId);
+    if(!p) return null;
+    for(var k in patch){
+      if(patch[k] !== undefined && k !== 'roundPlayerId'){
+        p[k] = patch[k];
+      }
+    }
+    // Normalize key fields after patch
+    if(p.displayName === '') p.displayName = null;
+    if(p.shortName === '') p.shortName = null;
+    if(p.status && PLAYER_STATUS.indexOf(p.status) < 0) p.status = 'active';
+    _touch();
+    return p;
   }
 
   // ══════════════════════════════════════════
@@ -553,6 +821,12 @@ const D = (function(){
     if(!_sc.scores) _sc.scores = {};
     if(!_sc.players) _sc.players = [];
     if(!_sc.meta) _sc.meta = { createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() };
+
+    // ── Player Schema v4.1: ensure teams / groups arrays ──
+    if(!_sc.playerSchemaVersion) _sc.playerSchemaVersion = '4.1';
+    if(!Array.isArray(_sc.teams)) _sc.teams = [];
+    if(!Array.isArray(_sc.groups)) _sc.groups = [];
+
     // Migrate: rename old course.holes → course.holeSnapshot
     if(_sc.course.holes && !_sc.course.holeSnapshot){
       _sc.course.holeSnapshot = _sc.course.holes;
@@ -562,6 +836,25 @@ const D = (function(){
     if(!Array.isArray(_sc.course.holeSnapshot)) _sc.course.holeSnapshot = [];
     var hc = _sc.course.holeCount || 18;
     while(_sc.course.holeSnapshot.length < hc) _sc.course.holeSnapshot.push(defCourseHole(_sc.course.holeSnapshot.length));
+
+    // ── Player v4.1 migration: normalize all players ──
+    // Also migrate scores keys if player.id was used instead of roundPlayerId
+    var scoresKeyMigrations = {}; // oldKey → newKey
+    _sc.players = _sc.players.map(function(raw, i){
+      var oldId = raw.id || null;    // 兼容旧版本 id 字段
+      var p = normalizePlayer(raw, i);
+      // Track scores key migration: if old id differs from new roundPlayerId
+      if(oldId && oldId !== p.roundPlayerId && _sc.scores[oldId] && !_sc.scores[p.roundPlayerId]){
+        scoresKeyMigrations[oldId] = p.roundPlayerId;
+      }
+      return p;
+    });
+    // Apply scores key migrations
+    for(var oldKey in scoresKeyMigrations){
+      _sc.scores[scoresKeyMigrations[oldKey]] = _sc.scores[oldKey];
+      delete _sc.scores[oldKey];
+    }
+
     // Ensure player scores match hole count
     for(var pid in _sc.scores) ensureScores(pid);
     // Normalize all shots (flags array, notes, shotNumber)
@@ -581,16 +874,6 @@ const D = (function(){
         if(!h.status) h.status = (h.gross !== null) ? 'completed' : 'not_started';
       });
     }
-    // Ensure player records have v4 fields + reindex order to match array position
-    _sc.players.forEach(function(p, i){
-      p.order = i; // array index is the single truth for ordering
-      if(p.nickname === undefined) p.nickname = '';
-      if(p.team === undefined) p.team = '';
-      if(p.color === undefined) p.color = '';
-      if(p.handicapIndex === undefined) p.handicapIndex = null;
-      if(p.courseHandicap === undefined) p.courseHandicap = null;
-      if(p.notes === undefined) p.notes = '';
-    });
     // Workspace integrity
     if(!_ws.overlayPos || typeof _ws.overlayPos['16:9'] !== 'object')
       _ws.overlayPos = defWorkspace().overlayPos;
@@ -637,9 +920,9 @@ const D = (function(){
       };
     });
 
-    // ── Players ──
+    // ── Players — migrate to v4.1 structure ──
     sc.players = (oldS.players || []).map(function(p, i){
-      return defPlayer(p.id, p.name, i);
+      return normalizePlayer(p, i);
     });
 
     // ── Scores: delta → gross ──
@@ -811,6 +1094,10 @@ const D = (function(){
     S.players           = _sc.players;
     S.currentPlayerId   = _ws.currentPlayerId;
 
+    // Teams / Groups
+    S.teams             = _sc.teams || [];
+    S.groups            = _sc.groups || [];
+
     // byPlayer compat: build delta-based view for all players
     S.byPlayer = {};
     for(var bpId in _sc.scores){
@@ -933,7 +1220,7 @@ const D = (function(){
     // Init
     init:init,
     // Accessors
-    sc:sc, ws:ws, pid:pid,
+    sc:sc, ws:ws, pid:pid, rpid:rpid,
     // Course
     getCourseHole:getCourseHole, setCourseHolePar:setCourseHolePar,
     setCourseHoleYards:setCourseHoleYards, holeCount:holeCount, setHoleCount:setHoleCount,
@@ -951,7 +1238,14 @@ const D = (function(){
     totalGross:totalGross, totalDelta:totalDelta,
     projectedGross:projectedGross, playedCount:playedCount,
     // Players
-    addPlayer:addPlayer, removePlayer:removePlayer, getPlayer:getPlayer,
+    addPlayer:addPlayer, removePlayer:removePlayer,
+    getPlayer:getPlayer, updatePlayer:updatePlayer,
+    // Player helpers
+    genRoundPlayerId:genRoundPlayerId,
+    playerDisplayName:playerDisplayName, playerShortName:playerShortName,
+    playerUIColor:playerUIColor,
+    normalizePlayer:normalizePlayer, validatePlayer:validatePlayer,
+    migrateTeamField:migrateTeamField, migrateColor:migrateColor,
     // Persistence
     save:save, load:load,
     // Legacy compat
@@ -959,11 +1253,12 @@ const D = (function(){
     migrateV531:migrateV531,
     // Factories
     defShot:defShot, defPlayerHole:defPlayerHole, defCourseHole:defCourseHole,
-    defPlayer:defPlayer, defScorecard:defScorecard, defWorkspace:defWorkspace,
+    defPlayer:defPlayer, defTeam:defTeam, defGroup:defGroup,
+    defScorecard:defScorecard, defWorkspace:defWorkspace,
     // Export/Import
     exportScorecard:exportScorecard, importScorecard:importScorecard,
     // Constants
-    SESSION:SESSION
+    SESSION:SESSION, PLAYER_STATUS:PLAYER_STATUS
   };
 
 })();

@@ -163,7 +163,7 @@ function shotAllTagsLabel(h, idx){
 
 // ── SCORECARD GEOMETRY ──
 function getSCRange(){
-  const total=S.holes.length||18;
+  const total=(S.holes&&S.holes.length) || (typeof D!=='undefined'?D.holeCount():18);
   const half=Math.ceil(total/2);
   // summary view (triggered by clicking F/B/T stat cards)
   if(S.scorecardSummary==='out') return [0,half];

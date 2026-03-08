@@ -53,10 +53,11 @@ const RoundBuilder = (function(){
 
     // ── 3. Write players ──
     sc.players = match.players.map(function(p, i){
-      var id = 'imp_' + Date.now() + '_' + i + '_' + Math.random().toString(36).slice(2, 5);
-      p._id = id; // stash for score mapping
-      var player = D.defPlayer(id, p.name, i);
-      if(p.groupNo != null) player.team = String(p.groupNo); // groupNo → team field
+      var rpId = D.genRoundPlayerId('imp', i);
+      p._id = rpId; // stash for score mapping
+      var overrides = {};
+      if(p.groupNo != null) overrides.groupId = 'g' + p.groupNo;
+      var player = D.defPlayer(rpId, p.name, overrides);
       return player;
     });
 
@@ -115,7 +116,7 @@ const RoundBuilder = (function(){
 
     // ── 8. Reset workspace ──
     ws.currentHole = 0;
-    ws.currentPlayerId = sc.players.length > 0 ? sc.players[0].id : null;
+    ws.currentPlayerId = sc.players.length > 0 ? D.rpid(sc.players[0]) : null;
     ws.shotIndex = -1;
     ws.scorecardSummary = null;
 

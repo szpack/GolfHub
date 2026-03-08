@@ -53,16 +53,16 @@ function buildPlayerArea(){
   const hi=S.currentHole;
   players.forEach(p=>{
     const row=document.createElement('div');
-    const isCur=p.id===S.currentPlayerId;
+    const isCur=D.rpid(p)===S.currentPlayerId;
     row.className='player-row'+(isCur?' pr-active':'');
     // name
     const nm=document.createElement('div');
     nm.className='pr-name'+(isCur?' active':'');
-    nm.textContent=p.name;
-    nm.title=p.name;
+    nm.textContent=D.playerDisplayName(p);
+    nm.title=D.playerDisplayName(p);
     nm.onclick=()=>{
-      if(p.id===effectivePlayerId()){ curHole().shotIndex=-1; D.ws().shotIndex=-1; render(); scheduleSave(); }
-      else switchToPlayer(p.id);
+      if(D.rpid(p)===effectivePlayerId()){ curHole().shotIndex=-1; D.ws().shotIndex=-1; render(); scheduleSave(); }
+      else switchToPlayer(D.rpid(p));
     };
     row.appendChild(nm);
     // delta wrap (− [delta] +)
@@ -71,9 +71,9 @@ function buildPlayerArea(){
     const mBtn=document.createElement('button');
     mBtn.className='pr-adj';
     mBtn.textContent='−';
-    mBtn.onclick=()=>{ adjPlayerDelta(p.id,-1); buildPlayerArea(); render(); };
+    mBtn.onclick=()=>{ adjPlayerDelta(D.rpid(p),-1); buildPlayerArea(); render(); };
     wrap.appendChild(mBtn);
-    const d=getPlayerHoleDelta(p.id,hi);
+    const d=getPlayerHoleDelta(D.rpid(p),hi);
     const dBtn=document.createElement('button');
     dBtn.className='pr-delta-btn';
     if(d!==null){
@@ -86,14 +86,14 @@ function buildPlayerArea(){
       dBtn.textContent='—';
     }
     dBtn.onclick=(e)=>{
-      if(!isCur) switchToPlayer(p.id);
+      if(!isCur) switchToPlayer(D.rpid(p));
       openPicker(e);
     };
     wrap.appendChild(dBtn);
     const pBtn=document.createElement('button');
     pBtn.className='pr-adj';
     pBtn.textContent='+';
-    pBtn.onclick=()=>{ adjPlayerDelta(p.id,+1); buildPlayerArea(); render(); };
+    pBtn.onclick=()=>{ adjPlayerDelta(D.rpid(p),+1); buildPlayerArea(); render(); };
     wrap.appendChild(pBtn);
     row.appendChild(wrap);
     grid.appendChild(row);
@@ -131,13 +131,13 @@ function buildPlayerManager(){
     activeList.innerHTML='';
     (S.players||[]).forEach(p=>{
       const row=document.createElement('div');
-      row.className='pm-player-row'+(p.id===S.currentPlayerId?' pm-current':'');
+      row.className='pm-player-row'+(D.rpid(p)===S.currentPlayerId?' pm-current':'');
       const nameSpan=document.createElement('span');
-      nameSpan.textContent=p.name;
+      nameSpan.textContent=D.playerDisplayName(p);
       const delBtn=document.createElement('button');
       delBtn.className='pm-del-btn';
       delBtn.textContent='×';
-      delBtn.onclick=()=>{ removePlayer(p.id); buildPlayerManager(); buildPlayerArea(); };
+      delBtn.onclick=()=>{ removePlayer(D.rpid(p)); buildPlayerManager(); buildPlayerArea(); };
       row.appendChild(nameSpan);
       row.appendChild(delBtn);
       activeList.appendChild(row);
@@ -386,7 +386,7 @@ function buildHoleNav(){
   }
 
   if(players){
-    players.forEach(p=>addPlayerRow(p.id,p.name,p.id===S.currentPlayerId));
+    players.forEach(p=>addPlayerRow(D.rpid(p),D.playerDisplayName(p),D.rpid(p)===S.currentPlayerId));
   } else {
     // Session mode — single unnamed row
     const epid=effectivePlayerId();
@@ -640,12 +640,12 @@ function ensureFocusSlots(){
   if(!S.focusSlots) S.focusSlots=[];
   const players=S.players||[];
   // purge stale ids
-  S.focusSlots=S.focusSlots.filter(id=>players.some(p=>p.id===id));
+  S.focusSlots=S.focusSlots.filter(id=>players.some(p=>D.rpid(p)===id));
   // fill up to 4 from players list
-  players.forEach(p=>{ if(S.focusSlots.length<4&&!S.focusSlots.includes(p.id)) S.focusSlots.push(p.id); });
+  players.forEach(p=>{ if(S.focusSlots.length<4&&!S.focusSlots.includes(D.rpid(p))) S.focusSlots.push(D.rpid(p)); });
   // if current player is valid but not in slots, bump first, add at end
   const curPid=S.currentPlayerId;
-  if(curPid&&players.some(p=>p.id===curPid)&&!S.focusSlots.includes(curPid)){
+  if(curPid&&players.some(p=>D.rpid(p)===curPid)&&!S.focusSlots.includes(curPid)){
     if(S.focusSlots.length>=4) S.focusSlots.shift();
     S.focusSlots.push(curPid);
   }
@@ -659,15 +659,15 @@ function buildFocusPlayerBtns(){
   if(players.length===0) return;
   ensureFocusSlots();
   S.focusSlots.forEach(id=>{
-    const p=players.find(x=>x.id===id);
+    const p=players.find(x=>D.rpid(x)===id);
     if(!p) return;
     const btn=document.createElement('button');
-    btn.className='rp-plyr-btn'+(p.id===S.currentPlayerId?' active':'');
-    btn.textContent=p.name;
-    btn.title=p.name;
+    btn.className='rp-plyr-btn'+(D.rpid(p)===S.currentPlayerId?' active':'');
+    btn.textContent=D.playerDisplayName(p);
+    btn.title=D.playerDisplayName(p);
     btn.onclick=()=>{
-      if(p.id===effectivePlayerId()){ curHole().shotIndex=-1; D.ws().shotIndex=-1; render(); scheduleSave(); }
-      else switchToPlayer(p.id);
+      if(D.rpid(p)===effectivePlayerId()){ curHole().shotIndex=-1; D.ws().shotIndex=-1; render(); scheduleSave(); }
+      else switchToPlayer(D.rpid(p));
     };
     cont.appendChild(btn);
   });
@@ -898,14 +898,14 @@ function openDrawerPicker(pid,holeIdx,e){
 function buildScoreDrawerBody(holeIdx){
   const body=document.getElementById('score-drawer-body');
   body.innerHTML='';
-  const players=(S.players&&S.players.length>0)?S.players:[{id:effectivePlayerId(),name:T('playerLbl')}];
+  const players=(S.players&&S.players.length>0)?S.players:[{roundPlayerId:effectivePlayerId(),name:T('playerLbl')}];
   players.forEach(p=>{
     const row=document.createElement('div');
     row.className='sd-player-row';
     // name
     const nm=document.createElement('div');
     nm.className='sd-pr-name';
-    nm.textContent=p.name;
+    nm.textContent=D.playerDisplayName(p);
     row.appendChild(nm);
     // controls
     const ctl=document.createElement('div');
@@ -915,13 +915,13 @@ function buildScoreDrawerBody(holeIdx){
     mBtn.className='sd-pr-adj';
     mBtn.textContent='−';
     mBtn.onclick=()=>{
-      adjPlayerDelta(p.id,-1,holeIdx);
+      adjPlayerDelta(D.rpid(p),-1,holeIdx);
       buildScoreDrawerBody(holeIdx);
       buildHoleNav(); render();
     };
     ctl.appendChild(mBtn);
     // delta badge — clickable to open picker
-    const d=getPlayerHoleDelta(p.id,holeIdx);
+    const d=getPlayerHoleDelta(D.rpid(p),holeIdx);
     const isDefault=(d===null);
     const displayDelta=isDefault?0:d;
     const badge=document.createElement('div');
@@ -934,14 +934,14 @@ function buildScoreDrawerBody(holeIdx){
       badge.style.color='#fff';
       badge.textContent=fmtDeltaDisplay(d);
     }
-    badge.onclick=(ev)=>openDrawerPicker(p.id,holeIdx,ev);
+    badge.onclick=(ev)=>openDrawerPicker(D.rpid(p),holeIdx,ev);
     ctl.appendChild(badge);
     // plus
     const pBtn=document.createElement('button');
     pBtn.className='sd-pr-adj';
     pBtn.textContent='+';
     pBtn.onclick=()=>{
-      adjPlayerDelta(p.id,+1,holeIdx);
+      adjPlayerDelta(D.rpid(p),+1,holeIdx);
       buildScoreDrawerBody(holeIdx);
       buildHoleNav(); render();
     };
@@ -962,7 +962,7 @@ function scoreDrawerClear(){
   const hi=_scoreDrawerHole;
   const players=(S.players&&S.players.length>0)?S.players:[{id:effectivePlayerId(),name:T('playerLbl')}];
   players.forEach(p=>{
-    setPlayerHoleDelta(p.id,hi,null);
+    setPlayerHoleDelta(D.rpid(p),hi,null);
   });
   buildScoreDrawerBody(hi);
   buildHoleNav(); render();
@@ -973,8 +973,8 @@ function scoreDrawerConfirm(){
   // For any player still at null (default), commit as par(0)
   const players=(S.players&&S.players.length>0)?S.players:[{id:effectivePlayerId(),name:T('playerLbl')}];
   players.forEach(p=>{
-    if(getPlayerHoleDelta(p.id,hi)===null){
-      setPlayerHoleDelta(p.id,hi,0);
+    if(getPlayerHoleDelta(D.rpid(p),hi)===null){
+      setPlayerHoleDelta(D.rpid(p),hi,0);
     }
   });
   buildHoleNav(); render();

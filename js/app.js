@@ -730,7 +730,7 @@ function ensurePlayerData(pid){ D.ensureScores(pid); }
 function currentPlayerDisplayName(){
   if(D.ws().currentPlayerId){
     const p=D.getPlayer(D.ws().currentPlayerId);
-    if(p) return p.name;
+    if(p) return D.playerDisplayName(p);
   }
   return D.ws().playerName||'PLAYER';
 }
@@ -773,9 +773,9 @@ function addPlayer(name){
   const players=D.sc().players;
   if(players.length>=150){ miniToast(T('maxPlayers'),true); return false; }
   if(players.find(p=>p.name===name)){ miniToast(T('playerExists'),true); return false; }
-  const id='p_'+Date.now()+'_'+Math.random().toString(36).slice(2,5);
   const isFirst=players.length===0;
-  D.addPlayer(id, name);
+  const newPlayer=D.addPlayer(name);  // v4.1: auto-generates roundPlayerId
+  const rpId=newPlayer.roundPlayerId;
   const ws=D.ws();
   if(!ws.playerHistory) ws.playerHistory=[];
   ws.playerHistory=[name,...ws.playerHistory.filter(n=>n!==name)].slice(0,50);
@@ -783,24 +783,29 @@ function addPlayer(name){
     // Migrate session data to this player
     const sessionScores=D.sc().scores[SESSION_ID];
     if(sessionScores){
-      D.sc().scores[id]=JSON.parse(JSON.stringify(sessionScores));
+      D.sc().scores[rpId]=JSON.parse(JSON.stringify(sessionScores));
       delete D.sc().scores[SESSION_ID];
     }
-    ws.currentPlayerId=id;
+    ws.currentPlayerId=rpId;
   }
   D.syncS(S);
   scheduleSave();
   return true;
 }
 
-function removePlayer(id){
-  D.removePlayer(id);
+function removePlayer(roundPlayerId){
+  D.removePlayer(roundPlayerId);
   const ws=D.ws();
-  if(ws.currentPlayerId===id){
-    ws.currentPlayerId=D.sc().players.length>0?D.sc().players[0].id:null;
+  if(ws.currentPlayerId===roundPlayerId){
+    const first=D.sc().players[0];
+    ws.currentPlayerId=first ? D.rpid(first) : null;
   }
+  // Clean dangling references
+  if(ws.focusSlots) ws.focusSlots=ws.focusSlots.filter(id=>id!==roundPlayerId);
+  if(ws.recentPlayerIds) ws.recentPlayerIds=ws.recentPlayerIds.filter(id=>id!==roundPlayerId);
   D.syncS(S);
   if(typeof buildPlayerArea==='function') buildPlayerArea();
+  if(typeof buildFocusPlayerBtns==='function') buildFocusPlayerBtns();
   render(); scheduleSave();
 }
 
@@ -1109,9 +1114,9 @@ function switchToNextPlayer(){
   const ps=S.players||[];
   if(!ps.length) return;
   const curPid=effectivePlayerId();
-  const idx=ps.findIndex(p=>p.id===curPid);
+  const idx=ps.findIndex(p=>D.rpid(p)===curPid);
   const next=idx<0?0:(idx+1)%ps.length;
-  switchToPlayer(ps[next].id);
+  switchToPlayer(D.rpid(ps[next]));
 }
 
 /** Switch to previous player in S.players list (cycle) */
@@ -1119,9 +1124,9 @@ function switchToPrevPlayer(){
   const ps=S.players||[];
   if(!ps.length) return;
   const curPid=effectivePlayerId();
-  const idx=ps.findIndex(p=>p.id===curPid);
+  const idx=ps.findIndex(p=>D.rpid(p)===curPid);
   const next=idx<=0?ps.length-1:idx-1;
-  switchToPlayer(ps[next].id);
+  switchToPlayer(D.rpid(ps[next]));
 }
 function setShotTag(type){
   const h=curHole();
@@ -2415,7 +2420,7 @@ function expTitleCase(s){ return s.split('_').map(w=>w?w[0].toUpperCase()+w.slic
 function expResLabel(){ const r=S.exportRes||2160; return r>=2160?'4K':r>=1440?'1440P':'1080P'; }
 function expModeLabel(){ return S.displayMode==='gross'?'Gross':'ToPar'; }
 function expCourse(){ return expTitleCase(expSanitize(S.courseName)||'Course'); }
-function expPlayer(){ if(S.currentPlayerId){const p=(S.players||[]).find(p=>p.id===S.currentPlayerId);if(p)return expTitleCase(expSanitize(p.name));} return 'Session'; }
+function expPlayer(){ if(S.currentPlayerId){const p=(S.players||[]).find(p=>D.rpid(p)===S.currentPlayerId);if(p)return expTitleCase(expSanitize(D.playerDisplayName(p)));} return 'Session'; }
 function expShotType(st){ return expTitleCase(st||'Shot'); }
 function expHole(n){ return `Hole${String(n).padStart(2,'0')}`; }
 function expShotFile(hole,shotNum,st){ return `${expPlayer()}_${expHole(hole)}_S${String(shotNum).padStart(2,'0')}_${expShotType(st)}_${expResLabel()}.png`; }
@@ -2524,7 +2529,7 @@ async function doExportHoleSequence(){
   const savedShotIndex=D.ws().shotIndex;
   const exportPlayers=[];
   for(const p of players){
-    if(D.getPlayerGross(p.id, holeIdx)!==null) exportPlayers.push(p);
+    if(D.getPlayerGross(D.rpid(p), holeIdx)!==null) exportPlayers.push(p);
   }
   if(exportPlayers.length===0){ miniToast(T('setScoreFirst'),true); return; }
 
@@ -2532,7 +2537,7 @@ async function doExportHoleSequence(){
   const zip=new JSZip();
   let totalSteps=1;
   exportPlayers.forEach(p=>{
-    const g=D.getPlayerGross(p.id, holeIdx)||0;
+    const g=D.getPlayerGross(D.rpid(p), holeIdx)||0;
     totalSteps+=g*2+1;
   });
   let step=0;
@@ -2540,12 +2545,13 @@ async function doExportHoleSequence(){
   try{
     for(const p of exportPlayers){
       // Switch to this player for rendering
-      D.ws().currentPlayerId=(p.id===D.SESSION)?null:p.id;
+      const _rpId=D.rpid(p);
+      D.ws().currentPlayerId=(_rpId===D.SESSION)?null:_rpId;
       D.syncS(S);
       const h=S.holes[holeIdx];
       const gross=getGross(h);
       if(!gross||gross<=0) continue;
-      const pName=expTitleCase(expSanitize(p.name));
+      const pName=expTitleCase(expSanitize(D.playerDisplayName(p)));
 
       for(let i=0;i<gross;i++){
         D.ws().shotIndex=i;
@@ -2657,21 +2663,23 @@ async function doExportAll(){
   const{w,h}=expGetDims();
   const ws=D.ws();
   const savedHole=ws.currentHole, savedPid=ws.currentPlayerId, savedSummary=ws.scorecardSummary, savedSI=ws.shotIndex;
-  const players=(D.sc().players.length>0)?D.sc().players:[{id:effectivePlayerId(),name:ws.playerName||T('playerLbl')}];
+  const players=(D.sc().players.length>0)?D.sc().players:[{roundPlayerId:effectivePlayerId(),name:ws.playerName||T('playerLbl')}];
   const _expHoles=D.holeCount();
   const totalSteps=players.length*_expHoles+players.length*(_expHoles+1);
   let step=0;
   try{
     for(const p of players){
-      ws.currentPlayerId=(p.id===D.SESSION)?null:p.id;
+      const _rpId=D.rpid(p);
+      const _pName=D.playerDisplayName(p);
+      ws.currentPlayerId=(_rpId===D.SESSION)?null:_rpId;
       D.syncS(S);
       for(let hi=0;hi<_expHoles;hi++){
         ws.currentHole=hi; ws.scorecardSummary=null; ws.shotIndex=-1;
         D.syncS(S);
-        step++; expShowProgress(`${p.name} Shot H${hi+1}`,step/totalSteps);
+        step++; expShowProgress(`${_pName} Shot H${hi+1}`,step/totalSteps);
         redrawOnly();
         const cv=expMakeShotCanvas(w,h);
-        const fn=`${expSanitize(p.name)}_${expHole(hi+1)}_Shot_${expModeLabel()}_${expResLabel()}.png`;
+        const fn=`${expSanitize(_pName)}_${expHole(hi+1)}_Shot_${expModeLabel()}_${expResLabel()}.png`;
         const blob=await expCanvasToBlob(cv);
         zip.file(fn,blob);
         await expSleep(10);
@@ -2680,19 +2688,19 @@ async function doExportAll(){
       for(let k=1;k<=_expHoles;k++){
         ws.currentHole=k;
         D.syncS(S);
-        step++; expShowProgress(`${p.name} SC ${k}/${_expHoles}`,step/totalSteps);
+        step++; expShowProgress(`${_pName} SC ${k}/${_expHoles}`,step/totalSteps);
         const scCv=expMakeSCCanvas(w,h);
         const rangeStr=k<=1?'0':`1-${k-1}`;
-        const fn=expSCFile(k,rangeStr).replace(expPlayer(),expSanitize(p.name));
+        const fn=expSCFile(k,rangeStr).replace(expPlayer(),expSanitize(_pName));
         const blob=await expCanvasToBlob(scCv);
         zip.file(fn,blob);
         await expSleep(10);
       }
       ws.scorecardSummary='tot';
       D.syncS(S);
-      step++; expShowProgress(`${p.name} SC TOT`,step/totalSteps);
+      step++; expShowProgress(`${_pName} SC TOT`,step/totalSteps);
       const totCv=expMakeSCCanvas(w,h);
-      const totFn=`${expSanitize(p.name)}_SC_TOT_1-${_expHoles}_${expModeLabel()}_${expResLabel()}.png`;
+      const totFn=`${expSanitize(D.playerDisplayName(p))}_SC_TOT_1-${_expHoles}_${expModeLabel()}_${expResLabel()}.png`;
       const totBlob=await expCanvasToBlob(totCv);
       zip.file(totFn,totBlob);
     }
@@ -3192,10 +3200,10 @@ function init(){
   // Restore saved player — only switch if saved player is valid
   const ws=D.ws();
   if(S.players.length>0 && ws.currentPlayerId){
-    const valid=S.players.some(p=>p.id===ws.currentPlayerId);
-    if(!valid){ ws.currentPlayerId=S.players[0].id; D.syncS(S); }
+    const valid=S.players.some(p=>D.rpid(p)===ws.currentPlayerId);
+    if(!valid){ ws.currentPlayerId=D.rpid(S.players[0]); D.syncS(S); }
   } else if(S.players.length>0 && !ws.currentPlayerId){
-    ws.currentPlayerId=S.players[0].id; D.syncS(S);
+    ws.currentPlayerId=D.rpid(S.players[0]); D.syncS(S);
   }
   // Preserve saved currentHole (clamp to valid range)
   const maxHole=D.holeCount()-1;

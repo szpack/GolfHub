@@ -100,10 +100,26 @@ const GolfLiveParser = (function(){
     }
     if(start < 0) return [];
     var cols = [start];
+    var maxGap = 5; // allow up to 5 gap columns (OUT, IN, TOT, etc.)
     for(var c2 = start + 1; c2 < row.length; c2++){
       var v2 = parseInt(String(row[c2] || '').trim(), 10);
-      if(v2 === cols.length + 1) cols.push(c2);
-      else break;
+      if(v2 === cols.length + 1){
+        cols.push(c2);
+      } else {
+        // Allow gaps for summary columns (OUT, IN, etc.) between hole 9 and 10
+        // Look ahead up to maxGap columns for the next expected hole number
+        var found = false;
+        for(var g = 1; g <= maxGap && (c2 + g) < row.length; g++){
+          var vg = parseInt(String(row[c2 + g] || '').trim(), 10);
+          if(vg === cols.length + 1){
+            cols.push(c2 + g);
+            c2 = c2 + g; // skip gap columns
+            found = true;
+            break;
+          }
+        }
+        if(!found) break;
+      }
     }
     return cols;
   }

@@ -5,9 +5,14 @@
 //
 // Data truth hierarchy:
 //   - course.holeSnapshot[] — par/yards frozen at round creation
-//   - players[] — array order IS the ordering truth (player.order is redundant)
-//   - scores[pid].holes[] — gross is primary, delta = gross - par (derived)
-//   - scores[pid].holes[].shots[] — per-shot detail records
+//   - players[] — array order IS the ordering truth
+//   - scores[roundPlayerId].holes[] — gross is primary, delta = gross - par (derived)
+//   - scores[roundPlayerId].holes[].shots[] — per-shot detail records
+//
+// Player schema v4.1:
+//   - roundPlayerId is the primary key (replaces legacy 'id')
+//   - Old 'id' field is still accepted on import for backward compat
+//   - team/color fields migrated to teamId/side/groupId/colorKey
 //
 // NOT exported as truth:
 //   - totals (derived cache)
@@ -19,9 +24,9 @@
 
 const SessionIO = (function(){
 
-  const SCHEMA_VERSION = '4.0';
+  const SCHEMA_VERSION = '4.1';
   const KIND = 'round-session';
-  const CURRENT_APP_VERSION = '12.1.0';
+  const CURRENT_APP_VERSION = '14.0.0';
 
   // ══════════════════════════════════════════
   // SERIALIZE — build export payload
@@ -37,16 +42,26 @@ const SessionIO = (function(){
 
     // Build players array — preserve array order (the single truth for ordering)
     const players = (sc.players || []).map(function(p, i){
+      var rpId = D.rpid(p);
       return {
-        id: p.id,
-        name: p.name,
-        order: i,  // redundant marker, array index is truth
-        nickname: p.nickname || '',
-        team: p.team || '',
-        color: p.color || '',
-        handicapIndex: p.handicapIndex,
-        courseHandicap: p.courseHandicap,
-        notes: p.notes || ''
+        roundPlayerId: rpId,
+        playerId: p.playerId || null,
+        name: p.name || '',
+        displayName: p.displayName || null,
+        shortName: p.shortName || null,
+        status: p.status || 'active',
+        teamId: p.teamId || null,
+        side: p.side || null,
+        groupId: p.groupId || null,
+        colorKey: p.colorKey || null,
+        hcpSnapshot: p.hcpSnapshot || null,
+        avatar: p.avatar || null,
+        role: p.role || null,
+        isGuest: !!p.isGuest,
+        notes: p.notes || '',
+        // Legacy compat fields for older importers
+        id: rpId,
+        order: i
       };
     });
 
@@ -80,6 +95,14 @@ const SessionIO = (function(){
       });
     }
 
+    // Teams & groups
+    var teams = (sc.teams || []).map(function(t){
+      return { teamId: t.teamId, name: t.name, color: t.color || null, notes: t.notes || '' };
+    });
+    var groups = (sc.groups || []).map(function(g){
+      return { groupId: g.groupId, name: g.name, teeTime: g.teeTime || null, notes: g.notes || '' };
+    });
+
     // UI state — only persistent display preferences, not transient states
     const uiState = {
       currentHole: ws.currentHole || 0,
@@ -108,6 +131,7 @@ const SessionIO = (function(){
       kind: KIND,
       appVersion: CURRENT_APP_VERSION,
       exportedAt: new Date().toISOString(),
+      playerSchemaVersion: sc.playerSchemaVersion || '4.1',
       meta: {
         roundId: sc.meta && sc.meta.roundId || null,
         createdAt: sc.meta && sc.meta.createdAt || null,
@@ -128,6 +152,8 @@ const SessionIO = (function(){
         })
       },
       players: players,
+      teams: teams,
+      groups: groups,
       holes: holes,
       uiState: uiState
     };
@@ -185,9 +211,10 @@ const SessionIO = (function(){
     if(!payload.round || typeof payload.round !== 'object'){
       throw new Error('Round data is missing');
     }
-    // Validate each player has required fields
+    // Validate each player has an ID (roundPlayerId or legacy id) and name
     payload.players.forEach(function(p, i){
-      if(!p.id || !p.name){
+      var pid = p.roundPlayerId || p.id;
+      if(!pid || !p.name){
         throw new Error('Player #' + (i+1) + ' is missing id or name');
       }
     });
@@ -210,8 +237,8 @@ const SessionIO = (function(){
 
   function migrateRoundPayload(payload){
     var ver = payload.schemaVersion;
-    // Current version — pass through
-    if(ver === '4.0') return payload;
+    // Current versions — pass through
+    if(ver === '4.0' || ver === '4.1') return payload;
     // Future version — reject
     var verNum = parseFloat(ver);
     if(verNum > parseFloat(SCHEMA_VERSION)){
@@ -219,7 +246,6 @@ const SessionIO = (function(){
     }
     // Older versions — attempt migration (extensible)
     if(verNum < 4.0){
-      // Future: add migration logic for older schemas here
       throw new Error('Schema version ' + ver + ' is too old and cannot be migrated');
     }
     return payload;
@@ -238,22 +264,25 @@ const SessionIO = (function(){
       round.holeSnapshot.push({number: round.holeSnapshot.length + 1, par: 4, yards: null, holeId: null});
     }
 
-    // Normalize players — ensure fields, re-index order
-    payload.players.forEach(function(p, i){
-      p.order = i;
-      if(p.nickname === undefined) p.nickname = '';
-      if(p.team === undefined) p.team = '';
-      if(p.color === undefined) p.color = '';
-      if(p.handicapIndex === undefined) p.handicapIndex = null;
-      if(p.courseHandicap === undefined) p.courseHandicap = null;
-      if(p.notes === undefined) p.notes = '';
+    // Normalize players via D.normalizePlayer — handles v4.0→v4.1 migration
+    payload.players = payload.players.map(function(p, i){
+      return D.normalizePlayer(p, i);
     });
 
     // Normalize holes — ensure all players have correct hole count with defaults
+    // Use roundPlayerId as key (normalizePlayer ensures it's set)
     var hc = round.holeCount;
     payload.players.forEach(function(p){
-      if(!payload.holes[p.id]) payload.holes[p.id] = [];
-      var arr = payload.holes[p.id];
+      var rpId = D.rpid(p);
+      // Check both new key and legacy key
+      var holesArr = payload.holes[rpId] || payload.holes[p.id] || [];
+      // Re-key under roundPlayerId if needed
+      if(!payload.holes[rpId] && payload.holes[p.id]){
+        payload.holes[rpId] = payload.holes[p.id];
+        if(rpId !== p.id) delete payload.holes[p.id];
+      }
+      if(!payload.holes[rpId]) payload.holes[rpId] = [];
+      var arr = payload.holes[rpId];
       while(arr.length < hc){
         arr.push({gross: null, net: null, putts: null, penalties: 0, notes: '', status: 'not_started', shots: []});
       }
@@ -280,9 +309,13 @@ const SessionIO = (function(){
       });
     });
 
+    // Normalize teams & groups
+    if(!Array.isArray(payload.teams)) payload.teams = [];
+    if(!Array.isArray(payload.groups)) payload.groups = [];
+
     // Strip any stale player IDs from holes that aren't in players[]
     var validPids = {};
-    payload.players.forEach(function(p){ validPids[p.id] = true; });
+    payload.players.forEach(function(p){ validPids[D.rpid(p)] = true; });
     // Keep session ID holes too
     validPids[D.SESSION] = true;
     for(var pid in payload.holes){
@@ -336,8 +369,6 @@ const SessionIO = (function(){
       // 2. Clear totals cache — will be rebuilt on demand
       sc.scores[pid].totals = {};
     }
-    // 3. Reindex player order
-    sc.players.forEach(function(p, i){ p.order = i; });
   }
 
   // ══════════════════════════════════════════
@@ -363,20 +394,13 @@ const SessionIO = (function(){
       return { number: h.number, par: h.par, yards: h.yards, holeId: h.holeId || null };
     });
 
-    // ── Write players ──
-    sc.players = payload.players.map(function(p, i){
-      return D.defPlayer(p.id, p.name, i);
-    });
-    // Copy extended fields
-    payload.players.forEach(function(p, i){
-      var sp = sc.players[i];
-      sp.nickname = p.nickname || '';
-      sp.team = p.team || '';
-      sp.color = p.color || '';
-      sp.handicapIndex = p.handicapIndex;
-      sp.courseHandicap = p.courseHandicap;
-      sp.notes = p.notes || '';
-    });
+    // ── Write players (already normalized) ──
+    sc.players = payload.players.slice();
+    sc.playerSchemaVersion = '4.1';
+
+    // ── Write teams & groups ──
+    sc.teams = (payload.teams || []).slice();
+    sc.groups = (payload.groups || []).slice();
 
     // ── Write scores ──
     sc.scores = {};
@@ -485,7 +509,7 @@ const SessionIO = (function(){
     // 3. Version migration
     payload = migrateRoundPayload(payload);
 
-    // 4. Normalize (fill defaults, clean structure)
+    // 4. Normalize (fill defaults, clean structure, migrate player schema)
     payload = normalizeRoundPayload(payload);
 
     // 5. Deserialize into D (replaces current round)

@@ -117,6 +117,20 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v14.0.1 — 2026-03-08
+- 修复GolfLive导入只解析9洞的严重bug：`findHoleColumns()` 遇到OUT/IN汇总列时提前终止，现在正确跳过间隔列继续搜索后9洞洞号
+
+### v14.0.0 — 2026-03-08
+- **Player 4.0 数据架构升级**：引入 `roundPlayerId` 双 ID 体系，替代旧 `id` 字段
+- 新增 `defPlayer()` 工厂函数：支持 displayName、shortName、status、teamId、side、groupId、colorKey、hcpSnapshot 等字段
+- 新增 `normalizePlayer()` / `migrateTeamField()` / `migrateColor()` 自动迁移旧版球员数据
+- 新增 `D.addPlayer()` / `D.removePlayer()` / `D.getPlayer()` / `D.updatePlayer()` API
+- 新增 `D.rpid(p)` 兼容访问器：同时支持新旧 ID 字段
+- 新增 `D.playerDisplayName(p)` / `D.playerShortName(p)` / `D.playerUIColor(p)` 显示辅助
+- sessionIO 导入导出升级至 schema v4.1，完整支持新球员字段，向后兼容 v4.0 导入
+- roundBuilder 导入使用 `genRoundPlayerId()` 生成唯一 ID，groupNo 映射至 groupId
+- 全局 UI 层 `p.id` 替换为 `D.rpid(p)`，`p.name` 替换为 `D.playerDisplayName(p)`
+
 ### v13.0.1 — 2026-03-08
 - 修复计分卡显示范围bug：F9/B9/18H标签现在根据实际洞数动态更新（如9洞球场显示F5/B4/9H）
 - 修复scorecardSummary持久化导致的显示覆盖问题：页面加载时自动清除临时summary状态
