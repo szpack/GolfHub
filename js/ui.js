@@ -738,9 +738,7 @@ function buildToParRow(){
 // ── RIGHT PANEL REFRESH ──
 function updateRightPanel(){
   const h=curHole(), idx=S.currentHole, gross=getGross(h);
-  // Course name (top + bottom nav)
-  const courseTop=document.getElementById('rp-course-name-top');
-  if(courseTop) courseTop.textContent=S.courseName||'';
+  // Course name (bottom nav)
   const courseBot=document.getElementById('rp-course-name');
   if(courseBot) courseBot.textContent=S.courseName||'';
   // HOLE + Par

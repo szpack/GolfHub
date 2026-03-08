@@ -117,6 +117,11 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v11.5.0 — 2026-03-08
+- 布局调整：球场信息栏移至左侧（预览区下方、计分卡导航区上方），一行显示球场名+Tee信息+Edit按钮
+- 右侧面板顺序调整：Hole → Players → Score → Shot Type
+- 未选择球场时显示红底"选择球场"按钮，选择后显示球场名、发球台颜色圆点、名称和总码数
+
 ### v11.4.6 — 2026-03-08
 - 修复计分卡叠加层TOT总杆：已打洞实际杆数+未打洞标准杆（如1号洞+1则显示73）
 

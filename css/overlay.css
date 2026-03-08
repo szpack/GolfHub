@@ -106,6 +106,17 @@ select:focus,input:focus{border-color:#2ea043}
 #score-range-sec{background:var(--panel-bg);border-bottom:1px solid var(--panel-border);padding:5px 10px;flex-shrink:0;display:none}
 #score-range-sec .opt-sub{margin:0;gap:10px}
 
+/* ── COURSE BAR ── */
+#course-bar{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--panel-bg);border-bottom:1px solid var(--panel-border);flex-shrink:0;min-height:32px}
+#cb-course-name{font:500 13px/1.2 'Roboto',Arial,sans-serif;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#cb-course-name.cb-empty{color:var(--text-muted);font-style:italic}
+#cb-tee-info{display:flex;align-items:center;gap:4px;font:500 11px/1 'Roboto',Arial,sans-serif;color:var(--text-muted);white-space:nowrap}
+.cb-tee-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.cb-btn{padding:3px 10px;border-radius:5px;border:1px solid var(--panel-border);background:transparent;color:var(--text-muted);font:600 11px/1.4 'Roboto',Arial,sans-serif;cursor:pointer;white-space:nowrap}
+.cb-btn:hover{border-color:var(--text-muted);color:var(--text-primary)}
+.cb-btn.cb-important{background:#c0392b;color:#fff;border-color:#c0392b}
+.cb-btn.cb-important:hover{background:#e74c3c}
+
 /* ── NAV (scorecard) ── */
 #nav{background:var(--panel-bg);flex-shrink:0;padding:4px;overflow-x:auto}
 /* ── Theme / Overlay Style picker (in Settings) ── */

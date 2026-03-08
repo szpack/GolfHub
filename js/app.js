@@ -71,6 +71,7 @@ const STRINGS = {
     albatross:'ALBATROSS', eagle:'EAGLE', birdie:'BIRDIE', par:'PAR',
     bogey:'BOGEY', double:'DOUBLE', triple:'TRIPLE',
     // UI labels
+    noCourseSelected:'No course selected', selectCourseBtn:'Select Course',
     courseLbl:'Course', playersLbl:'Players', scoreLbl:'Score', shotLbl:'SHOT',
     shotTypeLbl:'SHOT TYPE', purposeLbl:'PURPOSE', resultLbl:'RESULT', flagsLbl:'FLAGS', noteLbl:'NOTE',
     landGreen:'ON GREEN', landFairway:'FAIRWAY', landBunker:'BUNKER', landLight:'L.ROUGH', landHeavy:'H.ROUGH', landWater:'WATER', landTrees:'TREES',
@@ -168,6 +169,7 @@ const STRINGS = {
     albatross:'信天翁', eagle:'老鹰', birdie:'小鸟', par:'帕',
     bogey:'柏忌', double:'双柏忌', triple:'三柏忌',
     // UI labels
+    noCourseSelected:'未选择球场', selectCourseBtn:'选择球场',
     courseLbl:'球场', playersLbl:'球员', scoreLbl:'成绩', shotLbl:'击球',
     shotTypeLbl:'击球类型', purposeLbl:'目标', resultLbl:'结果', flagsLbl:'标记', noteLbl:'备注',
     landGreen:'上果岭', landFairway:'上球道', landBunker:'下沙', landLight:'二级草', landHeavy:'三级草', landWater:'下水', landTrees:'进树林',
@@ -974,10 +976,58 @@ function restoreActiveRound(){
 // ============================================================
 // COURSE NAME (right panel)
 // ============================================================
+const CB_TEE_COLORS={gold:'#DAA520',blue:'#2563EB',white:'#CCCCCC',red:'#DC2626',black:'#333',green:'#16A34A',silver:'#A0A0A0',champion:'#DAA520'};
 function updateCourseDisplay(){
+  // Bottom nav course name (legacy)
   const el=document.getElementById('rp-course-name');
-  if(!el) return;
-  el.textContent=S.courseName||'';
+  if(el) el.textContent=S.courseName||'';
+  // Course bar (left panel)
+  const nameEl=document.getElementById('cb-course-name');
+  const teeEl=document.getElementById('cb-tee-info');
+  const editBtn=document.getElementById('cb-edit-btn');
+  if(!nameEl) return;
+  const hasCourse=!!S.courseName;
+  if(hasCourse){
+    nameEl.textContent=S.courseName;
+    nameEl.classList.remove('cb-empty');
+  } else {
+    nameEl.textContent=T('noCourseSelected')||'未选择球场';
+    nameEl.classList.add('cb-empty');
+  }
+  // Tee info
+  if(teeEl){
+    teeEl.innerHTML='';
+    const tee=S.selectedTee;
+    if(hasCourse && tee){
+      const dot=document.createElement('span');
+      dot.className='cb-tee-dot';
+      dot.style.background=CB_TEE_COLORS[tee]||'#888';
+      teeEl.appendChild(dot);
+      const lbl=document.createElement('span');
+      lbl.textContent=tee.charAt(0).toUpperCase()+tee.slice(1);
+      teeEl.appendChild(lbl);
+      // Total yardage
+      const totalYds=S.holes.reduce((a,h)=>a+(h.holeLengthYds||0),0);
+      if(totalYds>0){
+        const yEl=document.createElement('span');
+        yEl.textContent=totalYds+'y';
+        yEl.style.color='var(--text-muted)';
+        teeEl.appendChild(yEl);
+      }
+    }
+  }
+  // Edit button
+  if(editBtn){
+    if(hasCourse){
+      editBtn.textContent='Edit';
+      editBtn.classList.remove('cb-important');
+      editBtn.onclick=()=>openCoursePicker();
+    } else {
+      editBtn.textContent=T('selectCourseBtn')||'选择球场';
+      editBtn.classList.add('cb-important');
+      editBtn.onclick=()=>openCoursePicker();
+    }
+  }
 }
 function editCourseName(){
   const bg=document.getElementById('course-edit-bg');

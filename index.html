@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Golf Overlay Tool v11.4.6</title>
+<title>Golf Overlay Tool v11.5.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/overlay.css?v=11.4.6">
+<link rel="stylesheet" href="./css/overlay.css?v=11.5.0">
 <script>
 /* Narrow-screen detection: use screen.width (physical device pixels)
    — immune to Safari "Request Desktop Website" which inflates viewport to ~980px */
@@ -28,7 +28,7 @@
 <div id="hdr">
   <img src="gologo.png" alt="Golf Overlay" class="logo-img">
   <div class="logo" id="logo-text">GOLF <span>OVERLAY</span></div>
-  <span class="logo-meta">v11.4.6<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
+  <span class="logo-meta">v11.5.0<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
   <span style="flex:1"></span>
   <div id="lang-wrap">
     <button id="btn-lang" onclick="toggleLangMenu()">🇺🇸 EN</button>
@@ -68,6 +68,14 @@
       <span style="flex:1"></span>
     </div>
 
+    <!-- Course Bar (one line) -->
+    <div id="course-bar">
+      <span id="cb-course-name">未选择球场</span>
+      <span id="cb-tee-info"></span>
+      <span style="flex:1"></span>
+      <button id="cb-edit-btn" class="cb-btn" onclick="openCoursePicker()">选择球场</button>
+    </div>
+
     <!-- Scorecard Nav — PGA style table -->
     <div id="nav">
       <div id="sc-grid"></div>
@@ -76,28 +84,7 @@
 
   <!-- RIGHT PANEL -->
   <div id="right">
-    <!-- 1. Course -->
-    <div class="rp-sec" id="rp-course-sec">
-      <div class="rp-row">
-        <span class="rp-sec-label" id="rp-course-lbl">Course</span>
-        <button class="rp-edit-btn" id="btn-course-pick" onclick="openCoursePicker()">SELECT</button>
-        <button class="rp-edit-btn" id="btn-course-edit" onclick="editCourseName()">EDIT</button>
-      </div>
-      <div class="rp-row">
-        <span id="rp-course-name-top" onclick="editCourseName()"></span>
-      </div>
-    </div>
-
-    <!-- 2. Players -->
-    <div class="rp-sec" id="rp-players-sec">
-      <div class="rp-row">
-        <span class="rp-sec-label" id="rp-players-lbl">Players</span>
-        <button class="rp-edit-btn" id="btn-player-mgr" onclick="openPlayerManager()">EDIT</button>
-      </div>
-      <div id="rp-player-btns"></div>
-    </div>
-
-    <!-- 2. Hole Info -->
+    <!-- 1. Hole Info -->
     <div class="rp-sec" id="rp-hole-sec">
       <div id="rp-hole-line1">
         <span id="rp-hole-lbl">HOLE</span>
@@ -110,6 +97,15 @@
         <input type="number" id="inp-dist" placeholder="—" min="0" max="999" onfocus="this.select()" class="rp-topin-input">
         <span id="dist-unit" class="rp-dist-unit">yds</span>
       </div>
+    </div>
+
+    <!-- 2. Players -->
+    <div class="rp-sec" id="rp-players-sec">
+      <div class="rp-row">
+        <span class="rp-sec-label" id="rp-players-lbl">Players</span>
+        <button class="rp-edit-btn" id="btn-player-mgr" onclick="openPlayerManager()">EDIT</button>
+      </div>
+      <div id="rp-player-btns"></div>
     </div>
 
     <!-- 3. Score + Shot -->
@@ -543,11 +539,11 @@
 <div id="mini-toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="./js/courseDatabase.js?v=11.4.6"></script>
-<script src="./js/scoreboard.js?v=11.4.6"></script>
-<script src="./js/ui.js?v=11.4.6"></script>
-<script src="./js/roundManager.js?v=11.4.6"></script>
-<script src="./js/coursePicker.js?v=11.4.6"></script>
-<script src="./js/app.js?v=11.4.6"></script>
+<script src="./js/courseDatabase.js?v=11.5.0"></script>
+<script src="./js/scoreboard.js?v=11.5.0"></script>
+<script src="./js/ui.js?v=11.5.0"></script>
+<script src="./js/roundManager.js?v=11.5.0"></script>
+<script src="./js/coursePicker.js?v=11.5.0"></script>
+<script src="./js/app.js?v=11.5.0"></script>
 </body>
 </html>
