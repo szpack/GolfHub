@@ -22,9 +22,14 @@ GolfOverlay/
 ├── index.html          # 页面结构（HTML骨架）
 ├── css/
 │   └── overlay.css     # 全部样式
+├── data/
+│   └── courses.json    # 球场数据库（静态JSON）
 ├── js/
+│   ├── courseDatabase.js # 球场数据管理层
 │   ├── scoreboard.js   # 计分卡逻辑
 │   ├── ui.js           # 界面操作
+│   ├── roundManager.js # Round状态管理
+│   ├── coursePicker.js # 球场选择器UI
 │   └── app.js          # 应用核心（最后加载）
 ├── assets/
 │   └── icons/          # 图标资源（备用）
@@ -67,9 +72,12 @@ GolfOverlay/
 
 ## 加载顺序
 ```html
-<script src="js/scoreboard.js"></script>  <!-- 无依赖 -->
-<script src="js/ui.js"></script>           <!-- 依赖 scoreboard.js -->
-<script src="js/app.js"></script>          <!-- 依赖 scoreboard.js + ui.js -->
+<script src="js/courseDatabase.js"></script>  <!-- 无依赖 -->
+<script src="js/scoreboard.js"></script>      <!-- 无依赖 -->
+<script src="js/ui.js"></script>              <!-- 依赖 scoreboard.js -->
+<script src="js/roundManager.js"></script>    <!-- 依赖 courseDatabase.js -->
+<script src="js/coursePicker.js"></script>    <!-- 依赖 courseDatabase.js + roundManager.js -->
+<script src="js/app.js"></script>             <!-- 依赖所有以上 -->
 ```
 
 ## 数据模型

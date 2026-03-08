@@ -117,6 +117,88 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v11.4.5 — 2026-03-08
+- 修正计分卡叠加层：每洞/OUT/IN跟随displayMode(ToPar/Gross)，仅TOT始终显示Gross
+
+### v11.4.4 — 2026-03-08
+- 计分卡叠加层始终显示Gross成绩（每洞/OUT/IN/TOT），不随displayMode切换
+
+### v11.4.3 — 2026-03-08
+- 计分卡叠加层OUT/IN/TOT总杆计算规则与击球信息区右上角总杆一致：仅统计已有成绩的洞、范围限制到当前洞、尊重displayMode（ToPar/Gross）
+
+### v11.4.2 — 2026-03-08
+- 修复buildTypeButtons中未定义变量`s`导致render()崩溃的致命bug（背景图消失、进度条不显示）
+- 修复Round恢复时球洞ID不匹配导致崩溃，改为占位符降级
+
+### v11.4.1 — 2026-03-08
+- 计分卡导航区点击球员名、球洞格子时，重置当前杆为概览模式（shotIndex=-1）
+- 点击已选中球员名同样重置到概览模式，确保总杆徽标正确显示
+- 修复Round恢复时若球洞ID在数据库中不存在会崩溃的问题，改为占位符降级
+
+### v11.4.0 — 2026-03-08
+- Shot 数据结构重构：每杆 5 类独立标签（Type / Purpose / Result / Flags / Notes）
+- Canvas 击球信息区：仅显示最后一次点击赋值的标签（lastTag）
+- 右侧面板：显示该杆全部已赋值标签，active 状态反映当前值
+- 导出文件名：去掉球会/球场前缀，Hole01 替代 H01
+- 旧数据自动迁移（manualShotType→type, manualResult→purpose, landing→result, manualCustomStatus→flags）
+
+### v11.3.2 — 2026-03-08
+- Canvas 击球叠加层：逐杆进度视图时隐藏右上角总杆 badge，仅在本洞 result 模式显示
+
+### v11.3.1 — 2026-03-08
+- 修复：左右键未选中杆时现在正确停留在第一杆，不再跳到第二杆
+- 上下方向键改为切换球员（循环），无当前球员时自动选第一个
+
+### v11.3.0 — 2026-03-08
+- 左右方向键切换上/下一杆（在已打杆数内循环），无选中杆时自动选中第一杆
+- 上下方向键切换上/下一洞
+- 字母快捷键直接设置击球类型/目的/落点/标记（T/A/L/C/U/B/P/O/G/F/K/R/H/W/E/Y/V）
+- 按钮左下角显示快捷键提示字母
+- To Pin 输入框聚焦时屏蔽所有快捷键，避免冲突
+- 移除自动聚焦 To Pin 输入框
+
+### v11.2.0 — 2026-03-08
+- 球场选择器新增发球台选择（Tee Box），支持 gold/blue/white/red 等发球台
+- 默认选择蓝色发球台（Blue Tee）
+- 选择发球台后自动根据 teeYards 数据填充每洞距离（holeLengthYds）
+- 保存发球台选择到状态，恢复 round 时自动应用
+- Export 面板新增 Import CSV 功能，导入成绩自动匹配/创建球员并写入 delta
+
+### v11.1.1 — 2026-03-08
+- 修复占位洞（placeholder holes）伪造 par=4 问题：自动补洞现在标记 `isPlaceholder:true`，par 为 null
+- 新增 `safePar()` / `parDisplay()` / `hasRealPar()` 辅助函数，系统性守护所有 par 引用
+- 计分卡导航、Canvas 计分卡、击球信息版、To Par 行、移动端 UI 全部容错：par 为 null 时显示 `—`
+- 导出（PNG/CSV）不再将占位洞伪装为 par 4，CSV 中占位洞 par 列留空
+- Round 恢复后自动从球场数据库同步 par/yard，若数据库已补充真实数据则立即生效
+- Round 恢复失败时给出 toast 提示并降级到手动模式，不再静默失败
+- 确认无旧 API（`getRouting` / `buildOrderedHoles`）残留调用
+
+### v11.1.0 — 2026-03-08
+- 升级球场数据库至 V3.1 规范，支持 fixed_18 和 composable_9 两种球会模式
+- fixed_18 球会：选俱乐部 → 选球场（course），自动生成 routing
+- composable_9 球会：选俱乐部 → 选前9 + 后9 segment，验证组合规则后生成 routing
+- 空洞数据自动填充：当 holes[] 为空时自动生成默认 par 4 占位洞
+- CourseDatabase 全面重构：运行时 routing 生成、compositionRules 校验、全局 hole.id 索引
+- RoundManager 改为接受 routing 对象（createRoundFromRouting），支持 round 持久化恢复
+- 球场选择器 UI 分支：根据 routingMode 显示不同的第二步选择界面
+- 兼容 V3.1 深圳球场数据：沙河、西丽、云海谷、观澜湖、隐秀、名商等
+
+### v11.0.0 — 2026-03-07
+- 新增球场数据库系统：本地 JSON 球场数据读取（/data/courses.json）
+- 新增球场选择器：先选俱乐部再选 Routing（路线），支持 A+B / B+C / C+A 等多路线组合
+- 新增 Round 管理：选定路线后自动初始化 round，填充各洞 par/yard，重置成绩
+- 计分卡、击球面板、导航、导出等全部联动新 round 数据
+- 支持动态洞数（不再硬编码18洞），为未来跳洞/补洞/任意洞开球预留扩展
+- 包含示例数据：沙河高尔夫球会（A/B/C 三场 + 3条路线）、观澜湖高尔夫球会（前后场 + Full 18）
+- 代码拆分为 courseDatabase.js / roundManager.js / coursePicker.js 三个模块
+
+### v10.22.1 — 2026-03-07
+- Logo图片后恢复GOLF OVERLAY产品名文字，保持原有样式
+
+### v10.22.0 — 2026-03-07
+- 使用自定义Logo图片(gologo.png)替换原文字Logo
+- 页头显示品牌Logo图标，桌面端32px/移动端26px
+
 ### v10.21.2 — 2026-03-07
 - 修复计分卡被拖出画布底部后不可见的问题：drawOverlays/导出/移动端均添加Y轴钳位
 - snapPos限制拖拽范围，保证至少40%高度在画布内

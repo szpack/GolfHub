@@ -719,7 +719,7 @@ function defState(){
     playerName:'PLAYER', courseName:'', currentHole:0, displayMode:'topar',
     ratio:'16:9', showShot:true, showScore:true, scoreRange:'18',
     scorecardSummary:null,
-    showTotal:true, showDist:false,
+    showTotal:true, showDist:false, selectedTee:'blue',
     exportRes:2160, bgOpacity:1.0, overlayOpacity:1.0,
     safeZone:false, szSize:'10', lang:'en', theme:'classic',
     userBg:null,
@@ -753,8 +753,13 @@ function effectivePlayerId(){ return S.currentPlayerId||SESSION_ID; }
 
 function ensurePlayerData(pid){
   if(!S.byPlayer) S.byPlayer={};
+  const count=S.holes.length||18;
   if(!S.byPlayer[pid]){
-    S.byPlayer[pid]={holes:Array.from({length:18},()=>({delta:null,shots:[],shotIndex:0,manualTypes:{},toPins:{}}))};
+    S.byPlayer[pid]={holes:Array.from({length:count},()=>({delta:null,shots:[],shotIndex:0,manualTypes:{},toPins:{}}))};
+  } else if(S.byPlayer[pid].holes.length!==count){
+    // Resize player holes to match current round
+    while(S.byPlayer[pid].holes.length<count) S.byPlayer[pid].holes.push({delta:null,shots:[],shotIndex:0,manualTypes:{},toPins:{}});
+    if(S.byPlayer[pid].holes.length>count) S.byPlayer[pid].holes.length=count;
   }
 }
 
@@ -814,6 +819,8 @@ function switchToPlayer(pid){
   loadPlayerData(effectivePlayerId());
   trackRecentPlayer(pid);
   clearReady();
+  // Reset to overview mode so canvas shows result + total badge
+  curHole().shotIndex=-1;
   if(typeof buildPlayerArea==='function') buildPlayerArea();
   if(typeof buildFocusPlayerBtns==='function') buildFocusPlayerBtns();
   render(); scheduleSave();
@@ -870,6 +877,9 @@ function doSave(){
   try{
     // Sync current player's live S.holes back to byPlayer before saving
     saveCurrentPlayerData();
+    // Sync round manager state back to S.activeRound
+    const rm=typeof RoundManager!=='undefined'?RoundManager.getRound():null;
+    if(rm) S.activeRound=JSON.parse(JSON.stringify(rm));
     const forStorage={...S,userBg:null};
     localStorage.setItem(LS_KEY,JSON.stringify(forStorage));
     if(S.userBg){
@@ -893,7 +903,8 @@ function loadSaved(){
       if(S.scorecardPos[r]===undefined) S.scorecardPos[r]=defState().scorecardPos[r];
       else if(S.scorecardPos[r].y>0.92) S.scorecardPos[r].y=0.82;
     });
-    S.holes=Array.from({length:18},(_,i)=>Object.assign(
+    const holeCount=saved.holes?saved.holes.length:18;
+    S.holes=Array.from({length:holeCount},(_,i)=>Object.assign(
       {par:4,holeLengthYds:null,delta:null,shots:[],shotIndex:0,manualTypes:{},toPins:{}},
       saved.holes?.[i]||{}
     ));
@@ -923,7 +934,41 @@ function loadSaved(){
     if(S.exportRes===undefined) S.exportRes=2160;
     if(!S.courseName) S.courseName='';
     if(!S.theme) S.theme='classic';
+    // activeRound is restored later after CourseDatabase loads
   } catch(e){ console.warn('loadSaved error',e); }
+}
+
+/** Restore active round from S.activeRound after CourseDatabase is ready */
+function restoreActiveRound(){
+  if(S.activeRound && S.activeRound.clubId && S.activeRound.routingId){
+    try {
+      const restored = RoundManager.restoreRound(S.activeRound, S.selectedTee || 'blue');
+      if(restored){
+        // Sync par/yard from course DB into S.holes (DB may have been updated)
+        const oh = RoundManager.getOrderedHoles();
+        if(oh){
+          S.holes.forEach((h,i)=>{
+            if(oh[i]){
+              // Only overwrite par if DB has real data (not placeholder)
+              if(oh[i].par != null) h.par = oh[i].par;
+              if(oh[i].yard != null) h.holeLengthYds = oh[i].yard;
+              h.isPlaceholder = (oh[i].par == null);
+            }
+          });
+        }
+        console.log('[init] restored round:', S.activeRound.routingName);
+        render();
+      } else {
+        console.warn('[init] round restore returned null — clearing activeRound');
+        S.activeRound = null;
+        miniToast('Round restore failed — manual mode', true);
+      }
+    } catch(e){
+      console.warn('[init] failed to restore round:', e.message);
+      S.activeRound=null;
+      miniToast('Round restore error — manual mode', true);
+    }
+  }
 }
 
 // ============================================================
@@ -992,7 +1037,7 @@ function clearBg(){ S.userBg=null; applyBg(); scheduleSave(); closeSettings(); }
 // ============================================================
 // MUTATIONS
 // ============================================================
-function setPar(v){ curHole().par=v; reconcileShots(curHole()); render(); scheduleSave(); }
+function setPar(v){ const h=curHole(); h.par=v; h.isPlaceholder=false; reconcileShots(h); render(); scheduleSave(); }
 
 function setDelta(d){
   const h=curHole();
@@ -1029,16 +1074,14 @@ function reconcileShots(h){
   while(h.shots.length<gross) h.shots.push({});
   if(h.shotIndex>=gross) h.shotIndex=gross-1;
   if(h.shotIndex<-1) h.shotIndex=-1;
-  // Default shot types: first = TEE, last = PUTT (only if not manually set)
-  if(gross>=1&&!h.shots[0].manualShotType){ h.shots[0].manualShotType='TEE'; h.manualTypes[0]=true; }
-  if(gross>=2&&!h.shots[gross-1].manualShotType){ h.shots[gross-1].manualShotType='PUTT'; h.manualTypes[gross-1]=true; }
-  // Migrate legacy data & sync type field
-  h.shots.forEach((s,i)=>{
-    if(s.type && !s.manualShotType && h.manualTypes && h.manualTypes[i]){
-      s.manualShotType=s.type;
-    }
-    const eff=getEffectiveShot(h,i);
-    s.type=eff.shotType;
+  // Migrate legacy field names to new model
+  h.shots.forEach(s=>{
+    if(s.manualShotType && !s.type)     { s.type=s.manualShotType; }
+    if(s.manualResult   && !s.purpose)  { s.purpose=s.manualResult; }
+    if(s.landing        && !s.result)   { s.result=s.landing; }
+    if(s.manualCustomStatus && !s.flags){ s.flags=s.manualCustomStatus; }
+    // Clean up legacy fields
+    delete s.manualShotType; delete s.manualResult; delete s.landing; delete s.manualCustomStatus;
   });
 }
 
@@ -1051,9 +1094,7 @@ function clearHole(){
 function setMode(m){ S.displayMode=m; render(); scheduleSave(); }
 
 function focusToPin(){
-  if(isMobile()) return; // prevent page jump on mobile
-  const el=document.getElementById('inp-dist');
-  if(el){ el.focus(); el.select(); }
+  // disabled — no longer auto-focus to pin input
 }
 function prevShot(){
   const h=curHole(), g=getGross(h);
@@ -1061,66 +1102,65 @@ function prevShot(){
   clearReady();
   if(h.shotIndex<0) { h.shotIndex=g-1; }
   else { h.shotIndex=h.shotIndex<=0?g-1:h.shotIndex-1; }
-  render(); scheduleSave(); focusToPin();
+  render(); scheduleSave();
 }
 function nextShot(){
   const h=curHole(), g=getGross(h);
   if(h.delta===null||!g) return;
   clearReady();
   if(h.shotIndex<0) { h.shotIndex=0; }
-  else { h.shotIndex=h.shotIndex>=g-1?-1:h.shotIndex+1; }
-  render(); scheduleSave(); focusToPin();
-}
-function setShotType(type){
-  const h=curHole();
-  if(h.delta===null||h.shotIndex<0) return;
-  const category=getShotCategory(type);
-  const gross=getGross(h);
-
-  if(category==='type'){
-    clearReady();
-    const targetIdx=h.shotIndex;
-    if(!h.shots[targetIdx]) h.shots[targetIdx]={};
-    const ts=h.shots[targetIdx];
-    if(ts.manualShotType===type) ts.manualShotType=null;
-    else ts.manualShotType=type;
-    const tEff=getEffectiveShot(h,targetIdx);
-    ts.type=tEff.shotType;
-    h.manualTypes[targetIdx]=!!ts.manualShotType;
-  } else {
-    // Purpose / Result / Flag: always modify current shot, cancel ready
-    clearReady();
-    const si=h.shotIndex;
-    if(!h.shots[si]) h.shots[si]={};
-    const s=h.shots[si];
-    if(category==='result'){
-      if(s.manualResult===type) s.manualResult=null;
-      else s.manualResult=type;
-    } else if(category==='flag'){
-      if(s.manualCustomStatus===type) s.manualCustomStatus=null;
-      else s.manualCustomStatus=type;
-    }
-    const newEff=getEffectiveShot(h,si);
-    s.type=newEff.shotType;
-    h.manualTypes[si]=!!s.manualShotType;
-  }
-
+  else { h.shotIndex=h.shotIndex>=g-1?0:h.shotIndex+1; }
   render(); scheduleSave();
 }
+/** Select first shot if none selected, used by keyboard handler.
+ *  Returns: 'ready' if already selected, 'just_selected' if just picked first shot, false if no score */
+function ensureShotSelected(){
+  const h=curHole(), g=getGross(h);
+  if(h.delta===null||!g) return false;
+  if(h.shotIndex<0){ clearReady(); h.shotIndex=0; render(); scheduleSave(); return 'just_selected'; }
+  return 'ready';
+}
 
-function setLanding(type){
+/** Switch to next player in S.players list (cycle) */
+function switchToNextPlayer(){
+  const ps=S.players||[];
+  if(!ps.length) return;
+  const curPid=effectivePlayerId();
+  const idx=ps.findIndex(p=>p.id===curPid);
+  const next=idx<0?0:(idx+1)%ps.length;
+  switchToPlayer(ps[next].id);
+}
+
+/** Switch to previous player in S.players list (cycle) */
+function switchToPrevPlayer(){
+  const ps=S.players||[];
+  if(!ps.length) return;
+  const curPid=effectivePlayerId();
+  const idx=ps.findIndex(p=>p.id===curPid);
+  const next=idx<=0?ps.length-1:idx-1;
+  switchToPlayer(ps[next].id);
+}
+function setShotTag(type){
   const h=curHole();
   if(h.delta===null||h.shotIndex<0) return;
   clearReady();
-  if(!h.shots[h.shotIndex]) h.shots[h.shotIndex]={};
-  const s=h.shots[h.shotIndex];
-  s.landing=(s.landing===type)?null:type;
+  const si=h.shotIndex;
+  if(!h.shots[si]) h.shots[si]={};
+  const s=h.shots[si];
+  const cat=getShotCategory(type); // 'type'|'purpose'|'result'|'flags'
+  // Toggle: same value → clear, different value → replace
+  if(s[cat]===type){ s[cat]=null; s.lastTag=null; }
+  else { s[cat]=type; s.lastTag=cat; }
   render(); scheduleSave();
 }
+// Legacy aliases
+function setShotType(type){ setShotTag(type); }
+function setLanding(type){ setShotTag(type); }
 
 function getShotCategory(type){
-  if(['PENALTY','PROV'].includes(type)) return 'flag';
-  if(['FOR_BIRDIE','FOR_PAR','FOR_BOGEY','FOR_DOUBLE','FOR_TRIPLE'].includes(type)) return 'result';
+  if(['PENALTY','PROV'].includes(type)) return 'flags';
+  if(['FOR_BIRDIE','FOR_PAR','FOR_BOGEY','FOR_DOUBLE','FOR_TRIPLE'].includes(type)) return 'purpose';
+  if(['GREEN','FAIRWAY','BUNKER','LIGHT_ROUGH','HEAVY_ROUGH','WATER','TREES'].includes(type)) return 'result';
   return 'type';
 }
 
@@ -1150,20 +1190,36 @@ function setShotToPin(val){
   redrawOnly(); scheduleSave();
 }
 
-function resetAllPars(){ S.holes.forEach(h=>h.par=4); render(); scheduleSave(); closeSettings(); }
+function resetAllPars(){
+  // If round from course DB is active, reset pars to course-defined values
+  const oh=RoundManager.getRound()?RoundManager.getOrderedHoles():null;
+  S.holes.forEach((h,i)=>{ h.par=(oh&&oh[i]&&oh[i].par!=null)?oh[i].par:4; });
+  render(); scheduleSave(); closeSettings();
+}
 
 function gotoNextHole(){
-  const next=(S.currentHole+1)%18;
+  const total=S.holes.length||18;
+  const next=(S.currentHole+1)%total;
   S.currentHole=next;
   S.scorecardSummary=null;
+  // Sync round manager if active
+  if(RoundManager.getRound()){
+    const oh=RoundManager.getOrderedHoles();
+    if(oh&&oh[next]) RoundManager.setCurrentHole(oh[next].holeId);
+  }
   resetAllShotIndex(next);
   clearReady();
   render(); scheduleSave();
 }
 function gotoPrevHole(){
-  const prev=(S.currentHole+17)%18;
+  const total=S.holes.length||18;
+  const prev=(S.currentHole+total-1)%total;
   S.currentHole=prev;
   S.scorecardSummary=null;
+  if(RoundManager.getRound()){
+    const oh=RoundManager.getOrderedHoles();
+    if(oh&&oh[prev]) RoundManager.setCurrentHole(oh[prev].holeId);
+  }
   resetAllShotIndex(prev);
   clearReady();
   render(); scheduleSave();
@@ -2186,17 +2242,17 @@ function drawShotOverlay(ctx,X,Y,scale){
 
   ctx.fillStyle=th.parValColor;
   ctx.font=`${th.parValWeight} ${Math.round(th.parValSize*scale)}px ${SF}`;
-  ctx.fillText(String(h.par),X+colW/2,Y+H*0.80);
+  ctx.fillText(parDisplay(h),X+colW/2,Y+H*0.80);
 
   // ── ROW1: player name + total badge ──
   const rx=X+colW+rpad, rW=W-colW-2*rpad;
 
-  // Total badge: show holes 1..N (current hole inclusive)
+  // Total badge: only show in overview/result mode (shotIndex<0), not per-shot view
   const _ci=S.currentHole;
   const _totalHoles=S.holes.slice(0,_ci+1).filter(x=>x.delta!==null);
   const _ctxTd=_totalHoles.reduce((a,x)=>a+x.delta,0);
-  const _ctxTg=_totalHoles.reduce((a,x)=>a+x.par+x.delta,0);
-  const _showTotal=S.showTotal&&_totalHoles.length>0;
+  const _ctxTg=_totalHoles.reduce((a,x)=>a+safePar(x)+x.delta,0);
+  const _showTotal=S.showTotal&&_totalHoles.length>0&&h.shotIndex<0;
 
   let nameMaxW=rW;
   if(_showTotal){
@@ -2236,7 +2292,7 @@ function drawShotOverlay(ctx,X,Y,scale){
   // Show max(si+1, par): up to current shot, pad to par with outline if under par.
   const gross=getGross(h), si=h.shotIndex;
   const overviewMode=si<0;
-  const sqCount=overviewMode?Math.max(gross||0, h.par):Math.max(si+1, h.par);
+  const sqCount=overviewMode?Math.max(gross||0, safePar(h)):Math.max(si+1, safePar(h));
   const sqSz=24*scale, sqGap=5*scale;
   const totalSqW=sqCount*(sqSz+sqGap)-sqGap;
   const sqStartX=X+W-rpad-totalSqW;
@@ -2277,17 +2333,12 @@ function drawShotOverlay(ctx,X,Y,scale){
   const toPinFontSz=Math.round(th.distValSize*scale);
   const resultFontSz=Math.round(th.resultBadgeSize*scale);
 
-  // ── Use inference engine for display ──
+  // ── Shot display (v11.4 — lastTag model) ──
   const effSi=overviewMode?Math.max((gross||1)-1,0):si;
   const eff=getEffectiveShot(h,effSi);
-  const isLast=overviewMode||si===gross-1;
-  // Display priority: flags > result > shotType
-  const hasFlag=!overviewMode&&!!eff.customStatus;  // manual flags only (PENALTY, PROV)
-  const hasResult=!!eff.result;
-  // Show result badge on last shot or overview mode (unless flag overrides)
-  const isResultMode=isLast && !hasFlag;
+  const isResultMode=overviewMode; // overview = result mode (show delta badge)
 
-  // LEFT: To Pin distance
+  // LEFT: To Pin distance (only in per-shot mode)
   const shotToPin=overviewMode?null:getShotToPin(h,si);
   if(!isResultMode && shotToPin!==null){
     const distVal=String(shotToPin);
@@ -2302,26 +2353,15 @@ function drawShotOverlay(ctx,X,Y,scale){
     ctx.fillText(unit,rx+dw+3*scale,r3y+r3h/2);
   }
 
-  // CENTER: display label with priority
-  // Manual shot type overrides auto result display
+  // CENTER: show only the lastTag label (most recently clicked)
   let centerTxt='';
-  if(hasFlag){
-    // Manual flags (PENALTY, PROV) take priority
-    centerTxt=shotTypeLabel(eff.customStatus);
-  } else if(eff.isManualType && !isLast){
-    // Manual shot type takes priority over auto result
-    centerTxt=shotTypeLabel(eff.shotType);
-  } else if(hasResult && !isLast){
-    // Result tag on second-last shot (only auto result when no manual type)
-    centerTxt=shotTypeLabel(eff.result);
-  } else if(!isLast || (isLast && hasResult)){
-    // Shot type label
-    centerTxt=shotTypeLabel(eff.shotType);
-  }
-  // Note can override if no other label
-  if(!centerTxt){
-    const shotNote=overviewMode?'':(h.shots[si]?.note||'');
-    if(shotNote) centerTxt=shotNote.toUpperCase();
+  if(!overviewMode){
+    centerTxt=shotLastTagLabel(h,si);
+    // Fallback to note if no tag label
+    if(!centerTxt){
+      const shotNote=h.shots[si]?.note||'';
+      if(shotNote) centerTxt=shotNote.toUpperCase();
+    }
   }
   if(centerTxt){
     ctx.font=`${th.shotTypeWeight} ${shotFontSz}px ${SF}`;
@@ -2330,7 +2370,7 @@ function drawShotOverlay(ctx,X,Y,scale){
     ctx.fillText(centerTxt,midX,r3y+r3h/2);
   }
 
-  // RIGHT: result badge
+  // RIGHT: result badge (only in overview/result mode)
   if(isResultMode){
     const resultTxt=deltaLabel(h.delta);
     ctx.font=`${th.resultBadgeWeight} ${resultFontSz}px ${SF}`;
@@ -2381,9 +2421,10 @@ function expModeLabel(){ return S.displayMode==='gross'?'Gross':'ToPar'; }
 function expCourse(){ return expTitleCase(expSanitize(S.courseName)||'Course'); }
 function expPlayer(){ if(S.currentPlayerId){const p=(S.players||[]).find(p=>p.id===S.currentPlayerId);if(p)return expTitleCase(expSanitize(p.name));} return 'Session'; }
 function expShotType(st){ return expTitleCase(st||'Shot'); }
-function expShotFile(hole,shotNum,st){ return `${expCourse()}_${expPlayer()}_H${String(hole).padStart(2,'0')}_S${String(shotNum).padStart(2,'0')}_${expShotType(st)}_${expResLabel()}.png`; }
-function expFinalFile(hole,res){ return `${expCourse()}_${expPlayer()}_H${String(hole).padStart(2,'0')}_ZFinal_${res}_${expResLabel()}.png`; }
-function expSCFile(k,range){ return `${expCourse()}_${expPlayer()}_SC_${String(k).padStart(2,'0')}_${range}_${expResLabel()}.png`; }
+function expHole(n){ return `Hole${String(n).padStart(2,'0')}`; }
+function expShotFile(hole,shotNum,st){ return `${expPlayer()}_${expHole(hole)}_S${String(shotNum).padStart(2,'0')}_${expShotType(st)}_${expResLabel()}.png`; }
+function expFinalFile(hole,res){ return `${expPlayer()}_${expHole(hole)}_ZFinal_${res}_${expResLabel()}.png`; }
+function expSCFile(k,range){ return `${expPlayer()}_SC_${String(k).padStart(2,'0')}_${range}_${expResLabel()}.png`; }
 
 function expCanvasToBlob(canvas){ return new Promise(r=>canvas.toBlob(r,'image/png')); }
 function expSleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
@@ -2498,7 +2539,7 @@ async function doExportHoleSequence(){
   let totalSteps=0;
   exportPlayers.forEach(p=>{
     const d=(p.id===effectivePlayerId())?S.holes[holeIdx].delta:(S.byPlayer[p.id].holes[holeIdx].delta);
-    totalSteps+=S.holes[holeIdx].par+d+1; // gross + final
+    totalSteps+=safePar(S.holes[holeIdx])+d+1; // gross + final
   });
   let step=0;
 
@@ -2520,24 +2561,24 @@ async function doExportHoleSequence(){
         h.shotIndex=i;
         if(i===gross-1){
           const ft=expGetForType(h.delta);
-          if(!h.shots[i]) h.shots[i]={type:null};
-          h.shots[i].type=ft; h.manualTypes[i]=true;
+          if(!h.shots[i]) h.shots[i]={};
+          h.shots[i].purpose=ft; h.shots[i].lastTag='purpose';
         }
         step++;
         expShowProgress(`${pName} S${i+1}`,step/totalSteps);
         const canvas=expMakeShotCanvas(w,H);
-        const st=(h.shots[i]?.type||'SHOT').replace(/ /g,'_').toUpperCase();
-        zip.file(`${expCourse()}_${pName}_H${String(holeNum).padStart(2,'0')}_S${String(i+1).padStart(2,'0')}_${expShotType(st)}_${expResLabel()}.png`,await expCanvasToBlob(canvas));
+        const eff=getEffectiveShot(h,i);
+        const st=(eff.type||eff.purpose||'SHOT').replace(/ /g,'_').toUpperCase();
+        zip.file(`${pName}_${expHole(holeNum)}_S${String(i+1).padStart(2,'0')}_${expShotType(st)}_${expResLabel()}.png`,await expCanvasToBlob(canvas));
         await expSleep(10);
       }
-      // FINAL frame
-      h.shotIndex=gross-1;
-      delete h.manualTypes[gross-1];
+      // FINAL frame: overview mode (shotIndex=-1 for result badge)
+      h.shotIndex=-1;
       step++;
       expShowProgress(`${pName} Final`,step/totalSteps);
       const fcanvas=expMakeShotCanvas(w,H);
       const resultStr=deltaLabel(h.delta).replace(/\s+/g,'_').toUpperCase();
-      zip.file(`${expCourse()}_${pName}_H${String(holeNum).padStart(2,'0')}_ZFinal_${resultStr}_${expResLabel()}.png`,await expCanvasToBlob(fcanvas));
+      zip.file(`${pName}_${expHole(holeNum)}_ZFinal_${resultStr}_${expResLabel()}.png`,await expCanvasToBlob(fcanvas));
       // restore this player's state
       h.shotIndex=savedIdx; h.manualTypes=savedMT; h.shots=JSON.parse(JSON.stringify(savedShots));
     }
@@ -2548,7 +2589,7 @@ async function doExportHoleSequence(){
 
     expShowProgress('Packaging ZIP…',0.97);
     const zblob=await zip.generateAsync({type:'blob'});
-    expDownloadBlob(zblob,`${expCourse()}_H${String(holeNum).padStart(2,'0')}_AllPlayers.zip`);
+    expDownloadBlob(zblob,`${expHole(holeNum)}_AllPlayers.zip`);
     expShowProgress('Done ✓',1);
     setTimeout(expHideProgress,2500);
   } catch(err){
@@ -2571,10 +2612,11 @@ async function doExportScorecardSequence(){
   const savedHole=S.currentHole, savedSummary=S.scorecardSummary;
   S.scorecardSummary=null;
 
+  const _scTotal=S.holes.length||18;
   try{
-    for(let k=1;k<=18;k++){
+    for(let k=1;k<=_scTotal;k++){
       S.currentHole=k; // scorecard shows holes 0..k-1 (before hole k)
-      expShowProgress(`Scorecard ${k}/18`,k/18);
+      expShowProgress(`Scorecard ${k}/${_scTotal}`,k/_scTotal);
       const canvas=expMakeSCCanvas(w,h);
       const rangeStr=k<=1?'0':`1-${k-1}`;
       const fname=expSCFile(k,rangeStr);
@@ -2582,17 +2624,17 @@ async function doExportScorecardSequence(){
       zip.file(fname,blob);
       await expSleep(10);
     }
-    // TOT view (all 18)
+    // TOT view
     S.scorecardSummary='tot';
     expShowProgress('SC TOT…',0.97);
     const totCanvas=expMakeSCCanvas(w,h);
-    const totFname=`${expCourse()}_${expPlayer()}_SC_TOT_1-18_${expModeLabel()}_${expResLabel()}.png`;
+    const totFname=`${expPlayer()}_SC_TOT_1-${_scTotal}_${expModeLabel()}_${expResLabel()}.png`;
     const totBlob=await expCanvasToBlob(totCanvas);
     zip.file(totFname,totBlob);
 
     expShowProgress('Packaging ZIP…',0.99);
     const zblob=await zip.generateAsync({type:'blob'});
-    expDownloadBlob(zblob,`${expCourse()}_${expPlayer()}_SC_sequence.zip`);
+    expDownloadBlob(zblob,`${expPlayer()}_SC_sequence.zip`);
     expShowProgress('Done ✓',1);
     setTimeout(expHideProgress,2500);
   } catch(err){
@@ -2611,27 +2653,28 @@ async function doExportAll(){
   const{w,h}=expGetDims();
   const savedHole=S.currentHole, savedPid=S.currentPlayerId, savedSummary=S.scorecardSummary;
   const players=(S.players&&S.players.length>0)?S.players:[{id:effectivePlayerId(),name:S.playerName||T('playerLbl')}];
-  const totalSteps=players.length*18+players.length*19;
+  const _expHoles=S.holes.length||18;
+  const totalSteps=players.length*_expHoles+players.length*(_expHoles+1);
   let step=0;
   try{
     // Per player: hole sequence (shot overlays)
     for(const p of players){
       if(p.id!==effectivePlayerId()){ saveCurrentPlayerData(); S.currentPlayerId=(p.id===SESSION_ID)?null:p.id; loadPlayerData(effectivePlayerId()); }
-      for(let hi=0;hi<18;hi++){
+      for(let hi=0;hi<_expHoles;hi++){
         S.currentHole=hi; S.scorecardSummary=null;
         step++; expShowProgress(`${p.name} Shot H${hi+1}`,step/totalSteps);
         redrawOnly();
         const cv=expMakeShotCanvas(w,h);
-        const fn=`${expCourse()}_${expSanitize(p.name)}_H${hi+1}_Shot_${expModeLabel()}_${expResLabel()}.png`;
+        const fn=`${expSanitize(p.name)}_${expHole(hi+1)}_Shot_${expModeLabel()}_${expResLabel()}.png`;
         const blob=await expCanvasToBlob(cv);
         zip.file(fn,blob);
         await expSleep(10);
       }
       // Scorecard sequence
       S.scorecardSummary=null;
-      for(let k=1;k<=18;k++){
+      for(let k=1;k<=_expHoles;k++){
         S.currentHole=k;
-        step++; expShowProgress(`${p.name} SC ${k}/18`,step/totalSteps);
+        step++; expShowProgress(`${p.name} SC ${k}/${_expHoles}`,step/totalSteps);
         const scCv=expMakeSCCanvas(w,h);
         const rangeStr=k<=1?'0':`1-${k-1}`;
         const fn=expSCFile(k,rangeStr).replace(expPlayer(),expSanitize(p.name));
@@ -2643,7 +2686,7 @@ async function doExportAll(){
       S.scorecardSummary='tot';
       step++; expShowProgress(`${p.name} SC TOT`,step/totalSteps);
       const totCv=expMakeSCCanvas(w,h);
-      const totFn=`${expCourse()}_${expSanitize(p.name)}_SC_TOT_1-18_${expModeLabel()}_${expResLabel()}.png`;
+      const totFn=`${expSanitize(p.name)}_SC_TOT_1-${_expHoles}_${expModeLabel()}_${expResLabel()}.png`;
       const totBlob=await expCanvasToBlob(totCv);
       zip.file(totFn,totBlob);
     }
@@ -2652,7 +2695,7 @@ async function doExportAll(){
     S.currentHole=savedHole; S.scorecardSummary=savedSummary;
     expShowProgress('Packaging ZIP…',0.99);
     const zblob=await zip.generateAsync({type:'blob'});
-    expDownloadBlob(zblob,`${expCourse()}_ALL_export.zip`);
+    expDownloadBlob(zblob,`ALL_export.zip`);
     expShowProgress('Done ✓',1);
     setTimeout(expHideProgress,2500);
   } catch(err){
@@ -2673,29 +2716,32 @@ function doExportScoreCSV(){
   rows.push('# '+course+' — '+date);
   rows.push('');
   // Header
-  const hdr=[''].concat(Array.from({length:9},(_,i)=>String(i+1)),['OUT'],Array.from({length:9},(_,i)=>String(i+10)),['IN','TOT']);
+  const _csvTotal=S.holes.length||18;
+  const _csvHalf=Math.ceil(_csvTotal/2);
+  const _csvSec=_csvTotal-_csvHalf;
+  const hdr=[''].concat(Array.from({length:_csvHalf},(_,i)=>String(i+1)),['OUT'],Array.from({length:_csvSec},(_,i)=>String(i+_csvHalf+1)),['IN','TOT']);
   rows.push(hdr.join(','));
   // Par row
   const pars=['PAR'];
   let outPar=0,inPar=0;
-  for(let i=0;i<9;i++){outPar+=S.holes[i].par;pars.push(S.holes[i].par);}
+  for(let i=0;i<_csvHalf;i++){const p=safePar(S.holes[i]);outPar+=p;pars.push(hasRealPar(S.holes[i])?p:'');}
   pars.push(outPar);
-  for(let i=9;i<18;i++){inPar+=S.holes[i].par;pars.push(S.holes[i].par);}
+  for(let i=_csvHalf;i<_csvTotal;i++){const p=safePar(S.holes[i]);inPar+=p;pars.push(hasRealPar(S.holes[i])?p:'');}
   pars.push(inPar); pars.push(outPar+inPar);
   rows.push(pars.join(','));
   // Player rows
   players.forEach(p=>{
     const gross=[p.name];
     let outG=0,inG=0,outPlayed=0,inPlayed=0;
-    for(let i=0;i<9;i++){
+    for(let i=0;i<_csvHalf;i++){
       const d=getPlayerHoleDelta(p.id,i);
-      if(d!==null){gross.push(S.holes[i].par+d);outG+=S.holes[i].par+d;outPlayed++;}
+      if(d!==null){const g=safePar(S.holes[i])+d;gross.push(g);outG+=g;outPlayed++;}
       else gross.push('');
     }
     gross.push(outPlayed?outG:'');
-    for(let i=9;i<18;i++){
+    for(let i=_csvHalf;i<_csvTotal;i++){
       const d=getPlayerHoleDelta(p.id,i);
-      if(d!==null){gross.push(S.holes[i].par+d);inG+=S.holes[i].par+d;inPlayed++;}
+      if(d!==null){const g=safePar(S.holes[i])+d;gross.push(g);inG+=g;inPlayed++;}
       else gross.push('');
     }
     gross.push(inPlayed?inG:'');
@@ -2704,12 +2750,12 @@ function doExportScoreCSV(){
     // To-par row
     const tp=[' (to par)'];
     let outD=0,inD=0;
-    for(let i=0;i<9;i++){
+    for(let i=0;i<_csvHalf;i++){
       const d=getPlayerHoleDelta(p.id,i);
       if(d!==null){tp.push(fmtDeltaDisplay(d));outD+=d;}else tp.push('');
     }
     tp.push(outPlayed?fmtDeltaDisplay(outD):'');
-    for(let i=9;i<18;i++){
+    for(let i=_csvHalf;i<_csvTotal;i++){
       const d=getPlayerHoleDelta(p.id,i);
       if(d!==null){tp.push(fmtDeltaDisplay(d));inD+=d;}else tp.push('');
     }
@@ -2719,9 +2765,107 @@ function doExportScoreCSV(){
   });
   const csv=rows.join('\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
-  const fn=expCourse()+'_scorecard_'+date+'.csv';
+  const fn='scorecard_'+date+'.csv';
   expDownloadBlob(blob,fn);
   miniToast('CSV exported ✓');
+}
+
+// ── Import: Scorecard CSV ──
+function doImportScoreCSV(){
+  const inp=document.createElement('input');
+  inp.type='file'; inp.accept='.csv,text/csv';
+  inp.onchange=function(){
+    const f=inp.files[0]; if(!f) return;
+    const reader=new FileReader();
+    reader.onload=function(){
+      try{
+        _parseAndApplyCSV(reader.result);
+        miniToast('CSV imported ✓');
+      } catch(e){
+        console.error('[importCSV]',e);
+        miniToast('Import failed: '+e.message,true);
+      }
+    };
+    reader.readAsText(f);
+  };
+  inp.click();
+}
+
+function _parseAndApplyCSV(text){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim()&&!l.startsWith('#'));
+  if(lines.length<2) throw new Error('CSV too short');
+
+  // Find header row (starts with comma or has hole numbers)
+  let hdrIdx=lines.findIndex(l=>/^,?\s*1\s*,/.test(l));
+  if(hdrIdx<0) hdrIdx=0;
+  const hdr=lines[hdrIdx].split(',');
+
+  // Determine hole count from header
+  const holeCount=S.holes.length||18;
+  const half=Math.ceil(holeCount/2);
+
+  // Parse PAR row (skip — we don't modify pars)
+  let dataStart=hdrIdx+1;
+  if(lines[dataStart]&&lines[dataStart].split(',')[0].trim().toUpperCase()==='PAR') dataStart++;
+
+  // Parse player rows: gross row followed by optional (to par) row
+  const playerImports=[];
+  for(let i=dataStart;i<lines.length;i++){
+    const cols=lines[i].split(',');
+    const label=cols[0].trim();
+    if(!label||label.startsWith('(to par)')) continue; // skip to-par rows
+    // This is a player gross row
+    const name=label;
+    const grosses=[];
+    // Columns: name, h1..h9, OUT, h10..h18, IN, TOT
+    let ci=1;
+    for(let h=0;h<half;h++){ grosses.push(_parseIntOrNull(cols[ci++])); }
+    ci++; // skip OUT
+    for(let h=half;h<holeCount;h++){ grosses.push(_parseIntOrNull(cols[ci++])); }
+    playerImports.push({name,grosses});
+    // Skip the following (to par) row if present
+    if(i+1<lines.length && lines[i+1].split(',')[0].trim().startsWith('(to par)')) i++;
+  }
+
+  if(playerImports.length===0) throw new Error('No player data found');
+
+  // Save current player data before modifying
+  saveCurrentPlayerData();
+
+  // For each imported player, find or create, then set deltas
+  playerImports.forEach(imp=>{
+    let player=S.players.find(p=>p.name===imp.name);
+    if(!player){
+      // Add new player
+      addPlayer(imp.name);
+      player=S.players.find(p=>p.name===imp.name);
+    }
+    if(!player) return;
+    ensurePlayerData(player.id);
+
+    for(let hi=0;hi<holeCount;hi++){
+      const g=imp.grosses[hi];
+      if(g===null) continue;
+      const par=safePar(S.holes[hi]);
+      const delta=par>0?(g-par):null;
+      if(delta===null) continue;
+      setPlayerHoleDelta(player.id, hi, delta);
+    }
+  });
+
+  // Sync current player's S.holes back to byPlayer, then reload
+  saveCurrentPlayerData();
+  loadPlayerData(effectivePlayerId());
+  if(typeof buildHoleNav==='function') buildHoleNav();
+  if(typeof buildPlayerArea==='function') buildPlayerArea();
+  render();
+  scheduleSave();
+}
+
+function _parseIntOrNull(s){
+  if(!s) return null;
+  const n=parseInt(s.trim(),10);
+  return isNaN(n)?null:n;
 }
 
 // ============================================================
@@ -2739,7 +2883,7 @@ function isMobile(){ return screen.width <= 480 || document.documentElement.clas
 function mobAddStroke(){
   const h = curHole();
   if(h.delta === null){
-    h.delta = 1 - h.par;
+    h.delta = 1 - safePar(h);
   } else {
     if(h.delta + 1 > 12) return;
     h.delta = h.delta + 1;
@@ -2771,7 +2915,8 @@ function mobFinishHole(){ gotoNextHole(); }
 
 function mobCyclePar(){
   const h = curHole();
-  const next = h.par === 3 ? 4 : h.par === 4 ? 5 : 3;
+  const p = safePar(h);
+  const next = p === 3 ? 4 : p === 4 ? 5 : p === 5 ? 3 : 4;
   setPar(next);
 }
 
@@ -2934,7 +3079,7 @@ function updateMobUI(){
 
   // Header
   document.getElementById('mob-hole-lbl').textContent = T('holeHero', idx+1);
-  document.getElementById('mob-par-lbl').textContent = T('parLabel', h.par);
+  document.getElementById('mob-par-lbl').textContent = T('parLabel', hasRealPar(h)?h.par:'—');
   const tp = h.shotIndex<0?null:getShotToPin(h, h.shotIndex);
   document.getElementById('mob-tp-val').textContent = tp !== null ? tp : '\u2014';
   document.getElementById('mob-tp-unit').textContent = T('distUnit').charAt(0);
@@ -3018,10 +3163,11 @@ function buildMobScSummary(){
   const cont = document.getElementById('mob-sc-row');
   if(!cont) return;
   cont.innerHTML = '';
-  const f9p = S.holes.slice(0,9).reduce((a,h)=>a+h.par,0);
-  const f9g = S.holes.slice(0,9).reduce((a,h)=>a+h.par+(h.delta??0),0);
-  const b9p = S.holes.slice(9,18).reduce((a,h)=>a+h.par,0);
-  const b9g = S.holes.slice(9,18).reduce((a,h)=>a+h.par+(h.delta??0),0);
+  const _mHalf=Math.ceil((S.holes.length||18)/2);
+  const f9p = S.holes.slice(0,_mHalf).reduce((a,h)=>a+safePar(h),0);
+  const f9g = S.holes.slice(0,_mHalf).reduce((a,h)=>a+safePar(h)+(h.delta??0),0);
+  const b9p = S.holes.slice(_mHalf).reduce((a,h)=>a+safePar(h),0);
+  const b9g = S.holes.slice(_mHalf).reduce((a,h)=>a+safePar(h)+(h.delta??0),0);
   [{lbl:'F9',par:f9p,val:f9g},{lbl:'B9',par:b9p,val:b9g},{lbl:'TOT',par:f9p+b9p,val:f9g+b9g}].forEach(({lbl,par,val}) => {
     const span = document.createElement('span');
     span.className = 'mob-sc-item';
@@ -3034,17 +3180,21 @@ function buildMobHoleNav(){
   const cont = document.getElementById('mob-nav-scroll');
   if(!cont) return;
   cont.innerHTML = '';
-  for(let i=0; i<18; i++){
+  for(let i=0; i<(S.holes.length||18); i++){
     const h = S.holes[i];
     const btn = document.createElement('div');
     btn.className = 'mob-hole-btn ' + deltaCardClass(h.delta);
     if(i === S.currentHole) btn.classList.add('active');
     let sc = '\u2014';
-    if(h.delta !== null) sc = S.displayMode === 'topar' ? fmtDeltaDisplay(h.delta) : String(h.par + h.delta);
-    btn.innerHTML = `<div class="mh-num">${i+1}</div><div class="mh-par">P${h.par}</div><div class="mh-sc">${sc}</div>`;
+    if(h.delta !== null) sc = S.displayMode === 'topar' ? fmtDeltaDisplay(h.delta) : String(safePar(h) + h.delta);
+    btn.innerHTML = `<div class="mh-num">${i+1}</div><div class="mh-par">P${hasRealPar(h)?h.par:'—'}</div><div class="mh-sc">${sc}</div>`;
     btn.onclick = () => {
       S.currentHole = i;
       S.scorecardSummary = null;
+      if(RoundManager.getRound()){
+        const oh=RoundManager.getOrderedHoles();
+        if(oh&&oh[i]) RoundManager.setCurrentHole(oh[i].holeId);
+      }
       resetAllShotIndex(i);
       render(); scheduleSave();
     };
@@ -3162,6 +3312,13 @@ function init(){
   initCanvas();
   wireAll();
 
+  // Load course database in background; restore active round when ready
+  CourseDatabase.load().then(()=>{
+    restoreActiveRound();
+  }).catch(e=>{
+    console.warn('[init] CourseDatabase load skipped:', e.message);
+  });
+
   // Sync UI
   document.querySelectorAll('.ratio-btn').forEach(b=>b.classList.toggle('active',b.dataset.ratio===S.ratio));
   document.querySelectorAll('.theme-btn').forEach(b=>b.classList.toggle('active',b.dataset.theme===(S.theme||'classic')));
@@ -3199,7 +3356,8 @@ function init(){
     S.currentPlayerId=S.players[0].id; loadPlayerData(S.currentPlayerId);
   }
   // Preserve saved currentHole (clamp to valid range)
-  if(typeof S.currentHole!=='number'||S.currentHole<0||S.currentHole>17) S.currentHole=0;
+  const maxHole=(S.holes.length||18)-1;
+  if(typeof S.currentHole!=='number'||S.currentHole<0||S.currentHole>maxHole) S.currentHole=0;
 
   if(typeof buildPlayerArea==='function') buildPlayerArea();
 

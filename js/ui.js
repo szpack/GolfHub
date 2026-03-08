@@ -13,7 +13,7 @@ function shotTypeLabel(t){
 function autoType(h,idx){
   const gross=getGross(h);
   if(!gross) return 'TEE';
-  const inf=inferShot(h.par, h.delta, gross, idx+1, null);
+  const inf=inferShot(safePar(h), h.delta, gross, idx+1, null);
   return inf.autoShotType||'TEE';
 }
 
@@ -36,7 +36,7 @@ function setPlayerHoleDelta(pid,holeIdx,delta){
     if(pd&&pd.holes&&pd.holes[holeIdx]){
       pd.holes[holeIdx].delta=delta;
       pd.holes[holeIdx].manualTypes={};
-      const par=S.holes[holeIdx].par;
+      const par=safePar(S.holes[holeIdx]);
       const g=delta!==null?par+delta:null;
       if(g&&g>0){
         pd.holes[holeIdx].shots=Array.from({length:g},(_,i)=>pd.holes[holeIdx].shots?.[i]||{type:null});
@@ -79,7 +79,10 @@ function buildPlayerArea(){
     nm.className='pr-name'+(isCur?' active':'');
     nm.textContent=p.name;
     nm.title=p.name;
-    nm.onclick=()=>switchToPlayer(p.id);
+    nm.onclick=()=>{
+      if(p.id===effectivePlayerId()){ curHole().shotIndex=-1; render(); scheduleSave(); }
+      else switchToPlayer(p.id);
+    };
     row.appendChild(nm);
     // delta wrap (− [delta] +)
     const wrap=document.createElement('div');
@@ -225,13 +228,20 @@ function buildHoleNav(){
   grid.innerHTML='';
 
   const ci=S.currentHole;
+  // Dynamic grid columns based on hole count
+  const _th=S.holes.length||18;
+  const _half=Math.ceil(_th/2);
+  const _sec=_th-_half;
+  const isNarrow=document.documentElement.classList.contains('narrow');
+  const _lw=isNarrow?'56px':'80px', _sw=isNarrow?'30px':'38px';
+  grid.style.gridTemplateColumns=_lw+' repeat('+_half+',1fr) '+_sw+' repeat('+_sec+',1fr) '+_sw+' '+_sw;
   // Helpers
-  const sumPar=(a,b)=>S.holes.slice(a,b).reduce((s,h)=>s+h.par,0);
+  const sumPar=(a,b)=>S.holes.slice(a,b).reduce((s,h)=>s+safePar(h),0);
   const sumGross=(pid,a,b)=>{
     let s=0;
     for(let i=a;i<b;i++){
       const d=getPlayerHoleDelta(pid,i);
-      if(d!==null) s+=S.holes[i].par+d;
+      if(d!==null) s+=safePar(S.holes[i])+d;
     }
     return s;
   };
@@ -249,9 +259,11 @@ function buildHoleNav(){
     return c;
   };
 
-  const f9P=sumPar(0,9), b9P=sumPar(9,18);
+  const totalHoles=S.holes.length||18;
+  const half=Math.ceil(totalHoles/2);
+  const f9P=sumPar(0,half), b9P=sumPar(half,totalHoles);
 
-  // Cell factory — col: hole index (0-17) for column hover/active
+  // Cell factory — col: hole index for column hover/active
   function cell(txt,cls,onclick,col){
     const d=document.createElement('div');
     d.className='sg-cell'+(cls?' '+cls:'');
@@ -274,6 +286,11 @@ function buildHoleNav(){
       }
       S.currentHole=i;
       S.scorecardSummary=null;
+      // Sync round manager
+      if(typeof RoundManager!=='undefined'&&RoundManager.getRound()){
+        const oh=RoundManager.getOrderedHoles();
+        if(oh&&oh[i]) RoundManager.setCurrentHole(oh[i].holeId);
+      }
       resetAllShotIndex(i);
       clearReady();
       render(); scheduleSave();
@@ -282,17 +299,17 @@ function buildHoleNav(){
 
   // ── Row 1: PAR ──
   grid.appendChild(cell('PAR','sg-hdr sg-label sg-par-label'));
-  for(let i=0;i<9;i++) grid.appendChild(cell(String(S.holes[i].par),'sg-hdr sg-par-val'+(i===ci?' sg-active':''),holeClick(i),i));
+  for(let i=0;i<half;i++) grid.appendChild(cell(parDisplay(S.holes[i]),'sg-hdr sg-par-val'+(i===ci?' sg-active':''),holeClick(i),i));
   grid.appendChild(cell(String(f9P),'sg-hdr sg-sub'));
-  for(let i=9;i<18;i++) grid.appendChild(cell(String(S.holes[i].par),'sg-hdr sg-par-val'+(i===ci?' sg-active':''),holeClick(i),i));
+  for(let i=half;i<totalHoles;i++) grid.appendChild(cell(parDisplay(S.holes[i]),'sg-hdr sg-par-val'+(i===ci?' sg-active':''),holeClick(i),i));
   grid.appendChild(cell(String(b9P),'sg-hdr sg-sub'));
   grid.appendChild(cell(String(f9P+b9P),'sg-hdr sg-sub'));
 
   // ── Row 2: HOLE header ──
   grid.appendChild(cell('HOLE','sg-hdr sg-label'));
-  for(let i=0;i<9;i++) grid.appendChild(cell(String(i+1),'sg-hdr'+(i===ci?' sg-active':''),holeClick(i),i));
+  for(let i=0;i<half;i++) grid.appendChild(cell(String(i+1),'sg-hdr'+(i===ci?' sg-active':''),holeClick(i),i));
   grid.appendChild(cell('OUT','sg-hdr sg-sub',()=>{ S.scorecardSummary='out'; render(); scheduleSave(); }));
-  for(let i=9;i<18;i++) grid.appendChild(cell(String(i+1),'sg-hdr'+(i===ci?' sg-active':''),holeClick(i),i));
+  for(let i=half;i<totalHoles;i++) grid.appendChild(cell(String(i+1),'sg-hdr'+(i===ci?' sg-active':''),holeClick(i),i));
   grid.appendChild(cell('IN','sg-hdr sg-sub',()=>{ S.scorecardSummary='in'; render(); scheduleSave(); }));
   grid.appendChild(cell('TOT','sg-hdr sg-sub',()=>{ S.scorecardSummary='tot'; render(); scheduleSave(); }));
 
@@ -316,7 +333,7 @@ function buildHoleNav(){
         resetAllShotIndex(holeIdx);
       }
       if(pid!==effectivePlayerId()) switchToPlayer(pid);
-      else { render(); scheduleSave(); }
+      else { curHole().shotIndex=-1; render(); scheduleSave(); }
       trackRecentPlayer(pid);
     };
     if(delta===null){
@@ -353,31 +370,34 @@ function buildHoleNav(){
   function addPlayerRow(pid,name,isCurrent){
     // Label
     const lbl=cell(name,'sg-label sg-player'+(isCurrent?' sg-player-active':''));
-    lbl.onclick=()=>switchToPlayer(pid);
+    lbl.onclick=()=>{
+      if(pid===effectivePlayerId()){ curHole().shotIndex=-1; render(); scheduleSave(); }
+      else switchToPlayer(pid);
+    };
     grid.appendChild(lbl);
 
-    // Front 9
-    for(let i=0;i<9;i++){
+    // First half
+    for(let i=0;i<half;i++){
       const delta=getPlayerHoleDelta(pid,i);
-      const txt=delta!==null?(S.displayMode==='topar'?fmtDeltaDisplay(delta):String(S.holes[i].par+delta)):'';
+      const txt=delta!==null?(S.displayMode==='topar'?fmtDeltaDisplay(delta):String(safePar(S.holes[i])+delta)):'';
       grid.appendChild(pgaScoreCell(delta,txt,i,pid));
     }
-    grid.appendChild(subCell(pid,0,9,'out'));
+    grid.appendChild(subCell(pid,0,half,'out'));
 
-    // Back 9
-    for(let i=9;i<18;i++){
+    // Second half
+    for(let i=half;i<totalHoles;i++){
       const delta=getPlayerHoleDelta(pid,i);
-      const txt=delta!==null?(S.displayMode==='topar'?fmtDeltaDisplay(delta):String(S.holes[i].par+delta)):'';
+      const txt=delta!==null?(S.displayMode==='topar'?fmtDeltaDisplay(delta):String(safePar(S.holes[i])+delta)):'';
       grid.appendChild(pgaScoreCell(delta,txt,i,pid));
     }
-    grid.appendChild(subCell(pid,9,18,'in'));
+    grid.appendChild(subCell(pid,half,totalHoles,'in'));
 
     // Total
-    const totalPlayed=countPlayed(pid,0,18);
+    const totalPlayed=countPlayed(pid,0,totalHoles);
     const tot=document.createElement('div');
     tot.className='sg-cell sg-sub';
     if(totalPlayed>0){
-      tot.textContent=String(sumGross(pid,0,18));
+      tot.textContent=String(sumGross(pid,0,totalHoles));
     } else { tot.textContent='·'; }
     tot.style.fontWeight='700';
     tot.onclick=()=>{ S.scorecardSummary='tot'; render(); scheduleSave(); };
@@ -414,7 +434,17 @@ function buildHoleNav(){
 function buildDeltaBtn(){ buildPlayerArea(); }
 
 // ── TYPE BUTTONS ──
-const SHOT_KEYS={TEE:'T',APPR:'A',LAYUP:'L',CHIP:'C',PUTT:'U',PROV:'V',FOR_BIRDIE:'B',FOR_PAR:'P',FOR_BOGEY:'O'};
+// Hotkey map: type → key letter (lowercase for lookup, uppercase for display)
+const TYPE_HOTKEY={
+  TEE:'T', APPR:'A', LAYUP:'L', CHIP:'C', PUTT:'U',
+  FOR_BIRDIE:'B', FOR_PAR:'P', FOR_BOGEY:'O',
+  GREEN:'G', FAIRWAY:'F', BUNKER:'K', LIGHT_ROUGH:'R', HEAVY_ROUGH:'H', WATER:'W', TREES:'E',
+  PENALTY:'Y', PROV:'V'
+};
+// Reverse: key → type
+const HOTKEY_TYPE={};
+Object.entries(TYPE_HOTKEY).forEach(([t,k])=>{ HOTKEY_TYPE[k.toLowerCase()]=t; });
+
 const SP_TYPES=[
   {type:'TEE',   labelKey:'typeTee'},
   {type:'APPR',  labelKey:'typeAppr'},
@@ -441,57 +471,58 @@ const SP_FLAGS=[
   {type:'PROV',  labelKey:'typeProv'},
 ];
 
+/** Create sp-btn with optional hotkey hint */
+function _mkSpBtn(item, isActive){
+  const btn=document.createElement('button');
+  btn.className='sp-btn'+(isActive?' active':'');
+  btn.dataset.type=item.type;
+  const label=item.labelKey?T(item.labelKey).toUpperCase():'';
+  const hk=TYPE_HOTKEY[item.type];
+  if(hk){
+    btn.innerHTML='<span class="sp-hk">'+hk+'</span>'+_escHtml(label);
+  } else {
+    btn.textContent=label;
+  }
+  return btn;
+}
+function _escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
 function buildTypeButtons(){
   const h=curHole();
   const hasDelta=h.delta!==null;
   const si=h.shotIndex;
   const overviewMode=si<0;
-  const ri=getReadyIndex();
-  const s=(hasDelta&&!overviewMode)?(h.shots[si]||{}):{};
+  const eff=(hasDelta&&!overviewMode)?getEffectiveShot(h,si):{};
 
-  // Shot Type target: ready shot if active, otherwise current shot
-  const typeTargetIdx=(ri>=0)?ri:si;
-  const ts=(hasDelta&&typeTargetIdx>=0)?(h.shots[typeTargetIdx]||{}):{};
-
-  // SHOT TYPE buttons — only manual highlight
+  // SHOT TYPE buttons
   const typeCont=document.getElementById('sp-type-btns');
   if(typeCont){
     typeCont.innerHTML='';
     SP_TYPES.forEach(item=>{
-      const btn=document.createElement('button');
-      btn.className='sp-btn'+(ts.manualShotType===item.type?' active':'');
-      btn.dataset.type=item.type;
-      btn.textContent=item.labelKey?T(item.labelKey).toUpperCase():'';
-      btn.onclick=()=>setShotType(item.type);
+      const btn=_mkSpBtn(item, eff.type===item.type);
+      btn.onclick=()=>setShotTag(item.type);
       typeCont.appendChild(btn);
     });
   }
 
-  // PURPOSE buttons — only manual highlight
+  // PURPOSE buttons
   const resCont=document.getElementById('sp-result-btns');
   if(resCont){
     resCont.innerHTML='';
     SP_RESULTS.forEach(item=>{
-      const btn=document.createElement('button');
-      btn.className='sp-btn'+(s.manualResult===item.type?' active':'');
-      btn.dataset.type=item.type;
-      btn.textContent=item.labelKey?T(item.labelKey).toUpperCase():'';
-      btn.onclick=()=>setShotType(item.type);
+      const btn=_mkSpBtn(item, eff.purpose===item.type);
+      btn.onclick=()=>setShotTag(item.type);
       resCont.appendChild(btn);
     });
   }
 
-  // LANDING (result) buttons
+  // RESULT (landing) buttons
   const landCont=document.getElementById('sp-landing-btns');
   if(landCont){
     landCont.innerHTML='';
     SP_LANDINGS.forEach(item=>{
-      const btn=document.createElement('button');
-      const isActive=(s.landing===item.type);
-      btn.className='sp-btn'+(isActive?' active':'');
-      btn.dataset.type=item.type;
-      btn.textContent=item.labelKey?T(item.labelKey):'';
-      btn.onclick=()=>setLanding(item.type);
+      const btn=_mkSpBtn(item, eff.result===item.type);
+      btn.onclick=()=>setShotTag(item.type);
       landCont.appendChild(btn);
     });
   }
@@ -501,12 +532,8 @@ function buildTypeButtons(){
   if(flagCont){
     flagCont.innerHTML='';
     SP_FLAGS.forEach(item=>{
-      const btn=document.createElement('button');
-      const isActive=(s.manualCustomStatus===item.type);
-      btn.className='sp-btn'+(isActive?' active':'');
-      btn.dataset.type=item.type;
-      btn.textContent=item.labelKey?T(item.labelKey).toUpperCase():'';
-      btn.onclick=()=>setShotType(item.type);
+      const btn=_mkSpBtn(item, eff.flags===item.type);
+      btn.onclick=()=>setShotTag(item.type);
       flagCont.appendChild(btn);
     });
   }
@@ -514,7 +541,7 @@ function buildTypeButtons(){
   // Note input
   const noteInp=document.getElementById('inp-shot-note');
   if(noteInp){
-    const note=hasDelta?(s.note||''):'';
+    const note=(hasDelta&&!overviewMode)?(eff.note||''):'';
     noteInp.value=note;
   }
 }
@@ -528,8 +555,9 @@ function buildShotButtons(){
   const noScore=(h.delta===null);
   const overviewMode=si<0;
   const ri=getReadyIndex();
-  const totalSlots=h.par*2+1;
-  const barEnd=noScore?h.par:gross;
+  const hp=safePar(h);
+  const totalSlots=Math.max(hp*2+1,1);
+  const barEnd=noScore?hp:gross;
   const color=noScore?null:deltaColorHex(h.delta);
 
   // Reuse existing buttons if count matches; rebuild only when par changes
@@ -574,7 +602,7 @@ function buildShotButtons(){
           hh.shotIndex=num-1;
         } else {
           // 无成绩 或 点击超出完成杆：设置/修改成绩
-          hh.delta=num-hh.par;
+          hh.delta=num-safePar(hh);
           hh.manualTypes={};
           reconcileShots(hh);
           hh.shotIndex=-1;
@@ -607,7 +635,7 @@ function buildShotButtons(){
   }
 
   // Auto-scroll — use scrollLeft on the scroll container to avoid affecting ancestor scroll
-  const scrollIdx=noScore?Math.min(h.par-1,totalSlots-1):(overviewMode?Math.max(barEnd-1,0):si);
+  const scrollIdx=noScore?Math.min(Math.max(hp-1,0),totalSlots-1):(overviewMode?Math.max(barEnd-1,0):si);
   const scrollParent=document.getElementById('rp-shot-progress');
   if(btns[scrollIdx]&&scrollParent) setTimeout(()=>{
     const btn=btns[scrollIdx];
@@ -619,7 +647,8 @@ function buildShotButtons(){
 // ── FOCUS: Par cycle on click ──
 function cycleParFocus(){
   const h=curHole();
-  const next=h.par===3?4:h.par===4?5:3;
+  const p=safePar(h);
+  const next=p===3?4:p===4?5:p===5?3:4;
   setPar(next);
 }
 
@@ -654,7 +683,10 @@ function buildFocusPlayerBtns(){
     btn.className='rp-plyr-btn'+(p.id===S.currentPlayerId?' active':'');
     btn.textContent=p.name;
     btn.title=p.name;
-    btn.onclick=()=>switchToPlayer(p.id);
+    btn.onclick=()=>{
+      if(p.id===effectivePlayerId()){ curHole().shotIndex=-1; render(); scheduleSave(); }
+      else switchToPlayer(p.id);
+    };
     cont.appendChild(btn);
   });
 }
@@ -682,7 +714,8 @@ function buildToParRow(){
   const cont=document.getElementById('topar-cells');
   if(!cont) return;
   const h=curHole(), si=h.shotIndex;
-  const totalSlots=h.par*2+1;
+  const hp=safePar(h);
+  const totalSlots=Math.max(hp*2+1,1);
   const existing=cont.querySelectorAll('.topar-cell');
   const needRebuild=existing.length!==totalSlots;
   if(needRebuild){
@@ -690,7 +723,7 @@ function buildToParRow(){
     for(let i=0;i<totalSlots;i++){
       const cell=document.createElement('div');
       const shotNum=i+1;
-      const d=shotNum-h.par;
+      const d=shotNum-hp;
       cell.textContent=d===0?'0':d>0?'+'+d:String(d);
       cell.className='topar-cell';
       cont.appendChild(cell);
@@ -716,7 +749,7 @@ function updateRightPanel(){
   if(holeLbl) holeLbl.textContent='HOLE';
   if(holeNum) holeNum.textContent=String(idx+1);
   const parVal=document.getElementById('rp-par-val');
-  if(parVal) parVal.textContent=String(h.par);
+  if(parVal) parVal.textContent=parDisplay(h);
   // Players
   buildFocusPlayerBtns();
   // Score value
@@ -821,7 +854,7 @@ var _scoreDrawerHole=-1;
 function openScoreDrawer(holeIdx){
   _scoreDrawerHole=holeIdx;
   const title=document.getElementById('score-drawer-title');
-  title.textContent=T('scoreDrawerTitle',holeIdx+1,S.holes[holeIdx].par);
+  title.textContent=T('scoreDrawerTitle',holeIdx+1,hasRealPar(S.holes[holeIdx])?S.holes[holeIdx].par:'—');
   buildScoreDrawerBody(holeIdx);
   document.getElementById('score-drawer').classList.add('open');
   document.getElementById('score-drawer-bg').classList.add('show');
@@ -988,7 +1021,10 @@ function doNewRound(){
     }
   }
   if(document.getElementById('m-pars').checked)
-    S.holes.forEach(h=>h.par=4);
+    S.holes.forEach(h=>{h.par=4;h.isPlaceholder=false;});
+  // Clear active round (back to manual mode)
+  if(typeof RoundManager!=='undefined') RoundManager.clearRound();
+  S.activeRound=null;
   // Clear all players so user can re-select for new round
   S.players=[]; S.currentPlayerId=null; S.byPlayer={};
   if(typeof buildPlayerArea==='function') buildPlayerArea();
@@ -1101,27 +1137,32 @@ function wireAll(){
     if(e.target===document.getElementById('newround-modal')) closeNewRound();
   };
 
-  // Keyboard
+  // Keyboard — shot navigation & hotkeys
   window.addEventListener('keydown',e=>{
+    // Skip when any input is focused (e.g. To Pin distance)
     if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT') return;
     const k=e.key;
-    if(k==='ArrowRight'){gotoNextHole();e.preventDefault();}
-    else if(k==='ArrowLeft'){gotoPrevHole();e.preventDefault();}
-    else if(k==='ArrowUp'||k===','){prevShot();e.preventDefault();}
-    else if(k==='ArrowDown'||k==='.'){nextShot();e.preventDefault();}
-    else if(!e.metaKey&&!e.ctrlKey&&!e.altKey){
+    // Arrow Left/Right: shot navigation (cycle within played shots)
+    if(k==='ArrowLeft'){
+      e.preventDefault();
+      const r=ensureShotSelected();
+      if(!r) return;
+      if(r==='ready') prevShot(); // already had a shot selected → navigate
+      // 'just_selected' → first shot was just selected, stay there
+    } else if(k==='ArrowRight'){
+      e.preventDefault();
+      const r=ensureShotSelected();
+      if(!r) return;
+      if(r==='ready') nextShot();
+    }
+    // Arrow Up/Down: switch player (cycle)
+    else if(k==='ArrowUp'){e.preventDefault();switchToPrevPlayer();}
+    else if(k==='ArrowDown'){e.preventDefault();switchToNextPlayer();}
+    // Letter hotkeys — shot type/purpose/result/flags
+    else if(!e.metaKey&&!e.ctrlKey&&!e.altKey&&k.length===1){
       const kl=k.toLowerCase();
-      if(kl==='h') gotoNextHole();
-      else if(kl==='t') setShotType('TEE');
-      else if(kl==='a') setShotType('APPR');
-      else if(kl==='l') setShotType('LAYUP');
-      else if(kl==='c') setShotType('CHIP');
-      else if(kl==='u') setShotType('PUTT');
-      else if(kl==='v') setShotType('PROV');
-      else if(kl==='b') setShotType('FOR_BIRDIE');
-      else if(kl==='p') setShotType('FOR_PAR');
-      else if(kl==='o') setShotType('FOR_BOGEY');
-      // (number keys 1-9 removed)
+      const type=HOTKEY_TYPE[kl];
+      if(type) setShotTag(type);
     }
   });
   window.addEventListener('resize',()=>render());

@@ -49,10 +49,17 @@ function totalBadgeColor(){
 }
 
 // ── HOLE / SCORE HELPERS ──
+/** Safe par accessor: returns numeric par or 0 for placeholder/null holes */
+function safePar(h){ return (h&&h.par!=null)?h.par:0; }
+/** Display string for par: '—' when null/placeholder, otherwise the number */
+function parDisplay(h){ return (h&&h.par!=null)?String(h.par):'—'; }
+/** Whether this hole has real par data (not a placeholder) */
+function hasRealPar(h){ return h&&h.par!=null; }
+
 function curHole(){ return S.holes[S.currentHole]; }
-function getGross(h){ return h.delta===null?null:h.par+h.delta; }
+function getGross(h){ return (h.delta===null||h.par==null)?null:h.par+h.delta; }
 function totalDelta(){ return S.holes.reduce((a,h)=>a+(h.delta??0),0); }
-function totalGross(){ return S.holes.reduce((a,h)=>a+h.par+(h.delta??0),0); }
+function totalGross(){ return S.holes.reduce((a,h)=>a+safePar(h)+(h.delta??0),0); }
 // v4.5: Even=0, never E
 function fmtDeltaDisplay(d){ return d===0?'0':d>0?'+'+d:String(d); }
 
@@ -68,6 +75,7 @@ function deltaLabel(d){
 function buildShotTemplate(par, gross){
   if(!gross || gross<1) return [];
   if(gross===1) return ['TEE'];
+  if(par==null) par=4; // fallback for placeholder holes
   const tmpl=new Array(gross).fill(null);
   tmpl[0]='TEE';
   tmpl[gross-1]='PUTT';
@@ -108,56 +116,60 @@ function inferShot(par, delta, gross, shotNo, allShots){
 function getHolePuttCount(h){
   const gross=getGross(h);
   if(!gross || gross<1) return 0;
-  const tmpl=buildShotTemplate(h.par, gross);
+  const tmpl=buildShotTemplate(safePar(h), gross);
   let count=0;
   for(let i=gross-1;i>=0;i--){
     const s=h.shots[i]||{};
-    const effType=s.manualShotType||tmpl[i]||'CHIP';
+    const effType=s.type||s.manualShotType||tmpl[i]||'CHIP';
     if(effType==='PUTT') count++; else break;
   }
   return count;
 }
 
-// Get effective values for a shot (manual overrides auto)
+// Get effective values for a shot (v11.4 — 5 independent categories)
 function getEffectiveShot(h, idx){
   const s=h.shots[idx]||{};
-  const shotType=s.manualShotType||null;
-  const result=s.manualResult||null;
-  const customStatus=s.manualCustomStatus||null;
-  let displayPrimary='type';
-  if(s.manualCustomStatus) displayPrimary='flag';
-  else if(s.manualResult) displayPrimary='result';
-  else if(s.manualShotType) displayPrimary='type';
-  return {
-    shotType, result, customStatus,
-    autoShotType: null,
-    autoResult:   null,
-    isManualType:   !!s.manualShotType,
-    isManualResult: !!s.manualResult,
-    isManualStatus: !!s.manualCustomStatus,
-    displayPrimary,
-  };
+  // Migrate legacy field names if present
+  const type    = s.type    || s.manualShotType      || null;
+  const purpose = s.purpose || s.manualResult         || null;
+  const result  = s.result  || s.landing              || null;
+  const flags   = s.flags   || s.manualCustomStatus   || null;
+  const note    = s.note    || null;
+  const lastTag = s.lastTag || (flags?'flags':purpose?'purpose':result?'result':type?'type':null);
+  return { type, purpose, result, flags, note, lastTag };
 }
 
-// Display label: flags > result > shotType
+// Display label for canvas: show only the lastTag value
+function shotLastTagLabel(h, idx){
+  const eff=getEffectiveShot(h, idx);
+  if(!eff.lastTag) return '';
+  const val=eff[eff.lastTag];
+  if(!val) return '';
+  return shotTypeLabel(val);
+}
+
+// Display label: all assigned tags (for right panel / export)
 function shotDisplayLabel(h, idx){
   const eff=getEffectiveShot(h, idx);
-  if(eff.customStatus) return shotTypeLabel(eff.customStatus);
-  if(eff.result) return shotTypeLabel(eff.result);
-  if(eff.shotType) return shotTypeLabel(eff.shotType);
+  if(eff.flags)   return shotTypeLabel(eff.flags);
+  if(eff.purpose) return shotTypeLabel(eff.purpose);
+  if(eff.result)  return shotTypeLabel(eff.result);
+  if(eff.type)    return shotTypeLabel(eff.type);
   return '';
 }
 
 // ── SCORECARD GEOMETRY ──
 function getSCRange(){
+  const total=S.holes.length||18;
+  const half=Math.ceil(total/2);
   // summary view (triggered by clicking F/B/T stat cards)
-  if(S.scorecardSummary==='out') return [0,9];
-  if(S.scorecardSummary==='in')  return [9,18];
-  if(S.scorecardSummary==='tot') return [0,18];
+  if(S.scorecardSummary==='out') return [0,half];
+  if(S.scorecardSummary==='in')  return [half,total];
+  if(S.scorecardSummary==='tot') return [0,total];
   // hole view — use scoreRange setting from radio buttons
-  if(S.scoreRange==='front9') return [0,9];
-  if(S.scoreRange==='back9')  return [9,18];
-  return [0,18];
+  if(S.scoreRange==='front9') return [0,half];
+  if(S.scoreRange==='back9')  return [half,total];
+  return [0,total];
 }
 function getSCWidth(scale){
   // v5.3: add OUT+IN sub-total columns for 18H mode
@@ -286,10 +298,11 @@ function drawScorecardOverlay(ctx,X,Y,scale){
   let parOut=0,parIn=0;
   for(let i=0;i<count;i++){
     const h=S.holes[start+i], lx=holeX(i);
-    if(is18){ if(i<9) parOut+=h.par; else parIn+=h.par; }
+    const hp=safePar(h);
+    if(is18){ if(i<9) parOut+=hp; else parIn+=hp; }
     ctx.fillStyle=th.parValColor;
     ctx.font=`${th.parValWeight} ${parValFontSz}px ${SF}`;
-    ctx.fillText(String(h.par),X+lx+colW/2,parY+parRowH/2);
+    ctx.fillText(parDisplay(h),X+lx+colW/2,parY+parRowH/2);
   }
   if(is18){
     ctx.fillStyle=th.parSubColor;
@@ -297,7 +310,7 @@ function drawScorecardOverlay(ctx,X,Y,scale){
     ctx.fillText(String(parOut),X+outX+subW/2,parY+parRowH/2);
     ctx.fillText(String(parIn), X+inX +subW/2,parY+parRowH/2);
   }
-  const parTot=(is18?parOut+parIn:S.holes.slice(start,end).reduce((a,h)=>a+h.par,0));
+  const parTot=(is18?parOut+parIn:S.holes.slice(start,end).reduce((a,h)=>a+safePar(h),0));
   ctx.fillStyle=th.parTotColor;
   ctx.font=`${th.parTotWeight} ${totFontSz}px ${SF}`;
   ctx.fillText(String(parTot),X+totX+totalW/2,parY+parRowH/2);
@@ -321,14 +334,14 @@ function drawScorecardOverlay(ctx,X,Y,scale){
   }
 
   const bH=Math.round(scoreRowH*0.56), bW=Math.round(colW*0.80);
-  let scoreOut=0,scoreIn=0;
+  let scoreOut=0,scoreIn=0,parPlayedOut=0,parPlayedIn=0;
 
   for(let i=0;i<count;i++){
     const h=S.holes[start+i], lx=holeX(i), cellCx=X+lx+colW/2;
     const delta=(start+i)<scoreEnd ? h.delta : null;
-    if(is18){
-      if(i<9) scoreOut+=(delta??0);
-      else    scoreIn +=(delta??0);
+    if(is18 && delta!==null){
+      if(i<9){ scoreOut+=delta; parPlayedOut+=safePar(h); }
+      else   { scoreIn +=delta; parPlayedIn +=safePar(h); }
     }
     if(delta===null){
       ctx.fillStyle=th.emptyDashColor;
@@ -339,16 +352,22 @@ function drawScorecardOverlay(ctx,X,Y,scale){
       ctx.fillStyle=deltaColorHex(delta); ctx.fill();
       ctx.fillStyle=th.scoreBadgeTextColor;
       ctx.font=`${th.scoreBadgeWeight} ${scoreBadgeFontSz}px ${SF}`;
-      const txt=S.displayMode==='topar'?fmtDeltaDisplay(delta):String(h.par+delta);
+      const txt=S.displayMode==='topar'?fmtDeltaDisplay(delta):String(safePar(h)+delta);
       ctx.fillText(txt,cellCx,scY+scoreRowH/2);
     }
   }
 
   if(is18){
     const subBH=Math.round(scoreRowH*0.52), subBW=Math.round(subW*0.72);
-    function drawSubTot(lx,delta,parSub){
+    function drawSubTot(lx,delta,parPlayed,hasData){
       const scx=X+lx+subW/2;
-      const txt=S.displayMode==='topar'?fmtDeltaDisplay(delta):String(parSub+delta);
+      if(!hasData){
+        ctx.fillStyle=th.emptyDashColor;
+        ctx.font=`${th.emptyDashWeight} ${Math.round(BASE*0.9)}px ${SF}`;
+        ctx.fillText('—',scx,scY+scoreRowH/2);
+        return;
+      }
+      const txt=S.displayMode==='topar'?fmtDeltaDisplay(delta):String(parPlayed+delta);
       rrect(ctx,scx-subBW/2,scY+scoreRowH/2-subBH/2,subBW,subBH,th.scoreBadgeRadius*scale);
       ctx.fillStyle=th.subTotBg; ctx.fill();
       ctx.fillStyle=th.subTotTextColor;
@@ -356,16 +375,23 @@ function drawScorecardOverlay(ctx,X,Y,scale){
       ctx.fillText(txt,scx,scY+scoreRowH/2);
     }
     ctx.textAlign='center'; ctx.textBaseline='middle';
-    drawSubTot(outX,scoreOut,parOut);
-    drawSubTot(inX, scoreIn, parIn);
+    drawSubTot(outX,scoreOut,parPlayedOut,parPlayedOut>0);
+    drawSubTot(inX, scoreIn, parPlayedIn, parPlayedIn>0);
   }
 
-  // TOT: always Gross
-  const tg=S.holes.slice(start,end).reduce((a,h)=>a+h.par+(h.delta??0),0);
+  // TOT: only played holes (delta!==null within scoreEnd), respect displayMode
+  const _playedHoles=S.holes.slice(start,Math.min(end,scoreEnd)).filter(h=>h.delta!==null);
+  const _totDelta=_playedHoles.reduce((a,h)=>a+h.delta,0);
+  const _totGross=_playedHoles.reduce((a,h)=>a+safePar(h)+h.delta,0);
   ctx.fillStyle=th.totTextColor;
   ctx.font=`${th.totWeight} ${totFontSz}px ${SF}`;
   ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(String(tg),X+totX+totalW/2,scY+scoreRowH/2);
+  if(_playedHoles.length>0){
+    ctx.fillText(String(_totGross),X+totX+totalW/2,scY+scoreRowH/2);
+  } else {
+    ctx.fillStyle=th.emptyDashColor;
+    ctx.fillText('—',X+totX+totalW/2,scY+scoreRowH/2);
+  }
 
   // Outer border
   ctx.strokeStyle='rgba(27,94,59,0.25)'; ctx.lineWidth=1;
