@@ -117,6 +117,10 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v12.1.1 — 2026-03-08
+- 修复Shot进度条点击赋值不生效bug：改用D.setPlayerGross()替代直接写S.delta，确保数据持久化
+- 修复刷新页面后球员信息和成绩丢失（根因同上：S直接写入未经D API，syncFromS不回写成绩）
+
 ### v12.1.0 — 2026-03-08
 - 新增球局JSON导入导出功能（sessionIO.js），支持完整保存/恢复本局数据
 - 导出包含球场快照、球员、逐洞成绩、每杆shot详情及UI偏好

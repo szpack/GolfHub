@@ -580,11 +580,11 @@ function buildShotButtons(){
           // 已有成绩且点击在完成杆范围内：仅导航，不改分
           hh.shotIndex=num-1; D.ws().shotIndex=num-1;
         } else {
-          // 无成绩 或 点击超出完成杆：设置/修改成绩
-          hh.delta=num-safePar(hh);
-          hh.manualTypes={};
-          reconcileShots(hh);
-          hh.shotIndex=-1; D.ws().shotIndex=-1;
+          // 无成绩 或 点击超出完成杆：通过D API设置gross
+          const hi=D.ws().currentHole;
+          D.setPlayerGross(D.pid(), hi, num);
+          D.ws().shotIndex=-1;
+          D.syncS(S);
         }
         render(); scheduleSave();
       };
