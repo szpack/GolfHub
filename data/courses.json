@@ -1,0 +1,324 @@
+{
+  "version": "3.1",
+  "datasetName": "selected_china_courses_user_verified",
+  "generatedAt": "2026-03-08",
+  "notes": [
+    "Compiled from user-provided scorecards and images in this conversation.",
+    "Only fields confidently identified from the provided materials are filled."
+  ],
+  "clubs": [
+    {
+      "id": "shahe",
+      "name": "沙河高尔夫球会",
+      "location": "深圳",
+      "routingMode": "composable_9",
+      "segments": [
+        {
+          "id": "A",
+          "name": "A场",
+          "holeCount": 9,
+          "holes": [
+            { "id": "shahe-A-1", "number": 1, "par": 4 },
+            { "id": "shahe-A-2", "number": 2, "par": 5 },
+            { "id": "shahe-A-3", "number": 3, "par": 4 },
+            { "id": "shahe-A-4", "number": 4, "par": 4 },
+            { "id": "shahe-A-5", "number": 5, "par": 5 },
+            { "id": "shahe-A-6", "number": 6, "par": 3 },
+            { "id": "shahe-A-7", "number": 7, "par": 4 },
+            { "id": "shahe-A-8", "number": 8, "par": 4 },
+            { "id": "shahe-A-9", "number": 9, "par": 4 }
+          ]
+        },
+        {
+          "id": "B",
+          "name": "B场",
+          "holeCount": 9,
+          "holes": [
+            { "id": "shahe-B-1", "number": 1, "par": 4 },
+            { "id": "shahe-B-2", "number": 2, "par": 5 },
+            { "id": "shahe-B-3", "number": 3, "par": 3 },
+            { "id": "shahe-B-4", "number": 4, "par": 4 },
+            { "id": "shahe-B-5", "number": 5, "par": 5 },
+            { "id": "shahe-B-6", "number": 6, "par": 3 },
+            { "id": "shahe-B-7", "number": 7, "par": 4 },
+            { "id": "shahe-B-8", "number": 8, "par": 3 },
+            { "id": "shahe-B-9", "number": 9, "par": 4 }
+          ]
+        },
+        {
+          "id": "C",
+          "name": "C场",
+          "holeCount": 9,
+          "holes": [
+            { "id": "shahe-C-1", "number": 1, "par": 5 },
+            { "id": "shahe-C-2", "number": 2, "par": 4 },
+            { "id": "shahe-C-3", "number": 3, "par": 5 },
+            { "id": "shahe-C-4", "number": 4, "par": 3 },
+            { "id": "shahe-C-5", "number": 5, "par": 4 },
+            { "id": "shahe-C-6", "number": 6, "par": 3 },
+            { "id": "shahe-C-7", "number": 7, "par": 4 },
+            { "id": "shahe-C-8", "number": 8, "par": 4 },
+            { "id": "shahe-C-9", "number": 9, "par": 4 }
+          ]
+        }
+      ],
+      "compositionRules": {
+        "allowedSegmentCounts": [2],
+        "allowRepeat": false,
+        "orderMatters": true
+      }
+    },
+    {
+      "id": "xili",
+      "name": "西丽高尔夫乡村俱乐部",
+      "location": "深圳",
+      "routingMode": "composable_9",
+      "segments": [
+        {
+          "id": "A",
+          "name": "A场",
+          "holeCount": 9,
+          "holes": [
+            { "id": "xili-A-1", "number": 1, "par": 5 },
+            { "id": "xili-A-2", "number": 2, "par": 4 },
+            { "id": "xili-A-3", "number": 3, "par": 5 },
+            { "id": "xili-A-4", "number": 4, "par": 4 },
+            { "id": "xili-A-5", "number": 5, "par": 3 },
+            { "id": "xili-A-6", "number": 6, "par": 4 },
+            { "id": "xili-A-7", "number": 7, "par": 4 },
+            { "id": "xili-A-8", "number": 8, "par": 3 },
+            { "id": "xili-A-9", "number": 9, "par": 4 }
+          ]
+        },
+        {
+          "id": "B",
+          "name": "B场",
+          "holeCount": 9,
+          "holes": [
+            { "id": "xili-B-1", "number": 1, "par": 4 },
+            { "id": "xili-B-2", "number": 2, "par": 4 },
+            { "id": "xili-B-3", "number": 3, "par": 3 },
+            { "id": "xili-B-4", "number": 4, "par": 5 },
+            { "id": "xili-B-5", "number": 5, "par": 3 },
+            { "id": "xili-B-6", "number": 6, "par": 4 },
+            { "id": "xili-B-7", "number": 7, "par": 4 },
+            { "id": "xili-B-8", "number": 8, "par": 5 },
+            { "id": "xili-B-9", "number": 9, "par": 4 }
+          ]
+        },
+        {
+          "id": "C",
+          "name": "C场",
+          "holeCount": 9,
+          "holes": [
+            { "id": "xili-C-1", "number": 1, "par": 4 },
+            { "id": "xili-C-2", "number": 2, "par": 4 },
+            { "id": "xili-C-3", "number": 3, "par": 5 },
+            { "id": "xili-C-4", "number": 4, "par": 3 },
+            { "id": "xili-C-5", "number": 5, "par": 4 },
+            { "id": "xili-C-6", "number": 6, "par": 4 },
+            { "id": "xili-C-7", "number": 7, "par": 4 },
+            { "id": "xili-C-8", "number": 8, "par": 3 },
+            { "id": "xili-C-9", "number": 9, "par": 5 }
+          ]
+        },
+        {
+          "id": "D",
+          "name": "D场",
+          "holeCount": 9,
+          "holes": [
+            { "id": "xili-D-1", "number": 1, "par": 5 },
+            { "id": "xili-D-2", "number": 2, "par": 4 },
+            { "id": "xili-D-3", "number": 3, "par": 4 },
+            { "id": "xili-D-4", "number": 4, "par": 4 },
+            { "id": "xili-D-5", "number": 5, "par": 4 },
+            { "id": "xili-D-6", "number": 6, "par": 3 },
+            { "id": "xili-D-7", "number": 7, "par": 4 },
+            { "id": "xili-D-8", "number": 8, "par": 5 },
+            { "id": "xili-D-9", "number": 9, "par": 3 }
+          ]
+        }
+      ],
+      "compositionRules": {
+        "allowedSegmentCounts": [2],
+        "allowRepeat": false,
+        "orderMatters": true
+      }
+    },
+    {
+      "id": "hidden_grace",
+      "name": "隐秀高尔夫俱乐部（原正中）",
+      "location": "深圳",
+      "routingMode": "fixed_18",
+      "aliases": ["正中高尔夫球会"],
+      "courses": [
+        {
+          "id": "A",
+          "name": "A场",
+          "holeCount": 18,
+          "holes": [
+            { "id": "hidden_grace-A-1", "number": 1, "par": 4 },
+            { "id": "hidden_grace-A-2", "number": 2, "par": 5 },
+            { "id": "hidden_grace-A-3", "number": 3, "par": 3 },
+            { "id": "hidden_grace-A-4", "number": 4, "par": 4 },
+            { "id": "hidden_grace-A-5", "number": 5, "par": 4 },
+            { "id": "hidden_grace-A-6", "number": 6, "par": 4 },
+            { "id": "hidden_grace-A-7", "number": 7, "par": 4 },
+            { "id": "hidden_grace-A-8", "number": 8, "par": 3 },
+            { "id": "hidden_grace-A-9", "number": 9, "par": 5 },
+            { "id": "hidden_grace-A-10", "number": 10, "par": 4 },
+            { "id": "hidden_grace-A-11", "number": 11, "par": 4 },
+            { "id": "hidden_grace-A-12", "number": 12, "par": 3 },
+            { "id": "hidden_grace-A-13", "number": 13, "par": 5 },
+            { "id": "hidden_grace-A-14", "number": 14, "par": 4 },
+            { "id": "hidden_grace-A-15", "number": 15, "par": 4 },
+            { "id": "hidden_grace-A-16", "number": 16, "par": 3 },
+            { "id": "hidden_grace-A-17", "number": 17, "par": 5 },
+            { "id": "hidden_grace-A-18", "number": 18, "par": 4 }
+          ]
+        },
+        {
+          "id": "B",
+          "name": "B场",
+          "holeCount": 18,
+          "holes": [
+            { "id": "hidden_grace-B-1", "number": 1, "par": 4 },
+            { "id": "hidden_grace-B-2", "number": 2, "par": 5 },
+            { "id": "hidden_grace-B-3", "number": 3, "par": 4 },
+            { "id": "hidden_grace-B-4", "number": 4, "par": 4 },
+            { "id": "hidden_grace-B-5", "number": 5, "par": 5 },
+            { "id": "hidden_grace-B-6", "number": 6, "par": 3 },
+            { "id": "hidden_grace-B-7", "number": 7, "par": 4 },
+            { "id": "hidden_grace-B-8", "number": 8, "par": 4 },
+            { "id": "hidden_grace-B-9", "number": 9, "par": 3 },
+            { "id": "hidden_grace-B-10", "number": 10, "par": 4 },
+            { "id": "hidden_grace-B-11", "number": 11, "par": 4 },
+            { "id": "hidden_grace-B-12", "number": 12, "par": 4 },
+            { "id": "hidden_grace-B-13", "number": 13, "par": 3 },
+            { "id": "hidden_grace-B-14", "number": 14, "par": 5 },
+            { "id": "hidden_grace-B-15", "number": 15, "par": 4 },
+            { "id": "hidden_grace-B-16", "number": 16, "par": 3 },
+            { "id": "hidden_grace-B-17", "number": 17, "par": 5 },
+            { "id": "hidden_grace-B-18", "number": 18, "par": 4 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mission_hills_haikou",
+      "name": "海口观澜湖高尔夫球会",
+      "location": "海口",
+      "routingMode": "fixed_18",
+      "courses": [
+        {
+          "id": "course_1_blackstone",
+          "name": "1号球场（黑石）",
+          "holeCount": 18,
+          "holes": [
+            { "id": "mission_hills_haikou-course_1_blackstone-1", "number": 1, "par": 4 },
+            { "id": "mission_hills_haikou-course_1_blackstone-2", "number": 2, "par": 5 },
+            { "id": "mission_hills_haikou-course_1_blackstone-3", "number": 3, "par": 4 },
+            { "id": "mission_hills_haikou-course_1_blackstone-4", "number": 4, "par": 4 },
+            { "id": "mission_hills_haikou-course_1_blackstone-5", "number": 5, "par": 3 },
+            { "id": "mission_hills_haikou-course_1_blackstone-6", "number": 6, "par": 5 },
+            { "id": "mission_hills_haikou-course_1_blackstone-7", "number": 7, "par": 4 },
+            { "id": "mission_hills_haikou-course_1_blackstone-8", "number": 8, "par": 3 },
+            { "id": "mission_hills_haikou-course_1_blackstone-9", "number": 9, "par": 4 },
+            { "id": "mission_hills_haikou-course_1_blackstone-10", "number": 10, "par": 4 },
+            { "id": "mission_hills_haikou-course_1_blackstone-11", "number": 11, "par": 3 },
+            { "id": "mission_hills_haikou-course_1_blackstone-12", "number": 12, "par": 5 },
+            { "id": "mission_hills_haikou-course_1_blackstone-13", "number": 13, "par": 5 },
+            { "id": "mission_hills_haikou-course_1_blackstone-14", "number": 14, "par": 4 },
+            { "id": "mission_hills_haikou-course_1_blackstone-15", "number": 15, "par": 3 },
+            { "id": "mission_hills_haikou-course_1_blackstone-16", "number": 16, "par": 4 },
+            { "id": "mission_hills_haikou-course_1_blackstone-17", "number": 17, "par": 4 },
+            { "id": "mission_hills_haikou-course_1_blackstone-18", "number": 18, "par": 5 }
+          ]
+        },
+        {
+          "id": "course_2",
+          "name": "2号球场",
+          "holeCount": 18,
+          "holes": [
+            { "id": "mission_hills_haikou-course_2-1", "number": 1, "par": 5 },
+            { "id": "mission_hills_haikou-course_2-2", "number": 2, "par": 4 },
+            { "id": "mission_hills_haikou-course_2-3", "number": 3, "par": 4 },
+            { "id": "mission_hills_haikou-course_2-4", "number": 4, "par": 4 },
+            { "id": "mission_hills_haikou-course_2-5", "number": 5, "par": 3 },
+            { "id": "mission_hills_haikou-course_2-6", "number": 6, "par": 4 },
+            { "id": "mission_hills_haikou-course_2-7", "number": 7, "par": 4 },
+            { "id": "mission_hills_haikou-course_2-8", "number": 8, "par": 5 },
+            { "id": "mission_hills_haikou-course_2-9", "number": 9, "par": 3 },
+            { "id": "mission_hills_haikou-course_2-10", "number": 10, "par": 4 },
+            { "id": "mission_hills_haikou-course_2-11", "number": 11, "par": 4 },
+            { "id": "mission_hills_haikou-course_2-12", "number": 12, "par": 5 },
+            { "id": "mission_hills_haikou-course_2-13", "number": 13, "par": 4 },
+            { "id": "mission_hills_haikou-course_2-14", "number": 14, "par": 3 },
+            { "id": "mission_hills_haikou-course_2-15", "number": 15, "par": 4 },
+            { "id": "mission_hills_haikou-course_2-16", "number": 16, "par": 3 },
+            { "id": "mission_hills_haikou-course_2-17", "number": 17, "par": 4 },
+            { "id": "mission_hills_haikou-course_2-18", "number": 18, "par": 5 }
+          ]
+        },
+        {
+          "id": "course_7",
+          "name": "7号球场",
+          "holeCount": 18,
+          "holes": [
+            { "id": "mission_hills_haikou-course_7-1", "number": 1, "par": 5, "teeYards": { "gold": 565, "blue": 529, "white": 495, "red": 466 }, "paceTime": { "river": "00:16", "cart": "00:18" }, "strokeIndex": 1 },
+            { "id": "mission_hills_haikou-course_7-2", "number": 2, "par": 3, "teeYards": { "gold": 226, "blue": 192, "white": 154, "red": 133 }, "paceTime": { "river": "00:08", "cart": "00:28" }, "strokeIndex": 3 },
+            { "id": "mission_hills_haikou-course_7-3", "number": 3, "par": 4, "teeYards": { "gold": 395, "blue": 363, "white": 346, "red": 342 }, "paceTime": { "river": "00:12", "cart": "00:42" }, "strokeIndex": 9 },
+            { "id": "mission_hills_haikou-course_7-4", "number": 4, "par": 4, "teeYards": { "gold": 383, "blue": 355, "white": 326, "red": 273 }, "paceTime": { "river": "00:12", "cart": "00:56" }, "strokeIndex": 5 },
+            { "id": "mission_hills_haikou-course_7-5", "number": 5, "par": 3, "teeYards": { "gold": 202, "blue": 186, "white": 164, "red": 128 }, "paceTime": { "river": "00:08", "cart": "01:06" }, "strokeIndex": 11 },
+            { "id": "mission_hills_haikou-course_7-6", "number": 6, "par": 4, "teeYards": { "gold": 325, "blue": 296, "white": 234, "red": 194 }, "paceTime": { "river": "00:12", "cart": "01:20" }, "strokeIndex": 17 },
+            { "id": "mission_hills_haikou-course_7-7", "number": 7, "par": 5, "teeYards": { "gold": 539, "blue": 504, "white": 467, "red": 428 }, "paceTime": { "river": "00:16", "cart": "01:38" }, "strokeIndex": 7 },
+            { "id": "mission_hills_haikou-course_7-8", "number": 8, "par": 3, "teeYards": { "gold": 141, "blue": 129, "white": 118, "red": 108 }, "paceTime": { "river": "00:08", "cart": "01:48" }, "strokeIndex": 13 },
+            { "id": "mission_hills_haikou-course_7-9", "number": 9, "par": 4, "teeYards": { "gold": 346, "blue": 327, "white": 305, "red": 281 }, "paceTime": { "river": "00:12", "cart": "02:02" }, "strokeIndex": 15 },
+            { "id": "mission_hills_haikou-course_7-10", "number": 10, "par": 4, "teeYards": { "gold": 422, "blue": 393, "white": 359, "red": 339 }, "paceTime": { "river": "00:12", "cart": "00:14" }, "strokeIndex": 2 },
+            { "id": "mission_hills_haikou-course_7-11", "number": 11, "par": 3, "teeYards": { "gold": 126, "blue": 106, "white": 85, "red": 70 }, "paceTime": { "river": "00:08", "cart": "00:24" }, "strokeIndex": 16 },
+            { "id": "mission_hills_haikou-course_7-12", "number": 12, "par": 5, "teeYards": { "gold": 535, "blue": 500, "white": 463, "red": 436 }, "paceTime": { "river": "00:16", "cart": "00:42" }, "strokeIndex": 4 },
+            { "id": "mission_hills_haikou-course_7-13", "number": 13, "par": 4, "teeYards": { "gold": 301, "blue": 277, "white": 257, "red": 245 }, "paceTime": { "river": "00:12", "cart": "00:56" }, "strokeIndex": 18 },
+            { "id": "mission_hills_haikou-course_7-14", "number": 14, "par": 4, "teeYards": { "gold": 385, "blue": 354, "white": 324, "red": 281 }, "paceTime": { "river": "00:12", "cart": "01:10" }, "strokeIndex": 6 },
+            { "id": "mission_hills_haikou-course_7-15", "number": 15, "par": 3, "teeYards": { "gold": 154, "blue": 135, "white": 109, "red": 85 }, "paceTime": { "river": "00:08", "cart": "01:20" }, "strokeIndex": 10 },
+            { "id": "mission_hills_haikou-course_7-16", "number": 16, "par": 5, "teeYards": { "gold": 521, "blue": 491, "white": 460, "red": 344 }, "paceTime": { "river": "00:16", "cart": "01:38" }, "strokeIndex": 8 },
+            { "id": "mission_hills_haikou-course_7-17", "number": 17, "par": 3, "teeYards": { "gold": 137, "blue": 113, "white": 102, "red": 91 }, "paceTime": { "river": "00:08", "cart": "01:48" }, "strokeIndex": 14 },
+            { "id": "mission_hills_haikou-course_7-18", "number": 18, "par": 4, "teeYards": { "gold": 326, "blue": 302, "white": 275, "red": 242 }, "paceTime": { "river": "00:12", "cart": "02:02" }, "strokeIndex": 12 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sanya_hna_double_holy_hill",
+      "name": "三亚海航双圣山高尔夫球会",
+      "location": "三亚",
+      "routingMode": "fixed_18",
+      "courses": [
+        {
+          "id": "jiuxianling_shihua",
+          "name": "九仙岭市花球场",
+          "holeCount": 18,
+          "holes": [
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-1", "number": 1, "par": 4 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-2", "number": 2, "par": 3 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-3", "number": 3, "par": 4 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-4", "number": 4, "par": 4 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-5", "number": 5, "par": 5 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-6", "number": 6, "par": 3 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-7", "number": 7, "par": 5 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-8", "number": 8, "par": 4 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-9", "number": 9, "par": 4 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-10", "number": 10, "par": 3 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-11", "number": 11, "par": 5 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-12", "number": 12, "par": 3 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-13", "number": 13, "par": 4 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-14", "number": 14, "par": 4 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-15", "number": 15, "par": 5 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-16", "number": 16, "par": 4 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-17", "number": 17, "par": 3 },
+            { "id": "sanya_hna_double_holy_hill-jiuxianling_shihua-18", "number": 18, "par": 4 }
+          ]
+        }
+      ]
+    }
+  ]
+}

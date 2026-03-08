@@ -1,0 +1,165 @@
+{
+  "version": "3.1",
+  "clubs": [
+    {
+      "id": "shahe",
+      "name": "沙河高尔夫球会",
+      "location": "深圳",
+      "routingMode": "composable_9",
+
+      "segments": [
+
+        {
+          "id": "A",
+          "name": "A场",
+          "holeCount": 9,
+          "holes": [
+            { "id": "shahe-A-1", "number": 1, "par": 4 },
+            { "id": "shahe-A-2", "number": 2, "par": 5 },
+            { "id": "shahe-A-3", "number": 3, "par": 4 },
+            { "id": "shahe-A-4", "number": 4, "par": 4 },
+            { "id": "shahe-A-5", "number": 5, "par": 5 },
+            { "id": "shahe-A-6", "number": 6, "par": 3 },
+            { "id": "shahe-A-7", "number": 7, "par": 4 },
+            { "id": "shahe-A-8", "number": 8, "par": 4 },
+            { "id": "shahe-A-9", "number": 9, "par": 4 }
+          ]
+        },
+
+        {
+          "id": "B",
+          "name": "B场",
+          "holeCount": 9,
+          "holes": [
+            { "id": "shahe-B-1", "number": 1, "par": 4 },
+            { "id": "shahe-B-2", "number": 2, "par": 5 },
+            { "id": "shahe-B-3", "number": 3, "par": 3 },
+            { "id": "shahe-B-4", "number": 4, "par": 4 },
+            { "id": "shahe-B-5", "number": 5, "par": 5 },
+            { "id": "shahe-B-6", "number": 6, "par": 3 },
+            { "id": "shahe-B-7", "number": 7, "par": 4 },
+            { "id": "shahe-B-8", "number": 8, "par": 3 },
+            { "id": "shahe-B-9", "number": 9, "par": 4 }
+          ]
+        },
+
+        {
+          "id": "C",
+          "name": "C场",
+          "holeCount": 9,
+          "holes": [
+            { "id": "shahe-C-1", "number": 1, "par": 5 },
+            { "id": "shahe-C-2", "number": 2, "par": 4 },
+            { "id": "shahe-C-3", "number": 3, "par": 5 },
+            { "id": "shahe-C-4", "number": 4, "par": 3 },
+            { "id": "shahe-C-5", "number": 5, "par": 4 },
+            { "id": "shahe-C-6", "number": 6, "par": 3 },
+            { "id": "shahe-C-7", "number": 7, "par": 4 },
+            { "id": "shahe-C-8", "number": 8, "par": 4 },
+            { "id": "shahe-C-9", "number": 9, "par": 4 }
+          ]
+        }
+
+      ],
+
+      "compositionRules": {
+        "allowedSegmentCounts": [2],
+        "allowRepeat": false,
+        "orderMatters": true
+      }
+    }
+  ]
+}
+
+
+{
+  "version": "3.1",
+  "clubs": [
+    {
+      "id": "xili",
+      "name": "深圳西丽高尔夫乡村俱乐部",
+      "location": "深圳",
+      "routingMode": "composable_9",
+
+      "segments": [
+
+        {
+          "id": "A",
+          "name": "A场",
+          "holeCount": 9,
+          "holes": [
+            { "id": "xili-A-1", "number": 1, "par": 5 },
+            { "id": "xili-A-2", "number": 2, "par": 4 },
+            { "id": "xili-A-3", "number": 3, "par": 5 },
+            { "id": "xili-A-4", "number": 4, "par": 4 },
+            { "id": "xili-A-5", "number": 5, "par": 3 },
+            { "id": "xili-A-6", "number": 6, "par": 4 },
+            { "id": "xili-A-7", "number": 7, "par": 4 },
+            { "id": "xili-A-8", "number": 8, "par": 3 },
+            { "id": "xili-A-9", "number": 9, "par": 4 }
+          ]
+        },
+
+        {
+          "id": "B",
+          "name": "B场",
+          "holeCount": 9,
+          "holes": [
+            { "id": "xili-B-1", "number": 1, "par": 4 },
+            { "id": "xili-B-2", "number": 2, "par": 4 },
+            { "id": "xili-B-3", "number": 3, "par": 3 },
+            { "id": "xili-B-4", "number": 4, "par": 5 },
+            { "id": "xili-B-5", "number": 5, "par": 3 },
+            { "id": "xili-B-6", "number": 6, "par": 4 },
+            { "id": "xili-B-7", "number": 7, "par": 4 },
+            { "id": "xili-B-8", "number": 8, "par": 5 },
+            { "id": "xili-B-9", "number": 9, "par": 4 }
+          ]
+        },
+
+        {
+          "id": "C",
+          "name": "C场",
+          "holeCount": 9,
+          "holes": [
+            { "id": "xili-C-1", "number": 1, "par": 4 },
+            { "id": "xili-C-2", "number": 2, "par": 4 },
+            { "id": "xili-C-3", "number": 3, "par": 5 },
+            { "id": "xili-C-4", "number": 4, "par": 3 },
+            { "id": "xili-C-5", "number": 5, "par": 4 },
+            { "id": "xili-C-6", "number": 6, "par": 4 },
+            { "id": "xili-C-7", "number": 7, "par": 4 },
+            { "id": "xili-C-8", "number": 8, "par": 3 },
+            { "id": "xili-C-9", "number": 9, "par": 5 }
+          ]
+        },
+
+        {
+          "id": "D",
+          "name": "D场",
+          "holeCount": 9,
+          "holes": [
+            { "id": "xili-D-1", "number": 1, "par": 5 },
+            { "id": "xili-D-2", "number": 2, "par": 4 },
+            { "id": "xili-D-3", "number": 3, "par": 4 },
+            { "id": "xili-D-4", "number": 4, "par": 4 },
+            { "id": "xili-D-5", "number": 5, "par": 4 },
+            { "id": "xili-D-6", "number": 6, "par": 3 },
+            { "id": "xili-D-7", "number": 7, "par": 4 },
+            { "id": "xili-D-8", "number": 8, "par": 5 },
+            { "id": "xili-D-9", "number": 9, "par": 3 }
+          ]
+        }
+
+      ],
+
+      "compositionRules": {
+        "allowedSegmentCounts": [2],
+        "allowRepeat": false,
+        "orderMatters": true
+      }
+
+    }
+  ]
+}
+
