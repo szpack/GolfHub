@@ -117,6 +117,10 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v11.5.1 — 2026-03-08
+- Hole区：Par移至HOLE X同行，右侧显示球洞长度（码）
+- Shot区重构：SHOT标题行右侧显示To Pin输入框，下方Type/Purpose/Result/Flags/Note间距收紧
+
 ### v11.5.0 — 2026-03-08
 - 布局调整：球场信息栏移至左侧（预览区下方、计分卡导航区上方），一行显示球场名+Tee信息+Edit按钮
 - 右侧面板顺序调整：Hole → Players → Score → Shot Type

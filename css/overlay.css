@@ -197,7 +197,10 @@ html.light .sg-hdr.sg-active{background:#FFD700;color:#1a2e1a}
 html.light .rp-edit-btn:active{background:rgba(0,0,0,.05)}
 
 /* ── Hole Info ── */
-#rp-hole-line1{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
+#rp-hole-line1{display:flex;align-items:baseline;gap:6px}
+.rp-par-inline{font:500 14px/1 'Roboto',Arial,sans-serif;color:var(--text-muted);cursor:pointer;margin-left:4px}
+.rp-par-inline:hover{color:var(--text-primary)}
+.rp-hole-yds{font:400 13px/1 'Roboto',Arial,sans-serif;color:var(--t3);margin-left:auto}
 #rp-hole-lbl{font:700 20px/1 'Roboto',Arial,sans-serif;color:#fff;text-transform:uppercase;letter-spacing:.06em}
 #rp-hole-num{font:700 20px/1 'Roboto',Arial,sans-serif;color:#fff;letter-spacing:.5px}
 html.light #rp-hole-lbl{color:#1a2e1a}
@@ -373,8 +376,10 @@ html.light .player-row.pr-active{background:rgba(34,197,94,.08)}
 .snum-btn:active{opacity:.7}
 /* type buttons */
 /* ── Shot Panel Groups ── */
-.sp-group{margin-top:16px}
+.sp-group{margin-top:14px}
 .sp-group:first-of-type{margin-top:0}
+.sp-group.sp-compact{margin-top:8px}
+.sp-shot-hdr-row{display:flex;align-items:center;gap:6px}
 .sp-header{display:flex;align-items:center;gap:6px;margin-bottom:6px}
 .sp-title{font:700 12px/1 'Roboto',Arial,sans-serif;color:#8a8f96;text-transform:uppercase;letter-spacing:.05em}
 .sp-btn-row{display:flex;gap:4px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
@@ -710,6 +715,7 @@ html.narrow .sp-btn-row{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scroll
 html.narrow .sp-btn-row::-webkit-scrollbar{display:none}
 html.narrow .sp-btn{flex-shrink:0;font-size:11px;padding:5px 10px}
 html.narrow .sp-group{margin-top:10px}
+html.narrow .sp-group.sp-compact{margin-top:6px}
 
 /* ── Final Score compact ── */
 html.narrow #delta-section{padding:8px 10px 10px}

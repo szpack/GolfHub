@@ -741,13 +741,18 @@ function updateRightPanel(){
   // Course name (bottom nav)
   const courseBot=document.getElementById('rp-course-name');
   if(courseBot) courseBot.textContent=S.courseName||'';
-  // HOLE + Par
+  // HOLE + Par + Yardage
   const holeLbl=document.getElementById('rp-hole-lbl');
   const holeNum=document.getElementById('rp-hole-num');
   if(holeLbl) holeLbl.textContent='HOLE';
   if(holeNum) holeNum.textContent=String(idx+1);
   const parVal=document.getElementById('rp-par-val');
   if(parVal) parVal.textContent=parDisplay(h);
+  const holeYds=document.getElementById('rp-hole-yds');
+  if(holeYds){
+    const yd=h.holeLengthYds;
+    holeYds.textContent=(yd!=null&&yd>0)?yd+' '+T('distUnit'):'';
+  }
   // Players
   buildFocusPlayerBtns();
   // Score value

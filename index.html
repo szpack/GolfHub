@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Golf Overlay Tool v11.5.0</title>
+<title>Golf Overlay Tool v11.5.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/overlay.css?v=11.5.0">
+<link rel="stylesheet" href="./css/overlay.css?v=11.5.1">
 <script>
 /* Narrow-screen detection: use screen.width (physical device pixels)
    — immune to Safari "Request Desktop Website" which inflates viewport to ~980px */
@@ -28,7 +28,7 @@
 <div id="hdr">
   <img src="gologo.png" alt="Golf Overlay" class="logo-img">
   <div class="logo" id="logo-text">GOLF <span>OVERLAY</span></div>
-  <span class="logo-meta">v11.5.0<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
+  <span class="logo-meta">v11.5.1<br><span id="logo-author" style="font-size:8px;color:var(--t3);letter-spacing:0">szpack@qq.com</span></span>
   <span style="flex:1"></span>
   <div id="lang-wrap">
     <button id="btn-lang" onclick="toggleLangMenu()">🇺🇸 EN</button>
@@ -89,13 +89,8 @@
       <div id="rp-hole-line1">
         <span id="rp-hole-lbl">HOLE</span>
         <span id="rp-hole-num">1</span>
-      </div>
-      <div id="rp-hole-line2">
-        <span id="rp-par-tap" onclick="cycleParFocus()">PAR <span id="rp-par-val">4</span></span>
-        <span class="rp-hole-sep">|</span>
-        <span class="rp-topin-lbl" id="rp-topin-lbl">TO PIN</span>
-        <input type="number" id="inp-dist" placeholder="—" min="0" max="999" onfocus="this.select()" class="rp-topin-input">
-        <span id="dist-unit" class="rp-dist-unit">yds</span>
+        <span id="rp-par-tap" onclick="cycleParFocus()" class="rp-par-inline">PAR <span id="rp-par-val">4</span></span>
+        <span id="rp-hole-yds" class="rp-hole-yds"></span>
       </div>
     </div>
 
@@ -121,28 +116,38 @@
         <div id="topar-cells"></div>
       </div>
 
-      <!-- Shot Type -->
-      <div class="sp-group">
-        <span class="sp-title" id="sp-type-lbl">SHOT TYPE</span>
+      <!-- Shot header: SHOT + To Pin -->
+      <div class="sp-group sp-shot-hdr">
+        <div class="sp-shot-hdr-row">
+          <span class="sp-title" id="sp-shot-title">SHOT</span>
+          <span style="flex:1"></span>
+          <span class="rp-topin-lbl" id="rp-topin-lbl">To Pin</span>
+          <input type="number" id="inp-dist" placeholder="—" min="0" max="999" onfocus="this.select()" class="rp-topin-input">
+          <span id="dist-unit" class="rp-dist-unit">yds</span>
+        </div>
+      </div>
+      <!-- Type -->
+      <div class="sp-group sp-compact">
+        <span class="sp-title" id="sp-type-lbl">TYPE</span>
         <div id="sp-type-btns" class="sp-btn-row"></div>
       </div>
       <!-- Purpose -->
-      <div class="sp-group">
+      <div class="sp-group sp-compact">
         <span class="sp-title" id="sp-purpose-lbl">PURPOSE</span>
         <div id="sp-result-btns" class="sp-btn-row"></div>
       </div>
       <!-- Result (landing) -->
-      <div class="sp-group">
+      <div class="sp-group sp-compact">
         <span class="sp-title" id="sp-result-lbl">RESULT</span>
         <div id="sp-landing-btns" class="sp-btn-row"></div>
       </div>
       <!-- Flags -->
-      <div class="sp-group">
+      <div class="sp-group sp-compact">
         <span class="sp-title" id="sp-flag-lbl">FLAGS</span>
         <div id="sp-flag-btns" class="sp-btn-row"></div>
       </div>
       <!-- Note -->
-      <div class="sp-group">
+      <div class="sp-group sp-compact">
         <span class="sp-title" id="sp-note-lbl">NOTE</span>
         <input type="text" id="inp-shot-note" class="sp-note-input" maxlength="30" placeholder="temp note…" oninput="onShotNoteInput(this.value)">
       </div>
@@ -539,11 +544,11 @@
 <div id="mini-toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="./js/courseDatabase.js?v=11.5.0"></script>
-<script src="./js/scoreboard.js?v=11.5.0"></script>
-<script src="./js/ui.js?v=11.5.0"></script>
-<script src="./js/roundManager.js?v=11.5.0"></script>
-<script src="./js/coursePicker.js?v=11.5.0"></script>
-<script src="./js/app.js?v=11.5.0"></script>
+<script src="./js/courseDatabase.js?v=11.5.1"></script>
+<script src="./js/scoreboard.js?v=11.5.1"></script>
+<script src="./js/ui.js?v=11.5.1"></script>
+<script src="./js/roundManager.js?v=11.5.1"></script>
+<script src="./js/coursePicker.js?v=11.5.1"></script>
+<script src="./js/app.js?v=11.5.1"></script>
 </body>
 </html>
