@@ -739,6 +739,8 @@ function currentPlayerDisplayName(){
 
 function resetAllShotIndex(hi){
   // v4: shotIndex is global in workspace, just reset it
+  // Also sync currentHole to D before rebuilding S, so syncS reads the correct hole
+  D.ws().currentHole=S.currentHole;
   D.ws().shotIndex=-1;
   D.syncS(S);
 }

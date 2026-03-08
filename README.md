@@ -117,6 +117,9 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 <!-- Claude: keep this section updated. Newest on top. -->
 
+### v12.1.2 — 2026-03-08
+- 修复计分卡导航区点击无法切换当前洞（v12.0.2回归bug：resetAllShotIndex中D.syncS覆盖了S.currentHole）
+
 ### v12.1.1 — 2026-03-08
 - 修复Shot进度条点击赋值不生效bug：改用D.setPlayerGross()替代直接写S.delta，确保数据持久化
 - 修复刷新页面后球员信息和成绩丢失（根因同上：S直接写入未经D API，syncFromS不回写成绩）
