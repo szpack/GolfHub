@@ -168,6 +168,9 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 ## Changelog
 
+### v20.1.1 — 2026-03-09
+- **修复**：Overlay Center 右侧 "New…" 按钮仍调用旧弹窗 `openNewRound()`，改为 `Shell.newRound()` 走新页面流程
+
 ### v20.1.0 — 2026-03-09
 - **输入验证**：`createNewRound()` 新增 `validateInput()` 前置验证，返回结构化错误数组
 - 验证规则：clubId 必须存在于 ClubStore、layoutId 必须存在于球场 layouts、至少一名球员且名字非空
