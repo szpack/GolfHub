@@ -32,6 +32,7 @@ GolfOverlay/
 │   └── courses.json    # 球场数据库（静态JSON）
 ├── js/
 │   ├── data.js         # v4.0 统一数据访问层（最先加载）
+│   ├── roundTypes.js   # Round 类型定义（JSDoc only，无运行时代码）
 │   ├── round.js        # Round 数据模型（纯函数，data.js 之后加载）
 │   ├── courseDatabase.js # 球场数据管理层
 │   ├── scoreboard.js   # 计分卡逻辑
@@ -112,6 +113,7 @@ v4.0 统一数据访问层（IIFE `D`），无依赖：
 ## 加载顺序
 ```html
 <script src="js/data.js"></script>            <!-- v4.0 数据层，无依赖 -->
+<script src="js/roundTypes.js"></script>     <!-- JSDoc 类型定义，无运行时代码 -->
 <script src="js/round.js"></script>          <!-- Round 数据模型，纯函数，无依赖 -->
 <script src="js/courseDatabase.js"></script>  <!-- 无依赖 -->
 <script src="js/scoreboard.js"></script>      <!-- 无依赖 -->

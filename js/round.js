@@ -56,8 +56,24 @@ const Round = (function(){
   // ══════════════════════════════════════════
 
   function _genId(prefix){
-    prefix = prefix || 'round';
+    prefix = prefix || 'id';
     return prefix + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,6);
+  }
+
+  /**
+   * Generate a round ID with date-based format for readability and sort order.
+   * Format: rnd_YYYYMMDD_<ts36><rand6>
+   * Uniqueness: millisecond timestamp (base36) + 6 random chars = ~2.1B combinations per ms.
+   * For single-user localStorage, collision is effectively impossible.
+   */
+  function _genRoundId(){
+    var d = new Date();
+    var ds = d.getFullYear() +
+      String(d.getMonth() + 1).padStart(2, '0') +
+      String(d.getDate()).padStart(2, '0');
+    var ts = Date.now().toString(36);
+    var rand = Math.random().toString(36).slice(2, 8);
+    return 'rnd_' + ds + '_' + ts + rand;
   }
 
   function _now(){ return new Date().toISOString(); }
@@ -155,7 +171,7 @@ const Round = (function(){
     var now = _now();
 
     var round = {
-      id:        input.id || _genId('round'),                     // [TRUTH]
+      id:        input.id || _genRoundId(),                        // [TRUTH]
       status:    input.status || 'planned',                       // [TRUTH]
       date:      input.date || now.slice(0,10),                   // [TRUTH]
 
@@ -207,7 +223,7 @@ const Round = (function(){
     var now = _now();
 
     var round = {
-      id:        raw.id || _genId('round'),
+      id:        raw.id || _genRoundId(),
       status:    (ROUND_STATUS.indexOf(raw.status) >= 0) ? raw.status : 'planned',
       date:      raw.date || now.slice(0,10),
       courseId:   raw.courseId || null,
@@ -500,7 +516,7 @@ const Round = (function(){
     var clone = _deepClone(round);
     var now = _now();
 
-    clone.id = _genId('round');
+    clone.id = _genRoundId();
     clone.status = options.status || 'planned';
     clone.date = options.date || now.slice(0,10);
     clone.createdAt = now;
@@ -638,7 +654,7 @@ const Round = (function(){
     }
 
     return {
-      id:        (sc.meta && sc.meta.roundId) || _genId('round'),
+      id:        (sc.meta && sc.meta.roundId) || _genRoundId(),
       status:    'playing',
       date:      (sc.meta && sc.meta.createdAt) ? sc.meta.createdAt.slice(0,10) : _now().slice(0,10),
       courseId:   course.clubId || null,
@@ -756,7 +772,7 @@ const Round = (function(){
 
     // ── 1. createRound ──
     var r = createRound({ courseId:'club_1', routingId:'rt_1', holeCount:18 });
-    ok('create: id',       r.id && r.id.indexOf('round_') === 0);
+    ok('create: id',       r.id && /^rnd_\d{8}_/.test(r.id), 'got ' + r.id);
     ok('create: holeCount', r.holeCount === 18);
     ok('create: status',   r.status === 'planned');
     ok('create: courseId',  r.courseId === 'club_1');

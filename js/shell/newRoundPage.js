@@ -363,8 +363,8 @@ const NewRoundPage = (function(){
       teeTime: teeTime
     });
 
-    if(!result){
-      alert('Failed to create round. Check course data.');
+    if(!result.success){
+      alert(result.errors.join('\n'));
       return;
     }
 

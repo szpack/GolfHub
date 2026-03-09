@@ -168,6 +168,19 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 ## Changelog
 
+### v20.1.0 — 2026-03-09
+- **输入验证**：`createNewRound()` 新增 `validateInput()` 前置验证，返回结构化错误数组
+- 验证规则：clubId 必须存在于 ClubStore、layoutId 必须存在于球场 layouts、至少一名球员且名字非空
+- **返回格式规范化**：`createNewRound()` 返回 `{success: true, round, ...}` 或 `{success: false, errors}`
+- **roundId 新格式**：`rnd_YYYYMMDD_<ts36><rand6>`，人类可读日期 + 毫秒时间戳 + 6位随机数，单用户 localStorage 下碰撞概率为零
+- **类型定义**：新增 `roundTypes.js`（JSDoc only），定义 Round / PlayerSnapshot / Hole / Shot / CourseHoleSnapshot / NewRoundInput / NewRoundResult 等类型
+- **UX 改进**：创建失败时显示具体验证错误（替代通用 alert）
+- 自测新增 T9 验证 + 100次快速 ID 唯一性检测
+
+### v20.0.1 — 2026-03-09
+- 新增 `NewRoundService._selfTest()` 浏览器控制台自测，覆盖 8 项测试场景
+- 测试覆盖：即时开局、计划球局、球员快照、洞初始化、球场快照、Round schema 完整性、边界情况
+
 ### v20.0.0 — 2026-03-09
 - **New Round 重新设计**：从弹窗改为独立页面 `#/new-round`，两步开局流程
 - 球场选择：最近球场 + 搜索，选球场 → 选 Layout（Routing）→ 选 Tee Set

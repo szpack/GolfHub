@@ -112,25 +112,78 @@ const NewRoundService = (function(){
   }
 
   // ══════════════════════════════════════════
+  // VALIDATION
+  // ══════════════════════════════════════════
+
+  /**
+   * Validate createNewRound input before creating the round.
+   *
+   * @param {NewRoundInput} input
+   * @returns {string[]} array of error messages (empty = valid)
+   */
+  function validateInput(input){
+    var errors = [];
+    if(!input) { errors.push('Input is required'); return errors; }
+
+    // clubId must exist in ClubStore
+    if(!input.clubId){
+      errors.push('Club is required');
+    } else if(!ClubStore.get(input.clubId)){
+      errors.push('Club not found: ' + input.clubId);
+    }
+
+    // layoutId must exist within the club
+    if(!input.layoutId){
+      errors.push('Layout is required');
+    } else if(input.clubId){
+      var club = ClubStore.get(input.clubId);
+      if(club){
+        var layoutFound = false;
+        for(var i = 0; i < (club.layouts || []).length; i++){
+          if(club.layouts[i].id === input.layoutId){ layoutFound = true; break; }
+        }
+        if(!layoutFound) errors.push('Layout not found: ' + input.layoutId);
+      }
+    }
+
+    // At least one player required
+    if(!input.players || !Array.isArray(input.players) || input.players.length === 0){
+      errors.push('At least one player is required');
+    } else {
+      // Each player must have a non-empty name
+      for(var i = 0; i < input.players.length; i++){
+        if(!input.players[i] || !input.players[i].name || !input.players[i].name.trim()){
+          errors.push('Player ' + (i + 1) + ' has no name');
+        }
+      }
+    }
+
+    return errors;
+  }
+
+  // ══════════════════════════════════════════
   // CREATE ROUND
   // ══════════════════════════════════════════
 
   /**
    * Create a new round from user selections.
+   * Returns validation errors if input is invalid, or the created round result.
    *
-   * @param {Object} input
-   * @param {string} input.clubId
-   * @param {string} input.layoutId
-   * @param {string} [input.teeSetId]
-   * @param {Array}  input.players - [{name, playerId?}]
-   * @param {string} [input.teeTime] - ISO datetime
-   * @param {string} [input.title]
-   * @returns {{ round: Object, snapshot: Array, activate: boolean, title: string } | null}
+   * @param {NewRoundInput} input
+   * @returns {NewRoundResult}
    */
   function createNewRound(input){
+    // 0. Validate input
+    var errors = validateInput(input);
+    if(errors.length > 0){
+      return { success: false, errors: errors };
+    }
+
     // 1. Build course snapshot
     var cs = buildCourseSnapshot(input.clubId, input.layoutId, input.teeSetId);
-    if(!cs || cs.holeCount === 0) return null;
+    if(!cs || cs.holeCount === 0){
+      return { success: false, errors: ['Course snapshot is empty — check layout segments'] };
+    }
 
     // 2. Resolve status
     var res = resolveStatus(input.teeTime);
@@ -167,6 +220,7 @@ const NewRoundService = (function(){
     round._routingName = cs.routingName;
 
     return {
+      success: true,
       round: round,
       snapshot: cs.snapshot,
       courseName: cs.courseName,
@@ -333,17 +387,293 @@ const NewRoundService = (function(){
   }
 
   // ══════════════════════════════════════════
+  // SELF-TEST — call NewRoundService._selfTest() in browser console
+  // ══════════════════════════════════════════
+
+  function _selfTest(){
+    var pass=0, fail=0, results=[];
+
+    function ok(name, cond, detail){
+      if(cond){ pass++; results.push('  OK  ' + name); }
+      else    { fail++; results.push('  FAIL ' + name + (detail ? ' — ' + detail : '')); }
+    }
+
+    // ── Mock ClubStore data ──
+    var _origGet = ClubStore.get;
+    var mockClub = {
+      id: 'test_club_1',
+      name: 'Test Golf Club',
+      name_en: 'Test Golf Club',
+      city: 'TestCity',
+      nines: [
+        {
+          id: 'nine_front',
+          name: 'Front',
+          holes: [
+            { par:4, hcp:1, tees:{ tee_blue:{ yards:380 } } },
+            { par:3, hcp:5, tees:{ tee_blue:{ yards:165 } } },
+            { par:5, hcp:3, tees:{ tee_blue:{ yards:520 } } },
+            { par:4, hcp:7, tees:{ tee_blue:{ yards:350 } } },
+            { par:4, hcp:9, tees:{ tee_blue:{ yards:370 } } },
+            { par:3, hcp:13, tees:{ tee_blue:{ yards:175 } } },
+            { par:4, hcp:11, tees:{ tee_blue:{ yards:410 } } },
+            { par:5, hcp:15, tees:{ tee_blue:{ yards:540 } } },
+            { par:4, hcp:17, tees:{ tee_blue:{ yards:390 } } }
+          ]
+        },
+        {
+          id: 'nine_back',
+          name: 'Back',
+          holes: [
+            { par:4, hcp:2, tees:{ tee_blue:{ yards:400 } } },
+            { par:4, hcp:4, tees:{ tee_blue:{ yards:360 } } },
+            { par:3, hcp:14, tees:{ tee_blue:{ yards:190 } } },
+            { par:5, hcp:6, tees:{ tee_blue:{ yards:530 } } },
+            { par:4, hcp:8, tees:{ tee_blue:{ yards:385 } } },
+            { par:4, hcp:10, tees:{ tee_blue:{ yards:395 } } },
+            { par:3, hcp:16, tees:{ tee_blue:{ yards:155 } } },
+            { par:5, hcp:12, tees:{ tee_blue:{ yards:510 } } },
+            { par:4, hcp:18, tees:{ tee_blue:{ yards:375 } } }
+          ]
+        }
+      ],
+      layouts: [
+        {
+          id: 'layout_full',
+          name: 'Full 18',
+          is_default: true,
+          hole_count: 18,
+          segments: [
+            { nine_id:'nine_front', order:1 },
+            { nine_id:'nine_back',  order:2 }
+          ]
+        }
+      ],
+      tee_sets: [
+        { id:'tee_blue', name:'Blue', color:'#0000ff' }
+      ]
+    };
+    ClubStore.get = function(id){ return id === 'test_club_1' ? mockClub : _origGet(id); };
+
+    // ════════════════════════════════════════
+    // Test 1: Immediate round (teeTime = today)
+    // ════════════════════════════════════════
+    var todayISO = new Date().toISOString().slice(0,10) + 'T08:00';
+    var r1 = createNewRound({
+      clubId: 'test_club_1',
+      layoutId: 'layout_full',
+      teeSetId: 'tee_blue',
+      players: [{ name:'Alice' }, { name:'Bob', playerId:'pid_bob' }],
+      teeTime: todayISO
+    });
+
+    ok('T1: success=true',        r1.success === true,     'got ' + r1.success);
+    ok('T1: no errors',           !r1.errors);
+    ok('T1: activate=true',      r1.activate === true,    'got ' + r1.activate);
+    ok('T1: status=playing',     r1.round.status === 'playing', 'got ' + r1.round.status);
+    ok('T1: holeCount=18',       r1.holeCount === 18,     'got ' + r1.holeCount);
+    ok('T1: courseName',         r1.courseName === 'Test Golf Club');
+    ok('T1: routingName',        r1.routingName === 'Full 18');
+    ok('T1: title contains date', r1.title.indexOf('月') >= 0 && r1.title.indexOf('Test Golf Club') >= 0);
+
+    // ════════════════════════════════════════
+    // Test 2: Scheduled round (future teeTime)
+    // ════════════════════════════════════════
+    var futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 7);
+    var futureISO = futureDate.toISOString().slice(0,10) + 'T09:30';
+    var r2 = createNewRound({
+      clubId: 'test_club_1',
+      layoutId: 'layout_full',
+      teeSetId: 'tee_blue',
+      players: [{ name:'Charlie' }],
+      teeTime: futureISO
+    });
+
+    ok('T2: success=true',        r2.success === true);
+    ok('T2: activate=false',     r2.activate === false,   'got ' + r2.activate);
+    ok('T2: status=planned',     r2.round.status === 'planned', 'got ' + r2.round.status);
+    ok('T2: different roundId',  r2.round.id !== r1.round.id);
+    ok('T2: _teeTime stored',    r2.round._teeTime === futureISO);
+
+    // ════════════════════════════════════════
+    // Test 3: Player snapshot creation
+    // ════════════════════════════════════════
+    var round = r1.round;
+    ok('T3: 2 players',           round.players.length === 2);
+
+    var p0 = round.players[0];
+    ok('T3: p0 name=Alice',       p0.name === 'Alice');
+    ok('T3: p0 has roundPlayerId', !!p0.roundPlayerId && /^rp_/.test(p0.roundPlayerId));
+    ok('T3: p0 playerId=null',    p0.playerId === null);
+    ok('T3: p0 order=0',          p0.order === 0,         'got ' + p0.order);
+
+    var p1 = round.players[1];
+    ok('T3: p1 name=Bob',         p1.name === 'Bob');
+    ok('T3: p1 playerId kept',    p1.playerId === 'pid_bob');
+    ok('T3: p1 order=1',          p1.order === 1,         'got ' + p1.order);
+    ok('T3: unique rpIds',        p0.roundPlayerId !== p1.roundPlayerId);
+
+    // Verify player fields match Round schema
+    var requiredFields = ['roundPlayerId','playerId','name','order','team','color'];
+    var allPresent = requiredFields.every(function(f){ return f in p0; });
+    ok('T3: schema fields present', allPresent, 'missing: ' + requiredFields.filter(function(f){ return !(f in p0); }).join(','));
+
+    // ════════════════════════════════════════
+    // Test 4: Hole initialization for all players
+    // ════════════════════════════════════════
+    ok('T4: scores has p0 key',   !!round.scores[p0.roundPlayerId]);
+    ok('T4: scores has p1 key',   !!round.scores[p1.roundPlayerId]);
+
+    var p0Holes = round.scores[p0.roundPlayerId].holes;
+    var p1Holes = round.scores[p1.roundPlayerId].holes;
+    ok('T4: p0 has 18 holes',     p0Holes.length === 18,  'got ' + p0Holes.length);
+    ok('T4: p1 has 18 holes',     p1Holes.length === 18,  'got ' + p1Holes.length);
+
+    // All holes should be empty
+    var allEmpty = p0Holes.every(function(h){ return h.gross === null && h.status === 'empty'; });
+    ok('T4: p0 all holes empty',  allEmpty);
+    var allEmpty1 = p1Holes.every(function(h){ return h.gross === null && h.status === 'empty'; });
+    ok('T4: p1 all holes empty',  allEmpty1);
+
+    // Shots initialized
+    ok('T4: shots has p0 key',    !!round.shots[p0.roundPlayerId]);
+    ok('T4: p0 shots 18 holes',   round.shots[p0.roundPlayerId].length === 18);
+    var allShotsEmpty = round.shots[p0.roundPlayerId].every(function(s){ return Array.isArray(s) && s.length === 0; });
+    ok('T4: p0 all shots empty',  allShotsEmpty);
+
+    // ════════════════════════════════════════
+    // Test 5: courseSnapshot in round
+    // ════════════════════════════════════════
+    var snap = r1.snapshot;
+    ok('T5: snapshot length=18',   snap.length === 18,     'got ' + snap.length);
+    ok('T5: hole1 par=4',          snap[0].par === 4,      'got ' + snap[0].par);
+    ok('T5: hole2 par=3',          snap[1].par === 3,      'got ' + snap[1].par);
+    ok('T5: hole3 par=5',          snap[2].par === 5,      'got ' + snap[2].par);
+    ok('T5: hole1 yards=380',      snap[0].yards === 380,  'got ' + snap[0].yards);
+    ok('T5: hole1 hcpIndex=1',     snap[0].hcpIndex === 1, 'got ' + snap[0].hcpIndex);
+    ok('T5: hole1 holeId',         snap[0].holeId === 'nine_front_h1');
+    ok('T5: hole10 from back nine', snap[9].holeId === 'nine_back_h1');
+    ok('T5: hole numbers sequential', snap.every(function(h, i){ return h.number === i + 1; }));
+
+    // _courseSnapshot stored on round
+    ok('T5: round._courseSnapshot', !!round._courseSnapshot && round._courseSnapshot.length === 18);
+
+    // ════════════════════════════════════════
+    // Test 6: Round object schema completeness
+    // ════════════════════════════════════════
+    var schemaKeys = ['id','status','date','courseId','routingId','holeCount',
+                      'players','scores','shots','game','event','notes',
+                      'createdAt','updatedAt','_courseSnapshot'];
+    var missingKeys = schemaKeys.filter(function(k){ return !(k in round); });
+    ok('T6: all schema keys',      missingKeys.length === 0, 'missing: ' + missingKeys.join(','));
+    ok('T6: id format rnd_YYYYMMDD_*', /^rnd_\d{8}_/.test(round.id), 'got ' + round.id);
+    ok('T6: courseId = clubId',     round.courseId === 'test_club_1');
+    ok('T6: routingId = layoutId',  round.routingId === 'layout_full');
+    ok('T6: createdAt is ISO',      /^\d{4}-\d{2}-\d{2}T/.test(round.createdAt));
+    ok('T6: game object',           round.game && round.game.type === null);
+    ok('T6: event object',          round.event && typeof round.event.name === 'string');
+
+    // ════════════════════════════════════════
+    // Test 7: Edge — no teeTime → immediate
+    // ════════════════════════════════════════
+    var r3 = createNewRound({
+      clubId: 'test_club_1',
+      layoutId: 'layout_full',
+      players: [{ name:'Dave' }]
+    });
+    ok('T7: no teeTime → activate', r3.activate === true);
+    ok('T7: status=playing',         r3.round.status === 'playing');
+    ok('T7: no teeSetId → yards null', r3.snapshot[0].yards === null);
+
+    // Rapid-fire uniqueness check
+    var ids = {};
+    var dup = false;
+    for(var ui = 0; ui < 100; ui++){
+      var rid = r3.round.id;  // same round
+      // Create many rounds to test uniqueness
+      var rx = createNewRound({
+        clubId: 'test_club_1', layoutId: 'layout_full',
+        players: [{ name:'UniqueTest' }]
+      });
+      if(ids[rx.round.id]){ dup = true; break; }
+      ids[rx.round.id] = true;
+    }
+    ok('T7: 100 rapid IDs unique', !dup);
+
+    // ════════════════════════════════════════
+    // Test 8: Validation — invalid inputs return errors
+    // ════════════════════════════════════════
+    var r4 = createNewRound({
+      clubId: 'nonexistent',
+      layoutId: 'layout_full',
+      players: [{ name:'Eve' }]
+    });
+    ok('T8: bad clubId → success=false', r4.success === false);
+    ok('T8: bad clubId → has errors',  r4.errors.length > 0);
+    ok('T8: bad clubId msg',           r4.errors[0].indexOf('Club not found') >= 0, r4.errors[0]);
+
+    var r5 = createNewRound({
+      clubId: 'test_club_1',
+      layoutId: 'bad_layout',
+      players: [{ name:'Eve' }]
+    });
+    ok('T8: bad layoutId → success=false', r5.success === false);
+    ok('T8: bad layoutId → has errors',    r5.errors.length > 0);
+    ok('T8: bad layoutId msg',             r5.errors[0].indexOf('Layout not found') >= 0, r5.errors[0]);
+
+    // ════════════════════════════════════════
+    // Test 9: Validation — missing fields
+    // ════════════════════════════════════════
+    var v1 = validateInput({});
+    ok('T9: empty input → errors',   v1.length >= 2, 'got ' + v1.length);
+    ok('T9: has club error',          v1.some(function(e){ return e.indexOf('Club') >= 0; }));
+    ok('T9: has player error',        v1.some(function(e){ return e.indexOf('player') >= 0; }));
+
+    var v2 = validateInput({
+      clubId: 'test_club_1',
+      layoutId: 'layout_full',
+      players: [{ name:'' }, { name:'  ' }]
+    });
+    ok('T9: blank names → errors',   v2.length === 2, 'got ' + v2.length + ': ' + v2.join('; '));
+
+    var v3 = validateInput({
+      clubId: 'test_club_1',
+      layoutId: 'layout_full',
+      players: [{ name:'Alice' }]
+    });
+    ok('T9: valid input → no errors', v3.length === 0, 'got ' + v3.join('; '));
+
+    var v4 = validateInput(null);
+    ok('T9: null input → error',     v4.length > 0);
+
+    // ── Restore mock ──
+    ClubStore.get = _origGet;
+
+    // ── Summary ──
+    console.log('');
+    console.log('══════════════════════════════════════════');
+    console.log('  NewRoundService._selfTest():  ' + pass + ' passed,  ' + fail + ' failed');
+    console.log('══════════════════════════════════════════');
+    results.forEach(function(line){ console.log(line); });
+    console.log('');
+    return { pass:pass, fail:fail, total:pass+fail };
+  }
+
+  // ══════════════════════════════════════════
   // PUBLIC API
   // ══════════════════════════════════════════
 
   return {
     buildCourseSnapshot: buildCourseSnapshot,
     resolveStatus: resolveStatus,
+    validateInput: validateInput,
     createNewRound: createNewRound,
     activateRound: activateRound,
     storeScheduledRound: storeScheduledRound,
     getRecentPlayers: getRecentPlayers,
-    getRecentClubs: getRecentClubs
+    getRecentClubs: getRecentClubs,
+    _selfTest: _selfTest
   };
 
 })();
