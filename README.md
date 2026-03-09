@@ -168,6 +168,20 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 ## Changelog
 
+### v20.0.0 — 2026-03-09
+- **New Round 重新设计**：从弹窗改为独立页面 `#/new-round`，两步开局流程
+- 球场选择：最近球场 + 搜索，选球场 → 选 Layout（Routing）→ 选 Tee Set
+- 球员管理：快捷添加历史球员 + 手动输入，支持排序和删除
+- Tee Time：默认当天当前时间，未来日期自动创建预约球局（status=planned）
+- 自动标题：`{球场名} {路线名} · {日期}` 格式
+- 新增 `NewRoundService`（纯逻辑层）：buildCourseSnapshot / createNewRound / activateRound / storeScheduledRound
+- 新增 `NewRoundPage`（Shell 页面组件）：完整 UI 表单 + 验证
+- 球员历史自动记录（最多 20 条），跨球局复用
+- 预约队列：future teeTime → status=planned，UI 自动归类到 Scheduled Rounds
+- Round 状态支持：planned / playing / finished（扩展：abandoned / archived）
+- 新增文件：`js/newRoundService.js`、`js/shell/newRoundPage.js`
+- Dark / Light 主题完整适配
+
 ### v19.4.2 — 2026-03-09
 - 修复 Club Detail 页面空白：`_esc()` 收到数字类型的 `source_ref` 时崩溃（GolfLive 导入的球场 source_ref 为数字）
 - 统一所有模块的 `_esc()` 函数为类型安全版本，防止非字符串输入导致 `.replace()` 报错

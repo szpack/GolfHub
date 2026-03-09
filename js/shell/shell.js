@@ -23,6 +23,7 @@ const Shell = (function(){
     courseDetail: { elementId:'page-course-detail', render: function(route){ CourseDetailPage.render(route && route.params ? route.params.id : null); }, title:'Club Detail' },
     courseStructure: { elementId:'page-course-structure', render: function(route){ CourseStructureEditor.render(route && route.params ? route.params.id : null); }, title:'Structure Editor' },
     courseImport: { elementId:'page-course-import', render: function(){ CourseImportPage.render(); }, title:'Import Courses' },
+    newRound: { elementId:'page-new-round', render: function(){ NewRoundPage.render(); }, title:'New Round' },
     clubs:    { elementId:'page-clubs',    title:'Clubs' },
     settings: { elementId:'page-settings', render: function(){ _renderSettingsPage(); }, title:'Settings' }
   };
@@ -38,6 +39,7 @@ const Shell = (function(){
     Router.add('/players',     'players');
     Router.add('/teams',       'teams');
     Router.add('/courses',     'courses');
+    Router.add('/new-round', 'newRound');
     Router.add('/courses/import', 'courseImport');
     Router.add('/courses/:id/structure', 'courseStructure');
     Router.add('/courses/:id', 'courseDetail');
@@ -132,7 +134,9 @@ const Shell = (function(){
 
   function _updateNavHighlight(pageName){
     // courseDetail / courseStructure highlight the courses nav item
-    var navName = (pageName === 'courseDetail' || pageName === 'courseStructure' || pageName === 'courseImport') ? 'courses' : pageName;
+    var navName = (pageName === 'courseDetail' || pageName === 'courseStructure' || pageName === 'courseImport') ? 'courses'
+               : (pageName === 'newRound') ? 'rounds'
+               : pageName;
     var items = document.querySelectorAll('.sb-item[data-route]');
     for(var i = 0; i < items.length; i++){
       var item = items[i];
@@ -284,10 +288,7 @@ const Shell = (function(){
   }
 
   function newRound(){
-    enterOverlay();
-    setTimeout(function(){
-      if(typeof openNewRound === 'function') openNewRound();
-    }, 300);
+    Router.navigate('/new-round');
   }
 
   function importRound(){

@@ -39,6 +39,7 @@ GolfOverlay/
 │   ├── roundManager.js # Round状态管理
 │   ├── coursePicker.js # 球场选择器UI
 │   ├── clubStore.js    # Club球会主数据CRUD + localStorage持久化
+│   ├── newRoundService.js # New Round 创建服务（纯逻辑，无UI）
 │   ├── sessionIO.js   # 球局JSON导入导出
 │   ├── import/          # GolfLive成绩导入模块
 │   │   ├── importTypes.js      # 导入类型定义（JSDoc）
@@ -54,7 +55,8 @@ GolfOverlay/
 │   │   ├── coursesPage.js  # Courses 列表页面 + Drawer 详情
 │   │   ├── courseDetailPage.js # Club 详情/编辑页面
 │   │   ├── courseStructureEditor.js # 3列结构编辑器
-│   │   └── courseImportPage.js # GolfLive球场批量导入页面
+│   │   ├── courseImportPage.js # GolfLive球场批量导入页面
+│   │   └── newRoundPage.js    # New Round 创建页面
 │   └── app.js          # 应用核心（Overlay Center 逻辑）
 ├── assets/
 │   └── icons/          # 图标资源（备用）
@@ -123,6 +125,7 @@ v4.0 统一数据访问层（IIFE `D`），无依赖：
 <script src="js/import/roundBuilder.js"></script>    <!-- 依赖 data.js -->
 <script src="js/import/importController.js"></script><!-- 依赖以上 import 模块 + UI -->
 <script src="js/clubStore.js"></script>       <!-- Club 球会 CRUD，依赖 data.js -->
+<script src="js/newRoundService.js"></script> <!-- New Round 服务，依赖 D + Round + ClubStore -->
 <script src="js/app.js"></script>             <!-- 依赖所有以上 -->
 <!-- App Shell（app.js init 完成后加载） -->
 <script src="js/shell/router.js"></script>   <!-- Hash 路由，无依赖 -->
@@ -132,6 +135,7 @@ v4.0 统一数据访问层（IIFE `D`），无依赖：
 <script src="js/shell/courseDetailPage.js"></script><!-- Club 详情编辑，依赖 clubStore.js -->
 <script src="js/shell/courseStructureEditor.js"></script><!-- 结构编辑器，依赖 clubStore.js -->
 <script src="js/shell/courseImportPage.js"></script><!-- GolfLive球场导入，依赖 clubStore.js -->
+<script src="js/shell/newRoundPage.js"></script><!-- New Round 页面，依赖 NewRoundService -->
 <script src="js/shell/shell.js"></script>     <!-- Shell 控制器，依赖以上 shell 模块 -->
 ```
 
