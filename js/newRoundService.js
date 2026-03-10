@@ -194,7 +194,8 @@ const NewRoundService = (function(){
       var p = input.players[i];
       playerInputs.push({
         name: p.name,
-        playerId: p.playerId || null
+        playerId: p.playerId || null,
+        buddyId: p.buddyId || null
       });
     }
 
@@ -271,7 +272,7 @@ const NewRoundService = (function(){
       sc.players.push(D.defPlayer(
         rp.roundPlayerId,
         rp.name,
-        { playerId: rp.playerId, colorKey: rp.color || null }
+        { playerId: rp.playerId, buddyId: rp.buddyId || null, colorKey: rp.color || null }
       ));
       sc.scores[rp.roundPlayerId] = {
         holes: Array.from({length: count}, function(){ return D.defPlayerHole(); }),

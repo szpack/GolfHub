@@ -24,6 +24,7 @@ const Shell = (function(){
     courseStructure: { elementId:'page-course-structure', render: function(route){ CourseStructureEditor.render(route && route.params ? route.params.id : null); }, title:'Structure Editor' },
     courseImport: { elementId:'page-course-import', render: function(){ CourseImportPage.render(); }, title:'Import Courses' },
     newRound: { elementId:'page-new-round', render: function(){ NewRoundPage.render(); }, title:'New Round' },
+    buddies:  { elementId:'page-buddies',  render: function(){ BuddiesPage.render(); }, title:'Buddies' },
     clubs:    { elementId:'page-clubs',    title:'Clubs' },
     login:    { elementId:'page-auth', render: function(route){ AuthPage.render(route); }, title:'Sign In' },
     register: { elementId:'page-auth', render: function(route){ AuthPage.render(route); }, title:'Create Account' },
@@ -46,6 +47,7 @@ const Shell = (function(){
     Router.add('/courses/import', 'courseImport');
     Router.add('/courses/:id/structure', 'courseStructure');
     Router.add('/courses/:id', 'courseDetail');
+    Router.add('/buddies',     'buddies');
     Router.add('/clubs',       'clubs');
     Router.add('/login',       'login');
     Router.add('/register',    'register');
@@ -185,7 +187,7 @@ const Shell = (function(){
     var pathMap = {
       home:'/', rounds:'/rounds',
       round:'/round/' + (D.getActiveRoundId() || 'current'),
-      courses:'/courses', players:'/players', teams:'/teams', clubs:'/clubs',
+      courses:'/courses', players:'/players', buddies:'/buddies', teams:'/teams', clubs:'/clubs',
       settings:'/settings'
     };
     Router.navigate(pathMap[route] || '/');
@@ -585,7 +587,7 @@ const Shell = (function(){
 
     // ── Sidebar nav visibility ──
     // Protected nav items: hide when not logged in
-    var protectedRoutes = ['rounds', 'courses', 'players', 'teams', 'clubs', 'settings'];
+    var protectedRoutes = ['rounds', 'courses', 'players', 'buddies', 'teams', 'clubs', 'settings'];
     var navItems = document.querySelectorAll('.sb-item[data-route]');
     for(var i = 0; i < navItems.length; i++){
       var route = navItems[i].getAttribute('data-route');

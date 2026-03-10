@@ -1,5 +1,10 @@
 // prisma/schema.prisma
 
+datasource db {
+  provider = "postgresql"  // 数据库类型，这里是 PostgreSQL
+  //url      = env("postgresql://pack:Rose1977@localhost:5432/golf_event_console?schema=public")  // 数据库连接字符串，使用 .env 文件中的变
+}
+
 generator client {
   provider = "prisma-client-js"
 }

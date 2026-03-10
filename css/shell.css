@@ -2449,6 +2449,15 @@ html.light .cd-toast { background: #16a34a; color: #fff; }
 }
 .nr-recent-chip:hover { background: var(--bg-active); color: var(--text-primary); border-color: var(--accent-green); }
 
+/* Buddy picker in New Round */
+.nr-buddy-section { margin-top: 4px; }
+.nr-buddy-toggle { background: none; border: none; color: #60a5fa; font-size: 12px; cursor: pointer; padding: 4px 0; }
+.nr-buddy-toggle:hover { text-decoration: underline; }
+.nr-buddy-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.nr-buddy-chip.nr-buddy-fav { border-color: rgba(234,179,8,0.3); color: #eab308; }
+.nr-buddy-hcp { font-size: 10px; opacity: 0.7; }
+.nr-buddy-loading, .nr-buddy-empty { font-size: 12px; color: #6b7280; padding: 6px 0; }
+
 .nr-player-list {
   display: flex;
   flex-direction: column;
@@ -4100,3 +4109,67 @@ html.light .sh-welcome { background: #f9fafb; border-color: rgba(0,0,0,0.06); }
 html.light .sh-welcome strong { color: #1a1a1a; }
 html.light .sh-legacy-notice { background: rgba(202,138,4,0.06); border-color: rgba(202,138,4,0.15); }
 html.light .sh-legacy-title { color: #ca8a04; }
+
+/* ── Buddies Page ── */
+.bd-page { max-width: 680px; margin: 0 auto; }
+.bd-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.bd-title { font-size: 20px; font-weight: 600; margin: 0; }
+.bd-add-btn { font-size: 13px; padding: 6px 14px; }
+.bd-toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.bd-search-input { flex: 1; min-width: 140px; padding: 7px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: inherit; font-size: 13px; outline: none; }
+.bd-search-input:focus { border-color: rgba(59,130,246,0.5); }
+.bd-filters { display: flex; gap: 8px; align-items: center; }
+.bd-filter-btn { padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: #9ca3af; font-size: 12px; cursor: pointer; }
+.bd-filter-btn:hover { background: rgba(255,255,255,0.05); }
+.bd-filter-btn.bd-filter-active { background: rgba(234,179,8,0.15); color: #eab308; border-color: rgba(234,179,8,0.3); }
+.bd-sort-select { padding: 5px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: inherit; font-size: 12px; }
+
+.bd-loading { text-align: center; padding: 40px; color: #6b7280; }
+.bd-empty { text-align: center; padding: 60px 20px; }
+.bd-empty-icon { font-size: 48px; margin-bottom: 12px; }
+.bd-empty-text { color: #6b7280; font-size: 14px; }
+
+.bd-list { display: flex; flex-direction: column; gap: 6px; }
+.bd-card { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); transition: background 0.15s; }
+.bd-card:hover { background: rgba(255,255,255,0.07); }
+.bd-card-main { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; cursor: pointer; }
+.bd-card-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(59,130,246,0.15); color: #60a5fa; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; flex-shrink: 0; }
+.bd-card-info { flex: 1; min-width: 0; }
+.bd-card-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bd-card-meta { display: flex; gap: 10px; font-size: 11px; color: #6b7280; margin-top: 2px; flex-wrap: wrap; }
+.bd-meta-item { white-space: nowrap; }
+.bd-card-notes { font-size: 11px; color: #6b7280; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
+.bd-fav-btn { background: none; border: none; font-size: 18px; color: #4b5563; cursor: pointer; padding: 4px; line-height: 1; }
+.bd-fav-btn:hover { color: #eab308; }
+.bd-fav-btn.bd-fav-active { color: #eab308; }
+
+.bd-pagination { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 16px; font-size: 12px; color: #6b7280; }
+.bd-page-btn { padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: inherit; cursor: pointer; font-size: 13px; }
+.bd-page-btn:hover:not(:disabled) { background: rgba(255,255,255,0.05); }
+.bd-page-btn:disabled { opacity: 0.3; cursor: default; }
+
+/* Modal */
+.bd-modal-overlay { position: fixed; inset: 0; z-index: 9000; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
+.bd-modal { background: #1e1e1e; border-radius: 12px; width: 90%; max-width: 400px; border: 1px solid rgba(255,255,255,0.1); }
+.bd-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; }
+.bd-modal-header h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.bd-modal-close { background: none; border: none; color: #6b7280; font-size: 22px; cursor: pointer; line-height: 1; padding: 0; }
+.bd-modal-body { padding: 0 16px 12px; display: flex; flex-direction: column; gap: 10px; }
+.bd-form-label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #9ca3af; }
+.bd-form-input, .bd-form-textarea { padding: 7px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: inherit; font-size: 13px; outline: none; font-family: inherit; }
+.bd-form-input:focus, .bd-form-textarea:focus { border-color: rgba(59,130,246,0.5); }
+.bd-modal-footer { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 10px 16px 14px; }
+
+/* Light theme overrides */
+html.light .bd-search-input { background: #f9fafb; border-color: rgba(0,0,0,0.1); }
+html.light .bd-filter-btn { border-color: rgba(0,0,0,0.1); color: #6b7280; }
+html.light .bd-filter-btn:hover { background: rgba(0,0,0,0.03); }
+html.light .bd-sort-select { background: #f9fafb; border-color: rgba(0,0,0,0.1); }
+html.light .bd-card { background: #fff; border-color: rgba(0,0,0,0.06); }
+html.light .bd-card:hover { background: #f9fafb; }
+html.light .bd-card-avatar { background: rgba(59,130,246,0.1); }
+html.light .bd-fav-btn { color: #9ca3af; }
+html.light .bd-page-btn { border-color: rgba(0,0,0,0.1); }
+html.light .bd-modal { background: #fff; border-color: rgba(0,0,0,0.1); }
+html.light .bd-form-input, html.light .bd-form-textarea { background: #f9fafb; border-color: rgba(0,0,0,0.1); }
+html.light .bd-title { color: #1a1a1a; }

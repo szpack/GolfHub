@@ -132,6 +132,7 @@ const Round = (function(){
     var p = {
       roundPlayerId: rpId,       // [TRUTH] 局内唯一主键
       playerId:      null,       // [TRUTH] nullable，长期身份 ID
+      buddyId:       null,       // [TRUTH] nullable，BuddyContact 回溯引用
       name:          name || '', // [TRUTH]
       order:         (order != null) ? order : 0, // [TRUTH]
       team:          '',         // [TRUTH]
@@ -246,6 +247,7 @@ const Round = (function(){
         var rpId = (p && (p.roundPlayerId || p.id)) || _genId('rp');
         var np = _defPlayer(rpId, (p && p.name) || '', i, {
           playerId: (p && p.playerId) || null,
+          buddyId:  (p && p.buddyId) || null,
           team:     (p && (p.team || p.teamId)) || '',
           color:    (p && (p.color || p.colorKey)) || ''
         });
@@ -331,6 +333,7 @@ const Round = (function(){
     var order = (inp.order != null) ? inp.order : round.players.length;
     var p = _defPlayer(rpId, inp.name || '', order, {
       playerId: inp.playerId || null,
+      buddyId:  inp.buddyId || null,
       team:     inp.team || inp.teamId || '',
       color:    inp.color || inp.colorKey || ''
     });
@@ -624,6 +627,7 @@ const Round = (function(){
       var rpId = p.roundPlayerId || p.id;
       return _defPlayer(rpId, p.name || '', i, {
         playerId: p.playerId || null,
+        buddyId:  p.buddyId || null,
         team:     p.teamId || '',
         color:    p.colorKey || ''
       });

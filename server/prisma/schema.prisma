@@ -19,9 +19,11 @@ model User {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  authIdentities AuthIdentity[]
-  players        Player[]
-  sessions       Session[]
+  authIdentities  AuthIdentity[]
+  players         Player[]
+  sessions        Session[]
+  buddiesOwned    BuddyContact[] @relation("BuddyOwner")
+  buddiesLinkedTo BuddyContact[] @relation("BuddyLinked")
 
   @@map("users")
 }
@@ -68,6 +70,44 @@ model Player {
   owner User @relation(fields: [ownerUserId], references: [id])
 
   @@map("players")
+}
+
+// ══════════════════════════════════════════
+// BuddyContact — 球友池（ownerUser 视角的单边关系沉淀）
+// ══════════════════════════════════════════
+
+model BuddyContact {
+  id                  String    @id @default(uuid()) @db.Uuid
+  ownerUserId         String    @map("owner_user_id") @db.Uuid
+  linkedUserId        String?   @map("linked_user_id") @db.Uuid
+  displayName         String    @map("display_name")
+
+  origin              String    @default("manual")   // manual | round_sedimented | browsed_followed | invited | imported
+  isFollowed          Boolean   @default(false) @map("is_followed")
+  isFavorite          Boolean   @default(false) @map("is_favorite")
+
+  roundsTogetherCount Int       @default(0) @map("rounds_together_count")
+  lastPlayedAt        DateTime? @map("last_played_at")
+  firstMetAt          DateTime? @map("first_met_at")
+  firstMetAtRoundId   String?   @map("first_met_at_round_id")  // 非 FK，仅跳转锚点
+  lastInteractionAt   DateTime? @map("last_interaction_at")
+
+  // owner 视角下记录的参考差点，不是对方 Player 档案真相。
+  // 用于建局时参考，不会自动同步对方 Player.handicap。
+  handicap            Decimal?  @db.Decimal(4, 1)
+  notes               String?
+
+  status              String    @default("active")   // active | archived | blocked | deleted
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  owner      User  @relation("BuddyOwner", fields: [ownerUserId], references: [id])
+  linkedUser User? @relation("BuddyLinked", fields: [linkedUserId], references: [id])
+
+  @@unique([ownerUserId, linkedUserId])
+  @@index([ownerUserId, status])
+  @@index([ownerUserId, isFavorite])
+  @@map("buddy_contacts")
 }
 
 // ══════════════════════════════════════════

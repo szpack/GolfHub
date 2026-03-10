@@ -126,6 +126,7 @@ const D = (function(){
       colorKey:      null,          // 可空，语义色键
       hcpSnapshot:   null,          // 可空，差点快照 { handicapIndex, courseHandicap, playingHandicap }
       avatar:        null,          // 可空，头像
+      buddyId:       null,          // 可空，BuddyContact 回溯引用（球局结束后沉淀用）
       role:          null,          // 可空，角色
       isGuest:       false,         // 是否访客
       notes:         ''             // 备注
@@ -279,6 +280,7 @@ const D = (function(){
       colorKey:    colorKey,
       hcpSnapshot: hcp,
       avatar:      raw.avatar || null,
+      buddyId:     raw.buddyId || null,
       role:        raw.role || null,
       isGuest:     !!raw.isGuest,
       notes:       raw.notes || ''

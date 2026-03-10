@@ -15,6 +15,8 @@ const NewRoundPage = (function(){
   var _searchQuery = '';
   var _showAllClubs = false;    // whether to show full club list vs recent only
   var _composing = false;       // IME composition in progress
+  var _showBuddyPicker = false;  // whether buddy picker is expanded
+  var _buddyList = null;         // cached buddy list from API
 
   // ══════════════════════════════════════════
   // RENDER
@@ -205,6 +207,14 @@ const NewRoundPage = (function(){
       html += '</div>';
     }
 
+    // From Buddies picker
+    html += '<div class="nr-buddy-section">';
+    html += '<button class="nr-buddy-toggle" onclick="NewRoundPage.toggleBuddyPicker()">' + (_showBuddyPicker ? '&#9660;' : '&#9654;') + ' From Buddies</button>';
+    if(_showBuddyPicker){
+      html += _renderBuddyPicker();
+    }
+    html += '</div>';
+
     // Add player input
     html += '<div class="nr-add-row">';
     html += '<input type="text" class="nr-add-input" id="nr-player-input" placeholder="Player name..." maxlength="24">';
@@ -213,6 +223,68 @@ const NewRoundPage = (function(){
 
     html += '</div>';
     return html;
+  }
+
+  // ── Buddy Picker ──
+
+  function _renderBuddyPicker(){
+    if(!_buddyList){
+      return '<div class="nr-buddy-loading">Loading buddies...</div>';
+    }
+    if(_buddyList.length === 0){
+      return '<div class="nr-buddy-empty">No buddies yet. <a href="#/buddies" style="color:#60a5fa">Add buddies</a></div>';
+    }
+    // Filter out already-added players
+    var addedNames = {};
+    for(var i = 0; i < _players.length; i++) addedNames[_players[i].name] = true;
+
+    var html = '<div class="nr-buddy-chips">';
+    var count = 0;
+    for(var i = 0; i < _buddyList.length; i++){
+      var b = _buddyList[i];
+      if(addedNames[b.displayName]) continue;
+      html += '<button class="nr-recent-chip nr-buddy-chip' + (b.isFavorite ? ' nr-buddy-fav' : '') + '" onclick="NewRoundPage.addBuddy(' + i + ')">';
+      html += (b.isFavorite ? '&#9733; ' : '') + _esc(b.displayName);
+      if(b.handicap != null) html += ' <span class="nr-buddy-hcp">(' + b.handicap.toFixed(1) + ')</span>';
+      html += '</button>';
+      count++;
+    }
+    if(count === 0){
+      html += '<span class="nr-buddy-empty">All buddies already added</span>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  async function toggleBuddyPicker(){
+    _showBuddyPicker = !_showBuddyPicker;
+    if(_showBuddyPicker && !_buddyList){
+      // Fetch buddies from API
+      render();
+      try {
+        if(typeof ApiClient !== 'undefined'){
+          var res = await ApiClient.get('/api/v1/buddies?limit=50&sortBy=name');
+          _buddyList = (res && res.buddies) ? res.buddies : [];
+        } else {
+          _buddyList = [];
+        }
+      } catch(e){
+        console.error('[NewRoundPage] fetch buddies error', e);
+        _buddyList = [];
+      }
+    }
+    render();
+  }
+
+  function addBuddy(index){
+    if(!_buddyList || !_buddyList[index]) return;
+    var b = _buddyList[index];
+    // Prevent duplicates
+    for(var i = 0; i < _players.length; i++){
+      if(_players[i].name === b.displayName) return;
+    }
+    _players.push({ name: b.displayName, playerId: b.linkedUserId || null, buddyId: b.id });
+    render();
   }
 
   // ══════════════════════════════════════════
@@ -398,6 +470,8 @@ const NewRoundPage = (function(){
     _teeTime = '';
     _searchQuery = '';
     _showAllClubs = false;
+    _showBuddyPicker = false;
+    _buddyList = null;
   }
 
   function _wireEvents(){
@@ -477,6 +551,8 @@ const NewRoundPage = (function(){
     movePlayer: movePlayer,
     searchClubs: searchClubs,
     showAllClubs: showAllClubs,
+    toggleBuddyPicker: toggleBuddyPicker,
+    addBuddy: addBuddy,
     goBack: goBack,
     doCreate: doCreate
   };

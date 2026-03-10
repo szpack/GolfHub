@@ -168,6 +168,13 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 ## Changelog
 
+### v21.5.0 — 2026-03-10
+- **BuddyContact 系统 MVP**：球友池功能完整实现（后端 + 前端）
+- **后端**：Prisma BuddyContact 模型 + migration，buddyService.js（CRUD / 搜索 / 收藏），RESTful API `/api/v1/buddies`
+- **前端 Buddies 页面**：球友列表（搜索 / 收藏筛选 / 排序 / 分页），添加/编辑/删除弹窗
+- **New Round 集成**："From Buddies" 选择器，可从球友池快速添加球员到新一局
+- **buddyId 全链路兼容**：data.js defPlayer / normalizePlayer、round.js _defPlayer / addRoundPlayer / normalizeRound / fromScorecard、sessionIO 导出均支持 buddyId 字段，旧数据自动兼容
+
 ### v21.4.0 — 2026-03-10
 - **Sidebar 紧凑化**：导航项高度从 44px 压缩到 34px，图标缩小，section label 间距收窄
 - **Brand 布局调整**：收起按钮移至 "Golf Event Console" 右侧，图标改为 ChatGPT 风格的侧边栏面板图标（SVG），品牌字体缩小至 14px 避免截断

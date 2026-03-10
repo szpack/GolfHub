@@ -66,6 +66,7 @@ const SessionIO = (function(){
         colorKey: p.colorKey || null,
         hcpSnapshot: p.hcpSnapshot || null,
         avatar: p.avatar || null,
+        buddyId: p.buddyId || null,
         role: p.role || null,
         isGuest: !!p.isGuest,
         notes: p.notes || '',
