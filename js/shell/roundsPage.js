@@ -250,9 +250,34 @@ const RoundsPage = (function(){
       html += '<div class="sh-abandon-reason">' + _esc(r.abandonReason) + '</div>';
     }
 
+    // Grace countdown badge
+    if(r.lockState === 'grace' && r.reopenUntil){
+      var graceLeft = _graceCountdown(r.reopenUntil);
+      if(graceLeft){
+        html += '<div class="sh-grace-badge">' + T('graceLbl') + ' ' + graceLeft + '</div>';
+      }
+    }
+
+    // Lock indicator
+    if(r.lockState === 'locked'){
+      html += '<div class="sh-locked-badge">' + T('lockedLbl') + '</div>';
+    }
+
     // Actions
     html += '<div class="sh-card-actions">';
     html += '<button class="sh-btn-sm" onclick="event.stopPropagation(); Router.navigate(\'/round/' + r.id + '\')">' + T('openBtn') + '</button>';
+
+    // End Round / Reopen actions based on status + lockState
+    if(r.status === 'in_progress' && !isActive){
+      html += '<button class="sh-btn-sm sh-btn-warn" onclick="event.stopPropagation(); RoundsPage.endRound(\'' + r.id + '\')">' + T('endRoundBtn') + '</button>';
+    }
+    if(r.status === 'in_progress' && isActive){
+      html += '<button class="sh-btn-sm sh-btn-warn" onclick="event.stopPropagation(); RoundsPage.endRound(\'' + r.id + '\')">' + T('endRoundBtn') + '</button>';
+    }
+    if((r.status === 'finished' && r.lockState === 'grace') || r.status === 'abandoned'){
+      html += '<button class="sh-btn-sm sh-btn-reopen" onclick="event.stopPropagation(); RoundsPage.reopenRound(\'' + r.id + '\')">' + T('reopenBtn') + '</button>';
+    }
+
     html += '<button class="sh-btn-sm" onclick="event.stopPropagation(); RoundsPage.duplicateRound(\'' + r.id + '\', ' + isActive + ')">' + T('duplicateBtn') + '</button>';
 
     if(!isActive){
@@ -356,8 +381,35 @@ const RoundsPage = (function(){
   }
 
   // ══════════════════════════════════════════
+  // END / REOPEN
+  // ══════════════════════════════════════════
+
+  function endRound(id){
+    if(typeof RoundStore === 'undefined') return;
+    if(!confirm(T('endRoundConfirm'))) return;
+    RoundStore.finishRound(id, { endedBy: 'manual' });
+    render();
+  }
+
+  function reopenRound(id){
+    if(typeof RoundStore === 'undefined') return;
+    RoundStore.reopenRound(id);
+    render();
+  }
+
+  // ══════════════════════════════════════════
   // HELPERS
   // ══════════════════════════════════════════
+
+  function _graceCountdown(reopenUntil){
+    if(!reopenUntil) return null;
+    var remaining = new Date(reopenUntil).getTime() - Date.now();
+    if(remaining <= 0) return null;
+    var hours = Math.floor(remaining / 3600000);
+    var mins = Math.floor((remaining % 3600000) / 60000);
+    if(hours > 0) return hours + 'h ' + mins + 'm';
+    return mins + 'm';
+  }
 
   function _esc(s){
     return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
@@ -371,6 +423,8 @@ const RoundsPage = (function(){
     startDelete:     startDelete,
     confirmDelete:   confirmDelete,
     cancelDelete:    cancelDelete,
-    duplicateRound:  duplicateRound
+    duplicateRound:  duplicateRound,
+    endRound:        endRound,
+    reopenRound:     reopenRound
   };
 })();

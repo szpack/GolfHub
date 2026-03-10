@@ -30,6 +30,9 @@ const Round = (function(){
   /** [TRUTH] Round-level status (v6 naming) */
   var ROUND_STATUS = ['scheduled','in_progress','finished','abandoned'];
 
+  /** [TRUTH] Lock state — independent of status */
+  var LOCK_STATE = ['open','grace','locked'];
+
   /** Compat mapping: old status names → v6 */
   var STATUS_COMPAT = { 'planned':'scheduled', 'playing':'in_progress' };
 
@@ -1001,6 +1004,7 @@ const Round = (function(){
     toScorecard:          toScorecard,
     // Constants
     ROUND_STATUS:         ROUND_STATUS,
+    LOCK_STATE:           LOCK_STATE,
     HOLE_STATUS:          HOLE_STATUS,
     STATUS_COMPAT:        STATUS_COMPAT,
     normalizeStatus:      _normalizeStatus,

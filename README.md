@@ -168,6 +168,17 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 ## Changelog
 
+### v24.0.0 — 2026-03-10
+- **Round 结束机制**：新增完整的球局结束生命周期（手动结束 / 自动结束 / 弃局）
+- **Grace 重开窗口**：结束后 24 小时内可重新打开球局，过期自动锁定
+- **自动结束**：非活跃的已打完球局，闲置 6 小时后自动标记为 finished
+- **Soft Delete**：删除球局改为软删除（保留 deletedAt），支持未来恢复
+- **lockState 独立状态**：open → grace → locked，与 status 正交管理
+- **endedAt 统一字段**：finish 和 abandon 共用 endedAt，记录结束时间
+- **lastActivityAt 追踪**：每次记分/击球写入更新，用于自动结束判定
+- **Rounds 页面 UI**：End Round / Reopen 按钮、Grace 倒计时徽章、锁定标识
+- **5 语言 i18n**：End Round 相关文案覆盖 en/zh/ja/ko/es
+
 ### v23.13.2 — 2026-03-10
 - **修复 Broadcast 默认背景图显示**：无用户背景时保持画布透明，不再加载默认 bkimg
 - **图片资源迁移**：所有根目录图片移至 `images/` 目录（gologo.png、bkimg 系列等）

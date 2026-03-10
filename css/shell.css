@@ -1062,6 +1062,34 @@ html.light .sb-lang-menu button:hover { background: var(--bg-hover); }
 .sh-btn-danger { color: #f87171; border-color: rgba(248,113,113,0.2); }
 .sh-btn-danger:hover { background: rgba(248,113,113,0.08); }
 
+.sh-btn-warn { color: #fbbf24; border-color: rgba(251,191,36,0.25); }
+.sh-btn-warn:hover { background: rgba(251,191,36,0.08); }
+
+.sh-btn-reopen { color: #34d399; border-color: rgba(52,211,153,0.25); }
+.sh-btn-reopen:hover { background: rgba(52,211,153,0.08); }
+
+.sh-grace-badge {
+  display: inline-block;
+  font-size: 11px;
+  color: #fbbf24;
+  background: rgba(251,191,36,0.1);
+  border: 1px solid rgba(251,191,36,0.2);
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-top: 4px;
+}
+
+.sh-locked-badge {
+  display: inline-block;
+  font-size: 11px;
+  color: #9ca3af;
+  background: rgba(156,163,175,0.1);
+  border: 1px solid rgba(156,163,175,0.2);
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-top: 4px;
+}
+
 /* ── My Rounds: Filters ── */
 .mr-filters {
   margin-bottom: 16px;
@@ -1648,6 +1676,12 @@ html.light .sh-btn-outline { border-color: rgba(0,0,0,0.1); color: #6b7280; }
 html.light .sh-btn-outline:hover { background: var(--bg-hover); color: #1a1a1a; }
 html.light .sh-btn-danger { color: #dc2626; border-color: rgba(220,38,38,0.2); }
 html.light .sh-btn-danger:hover { background: rgba(220,38,38,0.06); }
+html.light .sh-btn-warn { color: #d97706; border-color: rgba(217,119,6,0.2); }
+html.light .sh-btn-warn:hover { background: rgba(217,119,6,0.06); }
+html.light .sh-btn-reopen { color: #059669; border-color: rgba(5,150,105,0.2); }
+html.light .sh-btn-reopen:hover { background: rgba(5,150,105,0.06); }
+html.light .sh-grace-badge { color: #d97706; background: rgba(217,119,6,0.08); border-color: rgba(217,119,6,0.15); }
+html.light .sh-locked-badge { color: #6b7280; background: rgba(107,114,128,0.08); border-color: rgba(107,114,128,0.15); }
 html.light .sh-btn-confirm-del { background: rgba(220,38,38,0.04) !important; color: #dc2626 !important; border-color: rgba(220,38,38,0.2) !important; }
 
 /* Pills */
@@ -5980,3 +6014,1034 @@ html.light .tt-results-empty-title { color: #1a1a1a; }
   }
 }
 
+
+/* ============================================================
+   TeeTimes Page Styles (重构版)
+   ============================================================ */
+
+/* Intent Bar */
+.tt-intent-bar {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 12px;
+  margin: 0 16px 16px;
+}
+
+.tt-intent-field {
+  flex: 1;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.tt-intent-field:hover {
+  border-color: rgba(255,255,255,0.2);
+}
+
+.tt-intent-field-active {
+  border-color: var(--accent-green);
+  background: rgba(34,197,94,0.1);
+}
+
+.tt-intent-field label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.tt-intent-field .tt-field-value {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.tt-intent-field .tt-field-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+/* Intent Panel */
+.tt-intent-panel {
+  margin: 0 16px 16px;
+  padding: 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+}
+
+.tt-panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+/* Where Panel */
+.tt-where-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tt-where-section-title {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.tt-where-option {
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.tt-where-option:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.tt-where-option.tt-option-selected {
+  background: rgba(34,197,94,0.15);
+  border: 1px solid var(--accent-green);
+}
+
+.tt-where-price {
+  font-size: 12px;
+  color: var(--accent-green);
+}
+
+/* When Panel */
+.tt-when-presets {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tt-when-preset {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  color: inherit;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.tt-when-preset:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.tt-when-preset.tt-option-selected {
+  border-color: var(--accent-green);
+  background: rgba(34,197,94,0.15);
+}
+
+.tt-when-calendar {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 16px;
+}
+
+.tt-calendar-title {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.tt-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.tt-calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.tt-calendar-day:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.tt-calendar-day.tt-calendar-day-selected {
+  background: var(--accent-green);
+  color: white;
+}
+
+/* Players & Access Panels */
+.tt-players-options,
+.tt-access-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.tt-players-option,
+.tt-access-option {
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  color: inherit;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.tt-players-option:hover,
+.tt-access-option:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.tt-players-option.tt-option-selected,
+.tt-access-option.tt-option-selected {
+  border-color: var(--accent-green);
+  background: rgba(34,197,94,0.15);
+}
+
+/* Results Summary */
+.tt-results-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin: 0 16px 16px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.tt-summary-filters {
+  color: var(--text-secondary);
+}
+
+/* Results Placeholder */
+.tt-results-placeholder {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.tt-placeholder-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.tt-placeholder-text {
+  font-size: 14px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .tt-intent-bar {
+    flex-wrap: wrap;
+  }
+  
+  .tt-intent-field {
+    flex: 1 1 calc(50% - 6px);
+    min-width: 140px;
+  }
+  
+  .tt-players-options,
+  .tt-access-options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ══════════════════════════════════════════
+   TEE TIME CARD 列表
+   ══════════════════════════════════════════ */
+
+/* Card 列表容器 */
+.tt-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 16px 32px;
+}
+
+/* TeeTime Card */
+.tt-card {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tt-card:hover {
+  background: var(--bg-active);
+  border-color: rgba(255,255,255,0.12);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+/* L1: 时间 + 价格 + 可用性 */
+.tt-card-l1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.tt-card-time {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.tt-card-price-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tt-card-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent-green);
+}
+
+.tt-card-original-price {
+  font-size: 14px;
+  color: var(--text-section);
+  text-decoration: line-through;
+}
+
+.tt-card-availability {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(74,222,128,0.15);
+  color: #4ade80;
+}
+
+.tt-card-availability.limited {
+  background: rgba(251,191,36,0.15);
+  color: #fbbf24;
+}
+
+.tt-card-availability.full {
+  background: rgba(248,113,113,0.15);
+  color: #f87171;
+}
+
+.tt-card-availability.waitlist {
+  background: rgba(96,165,250,0.15);
+  color: #60a5fa;
+}
+
+/* L2: 球场名 + 球场信息 */
+.tt-card-l2 {
+  margin-bottom: 12px;
+}
+
+.tt-card-course-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.tt-card-course-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tt-card-divider {
+  color: var(--text-section);
+  opacity: 0.5;
+}
+
+/* L3: Access Label + 预订方式 + 限制 */
+.tt-card-l3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+/* Access Label 体系 */
+.tt-access-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tt-access-public {
+  background: rgba(74,222,128,0.15);
+  color: #4ade80;
+}
+
+.tt-access-member {
+  background: rgba(251,191,36,0.15);
+  color: #fbbf24;
+}
+
+.tt-access-guest {
+  background: rgba(96,165,250,0.15);
+  color: #60a5fa;
+}
+
+.tt-access-limited {
+  background: rgba(234,179,8,0.15);
+  color: #eab308;
+}
+
+.tt-access-private {
+  background: rgba(248,113,113,0.15);
+  color: #f87171;
+}
+
+.tt-booking-method {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.tt-restriction {
+  font-size: 11px;
+  color: var(--text-section);
+  padding: 2px 8px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 4px;
+}
+
+/* L4: 辅助信息 */
+.tt-card-l4 {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.tt-extra {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* L5: Book + Start Round 按钮 */
+.tt-card-l5 {
+  display: flex;
+  gap: 10px;
+}
+
+/* Book 按钮 - 4种状态 */
+.tt-btn-book {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 10px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: var(--accent-green);
+  color: #000;
+}
+
+.tt-btn-book:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.tt-btn-book:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Book 按钮状态变体 */
+.tt-btn-book.tt-btn-limited {
+  background: #fbbf24;
+  color: #000;
+}
+
+.tt-btn-book.tt-btn-full {
+  background: rgba(248,113,113,0.2);
+  color: #f87171;
+}
+
+.tt-btn-book.tt-btn-waitlist {
+  background: #60a5fa;
+  color: #fff;
+}
+
+/* Start Round 按钮 */
+.tt-btn-start-round {
+  flex: 1;
+  padding: 12px 20px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.tt-btn-start-round:hover {
+  background: var(--bg-hover);
+  border-color: rgba(255,255,255,0.2);
+  color: var(--text-primary);
+}
+
+/* Light Theme - TeeTime Card */
+html.light .tt-card {
+  background: #fff;
+  border-color: rgba(0,0,0,0.06);
+}
+
+html.light .tt-card:hover {
+  background: #fafafa;
+  border-color: rgba(0,0,0,0.12);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+html.light .tt-card-time,
+html.light .tt-card-course-name {
+  color: #1a1a1a;
+}
+
+html.light .tt-card-original-price {
+  color: #9ca3af;
+}
+
+html.light .tt-card-availability {
+  background: rgba(34,197,94,0.1);
+  color: #16a34a;
+}
+
+html.light .tt-card-availability.limited {
+  background: rgba(234,179,8,0.1);
+  color: #ca8a04;
+}
+
+html.light .tt-card-availability.full {
+  background: rgba(220,38,38,0.1);
+  color: #dc2626;
+}
+
+html.light .tt-card-availability.waitlist {
+  background: rgba(37,99,235,0.1);
+  color: #2563eb;
+}
+
+html.light .tt-access-public {
+  background: rgba(34,197,94,0.1);
+  color: #16a34a;
+}
+
+html.light .tt-access-member {
+  background: rgba(234,179,8,0.1);
+  color: #ca8a04;
+}
+
+html.light .tt-access-guest {
+  background: rgba(37,99,235,0.1);
+  color: #2563eb;
+}
+
+html.light .tt-access-limited {
+  background: rgba(202,138,4,0.1);
+  color: #a16207;
+}
+
+html.light .tt-access-private {
+  background: rgba(220,38,38,0.1);
+  color: #dc2626;
+}
+
+html.light .tt-restriction {
+  background: rgba(0,0,0,0.03);
+}
+
+html.light .tt-btn-book.tt-btn-full {
+  background: rgba(220,38,38,0.1);
+  color: #dc2626;
+}
+
+html.light .tt-btn-start-round {
+  border-color: rgba(0,0,0,0.08);
+  color: #6b7280;
+}
+
+html.light .tt-btn-start-round:hover {
+  background: rgba(0,0,0,0.03);
+  border-color: rgba(0,0,0,0.15);
+  color: #374151;
+}
+
+/* Responsive - TeeTime Card */
+@media (max-width: 640px) {
+  .tt-card {
+    padding: 14px 16px;
+  }
+  
+  .tt-card-time {
+    font-size: 24px;
+  }
+  
+  .tt-card-price {
+    font-size: 20px;
+  }
+  
+  .tt-card-l5 {
+    flex-direction: column;
+  }
+  
+  .tt-btn-book,
+  .tt-btn-start-round {
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   TeeTime Card Styles
+   ============================================================ */
+
+/* Results List */
+.tt-results-list {
+  padding: 0 16px 100px;
+}
+
+.tt-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.tt-empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.tt-empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.tt-empty-text {
+  font-size: 14px;
+}
+
+/* TeeTime Card */
+.tt-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: all 0.2s;
+}
+
+.tt-card:hover {
+  border-color: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.06);
+}
+
+/* L1: Primary Info */
+.tt-card-primary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.tt-card-time {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.tt-card-availability {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.tt-avail-open {
+  background: rgba(34,197,94,0.15);
+  color: #22c55e;
+}
+
+.tt-avail-low {
+  background: rgba(245,158,11,0.15);
+  color: #f59e0b;
+}
+
+.tt-avail-full {
+  background: rgba(107,114,128,0.15);
+  color: #6b7280;
+}
+
+.tt-card-price {
+  text-align: right;
+}
+
+.tt-price-note {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.tt-price-amount {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent-green);
+}
+
+/* L2: Course Info */
+.tt-card-course {
+  margin-bottom: 12px;
+}
+
+.tt-course-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.tt-course-routing {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* L3: Decision Info */
+.tt-card-decision {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.tt-access-badge {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.tt-access-public {
+  background: rgba(34,197,94,0.15);
+  color: #22c55e;
+}
+
+.tt-access-member {
+  background: rgba(59,130,246,0.15);
+  color: #60a5fa;
+}
+
+.tt-access-guest {
+  background: rgba(6,182,212,0.15);
+  color: #22d3ee;
+}
+
+.tt-access-limited {
+  background: rgba(245,158,11,0.15);
+  color: #f59e0b;
+}
+
+.tt-access-private {
+  background: rgba(107,114,128,0.15);
+  color: #9ca3af;
+}
+
+.tt-booking-method {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.tt-restriction {
+  font-size: 11px;
+  color: #f59e0b;
+  padding: 2px 8px;
+  background: rgba(245,158,11,0.1);
+  border-radius: 4px;
+}
+
+/* L4: Meta Info */
+.tt-card-meta {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* L5: Actions */
+.tt-card-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.tt-btn {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.tt-btn-primary {
+  background: var(--accent-green);
+  color: white;
+}
+
+.tt-btn-primary:hover:not(:disabled) {
+  background: #16a34a;
+}
+
+.tt-btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.tt-btn-secondary:hover:not(:disabled) {
+  background: rgba(255,255,255,0.05);
+}
+
+.tt-btn-disabled {
+  background: rgba(107,114,128,0.2);
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   TeeTime Detail Drawer Styles
+   ============================================================ */
+
+/* Drawer Overlay */
+.tt-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  animation: tt-fade-in 0.2s ease;
+}
+
+@keyframes tt-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Drawer */
+.tt-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 100%;
+  max-width: 420px;
+  height: 100%;
+  background: var(--bg-sidebar, #171717);
+  border-left: 1px solid rgba(255,255,255,0.1);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  animation: tt-slide-in 0.3s ease;
+}
+
+@keyframes tt-slide-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* Drawer Header */
+.tt-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.tt-drawer-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tt-drawer-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.tt-drawer-close:hover {
+  color: var(--text-primary);
+}
+
+/* Drawer Content */
+.tt-drawer-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.tt-drawer-section {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.tt-drawer-section:last-of-type {
+  border-bottom: none;
+}
+
+.tt-drawer-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.tt-drawer-value {
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.tt-drawer-course {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.tt-drawer-routing {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.tt-drawer-datetime {
+  font-size: 16px;
+  color: var(--accent-green);
+  font-weight: 600;
+}
+
+.tt-drawer-access-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.tt-drawer-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent-green);
+}
+
+.tt-drawer-price-note {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.tt-drawer-phone {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  font-family: monospace;
+}
+
+.tt-drawer-description {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.tt-drawer-restrictions {
+  font-size: 13px;
+  color: #f59e0b;
+  margin-bottom: 8px;
+}
+
+.tt-drawer-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* Drawer Footer */
+.tt-drawer-footer {
+  padding: 16px 20px 24px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  gap: 12px;
+}
+
+.tt-drawer-footer .tt-btn {
+  flex: 1;
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .tt-drawer {
+    max-width: 100%;
+  }
+}

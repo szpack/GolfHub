@@ -72,6 +72,12 @@ const Shell = (function(){
   }
 
   function _startShell(){
+    // Lazy lifecycle checks — auto-finish idle rounds, lock expired grace windows
+    if(typeof RoundStore !== 'undefined'){
+      RoundStore.checkAutoFinish();
+      RoundStore.checkGraceLock();
+    }
+
     Router.start(_onRouteChange);
     _renderLiveRecent();
 
@@ -104,6 +110,12 @@ const Shell = (function(){
         history.replaceState(null, '', '#' + prevPath);
         return;
       }
+    }
+
+    // Lazy lifecycle checks on navigation
+    if(typeof RoundStore !== 'undefined'){
+      RoundStore.checkAutoFinish();
+      RoundStore.checkGraceLock();
     }
 
     var pageName = route ? route.name : 'home';

@@ -178,6 +178,23 @@ const RoundIndex = (function(){
       candidates = _intersect(candidates, dateFiltered);
     }
 
+    // Filter: lockState (optional)
+    if(opts.lockState){
+      var lsArr = Array.isArray(opts.lockState) ? opts.lockState : [opts.lockState];
+      var lsFiltered = [];
+      // Must check summaries since lockState is not indexed
+      for(var li = 0; li < _byDate.length; li++){
+        var rid = _byDate[li].id;
+        if(typeof RoundStore !== 'undefined'){
+          var rs = RoundStore.get(rid);
+          if(rs && lsArr.indexOf(rs.lockState || 'open') >= 0){
+            lsFiltered.push(rid);
+          }
+        }
+      }
+      candidates = _intersect(candidates, lsFiltered);
+    }
+
     // If no filter applied, use all ids from byDate
     if(candidates === null){
       candidates = _byDate.map(function(e){ return e.id; });

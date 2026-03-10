@@ -1,16 +1,16 @@
 // ============================================================
-// teeTimesPage.js — TeeTimes Booking Page (重构版)
+// teeTimesPage.js — TeeTimes Booking Page (完整版)
 // Route: #/teetimes
-// Phase 1: 完整实现
+// 包含: Intent Bar + TeeTime Card List + Detail Drawer
 // ============================================================
 
 const TeeTimesPage = (function(){
 
   // Mock 数据
   var _courses = [
-    { id: 'shahe', name: '沙河高尔夫球会', location: '深圳南山', price: 520, image: 'images/bkimg.jpeg' },
-    { id: 'xili', name: '西丽高尔夫乡村俱乐部', location: '深圳南山', price: 480, image: 'images/bkimg-9-16.jpg' },
-    { id: 'mission', name: '观澜湖高尔夫球会', location: '深圳龙华', price: 1280, image: 'images/bkimg-1-1.jpg' }
+    { id: 'shahe', name: '沙河高尔夫球会', location: '深圳南山', price: 520, image: 'bkimg.jpeg' },
+    { id: 'xili', name: '西丽高尔夫乡村俱乐部', location: '深圳南山', price: 480, image: 'bkimg-9-16.jpg' },
+    { id: 'mission', name: '观澜湖高尔夫球会', location: '深圳龙华', price: 1280, image: 'bkimg-1-1.jpg' }
   ];
 
   var _areas = [
@@ -37,8 +37,11 @@ const TeeTimesPage = (function(){
       priceNote: '会员价',
       bookingMethod: 'member_portal',
       bookingLabel: '会员门户预订',
+      bookingUrl: 'https://member.shahegolf.com',
+      phone: '0755-12345678',
       restrictions: [],
-      meta: ['含球车', '不可取消']
+      meta: ['含球车', '不可取消'],
+      description: '沙河高尔夫球会 A/B 场，标准杆 72 杆，球道宽阔，适合各级别球手。'
     },
     {
       id: 'tt_002',
@@ -56,8 +59,11 @@ const TeeTimesPage = (function(){
       priceNote: '公开价',
       bookingMethod: 'external_link',
       bookingLabel: '在线预订',
+      bookingUrl: 'https://booking.shahegolf.com',
+      phone: '',
       restrictions: [],
-      meta: ['含球车']
+      meta: ['含球车'],
+      description: '沙河高尔夫球会公开预订时段，欢迎各界人士预订。'
     },
     {
       id: 'tt_003',
@@ -75,8 +81,11 @@ const TeeTimesPage = (function(){
       priceNote: '会员价',
       bookingMethod: 'phone',
       bookingLabel: '电话预订',
+      bookingUrl: '',
+      phone: '0755-87654321',
       restrictions: ['仅限会员'],
-      meta: ['需提前1天']
+      meta: ['需提前1天'],
+      description: '西丽高尔夫 A 场，风景优美，挑战性适中。'
     },
     {
       id: 'tt_004',
@@ -94,8 +103,11 @@ const TeeTimesPage = (function(){
       priceNote: '周末价',
       bookingMethod: 'external_link',
       bookingLabel: '在线预订',
+      bookingUrl: 'https://missionhills.com/booking',
+      phone: '',
       restrictions: [],
-      meta: ['含球车', '含球童']
+      meta: ['含球车', '含球童'],
+      description: '观澜湖世界杯球场，国际标准锦标赛球场。'
     },
     {
       id: 'tt_005',
@@ -113,8 +125,11 @@ const TeeTimesPage = (function(){
       priceNote: '下午场',
       bookingMethod: 'display_only',
       bookingLabel: '已满',
+      bookingUrl: '',
+      phone: '',
       restrictions: ['已售罄'],
-      meta: []
+      meta: [],
+      description: '沙河 C 场下午时段，目前名额已满。'
     },
     {
       id: 'tt_006',
@@ -132,8 +147,11 @@ const TeeTimesPage = (function(){
       priceNote: '嘉宾价',
       bookingMethod: 'phone',
       bookingLabel: '电话预订',
+      bookingUrl: '',
+      phone: '0755-87654321',
       restrictions: ['需会员陪同'],
-      meta: ['含球车']
+      meta: ['含球车'],
+      description: '西丽 B 场会员带客时段，需会员陪同下场。'
     }
   ];
 
@@ -146,7 +164,8 @@ const TeeTimesPage = (function(){
   };
 
   var _ui = {
-    openField: null
+    openField: null,
+    selectedTeeTime: null // 当前打开的 Detail Drawer
   };
 
   // 工具函数
@@ -163,7 +182,6 @@ const TeeTimesPage = (function(){
 
   function _filterTeeTimes(){
     return _teeTimes.filter(function(tt){
-      // Access filter
       if(_state.access !== 'all' && tt.accessLevel !== _state.access){
         return false;
       }
@@ -202,6 +220,11 @@ const TeeTimesPage = (function(){
     // 结果列表
     var filtered = _filterTeeTimes();
     html += _renderResults(filtered);
+
+    // Detail Drawer
+    if(_ui.selectedTeeTime){
+      html += _renderDetailDrawer();
+    }
 
     el.innerHTML = html;
     _wireEvents();
@@ -387,7 +410,7 @@ const TeeTimesPage = (function(){
 
     var html = '<div class="tt-card" data-tt-id="' + tt.id + '">';
     
-    // L1: 主信息（时间 + 价格 + 可用性）
+    // L1: 主信息
     html += '<div class="tt-card-primary">';
     html += '<div class="tt-card-time">' + tt.time + '</div>';
     html += '<div class="tt-card-availability ' + availabilityClass + '">' + availabilityText + '</div>';
@@ -403,7 +426,7 @@ const TeeTimesPage = (function(){
     html += '<div class="tt-course-routing">' + tt.courseRouting + '</div>';
     html += '</div>';
     
-    // L3: 决策信息（Access + 预订方式 + 限制）
+    // L3: 决策信息
     html += '<div class="tt-card-decision">';
     html += '<span class="tt-access-badge ' + accessClass + '">' + tt.accessLabel + '</span>';
     html += '<span class="tt-booking-method">' + tt.bookingLabel + '</span>';
@@ -420,10 +443,106 @@ const TeeTimesPage = (function(){
     // L5: 动作按钮
     html += '<div class="tt-card-actions">';
     
+    // View Details 按钮（打开 Drawer）
+    html += '<button class="tt-btn tt-btn-secondary" data-action="viewDetails" data-tt-id="' + tt.id + '">' + T('viewDetails') + '</button>';
+    
+    html += '</div>';
+    html += '</div>';
+    
+    return html;
+  }
+
+  // Detail Drawer
+  function _renderDetailDrawer(){
+    var tt = _teeTimes.find(function(t){ return t.id === _ui.selectedTeeTime; });
+    if(!tt) return '';
+
+    var accessColors = {
+      public: 'tt-access-public',
+      member: 'tt-access-member',
+      guest: 'tt-access-guest',
+      limited: 'tt-access-limited',
+      private: 'tt-access-private'
+    };
+    var accessClass = accessColors[tt.accessLevel] || 'tt-access-default';
+    var isFull = tt.availableSlots === 0;
+
+    var html = '<div class="tt-drawer-overlay" onclick="TeeTimesPage.closeDrawer()"></div>';
+    html += '<div class="tt-drawer">';
+    
+    // Drawer 头部
+    html += '<div class="tt-drawer-header">';
+    html += '<h3>' + T('teeTimeDetail') + '</h3>';
+    html += '<button class="tt-drawer-close" onclick="TeeTimesPage.closeDrawer()">&times;</button>';
+    html += '</div>';
+    
+    // Drawer 内容
+    html += '<div class="tt-drawer-content">';
+    
+    // 球场和时间
+    html += '<div class="tt-drawer-section">';
+    html += '<div class="tt-drawer-course">' + tt.courseName + '</div>';
+    html += '<div class="tt-drawer-routing">' + tt.courseRouting + '</div>';
+    html += '<div class="tt-drawer-datetime">' + tt.date + ' ' + tt.time + '</div>';
+    html += '</div>';
+    
+    // 名额信息
+    html += '<div class="tt-drawer-section">';
+    html += '<div class="tt-drawer-label">' + T('availability') + '</div>';
+    html += '<div class="tt-drawer-value">' + tt.capacity + ' ' + T('playerSlots') + ' · ' + (isFull ? T('full') : (tt.availableSlots + ' ' + T('spotsLeft'))) + '</div>';
+    html += '</div>';
+    
+    // Access & Price
+    html += '<div class="tt-drawer-section">';
+    html += '<div class="tt-drawer-label">' + T('accessAndPrice') + '</div>';
+    html += '<div class="tt-drawer-access-row">';
+    html += '<span class="tt-access-badge ' + accessClass + '">' + tt.accessLabel + '</span>';
+    html += '<span class="tt-drawer-price">¥' + tt.displayPrice + '</span>';
+    html += '</div>';
+    if(tt.priceNote){
+      html += '<div class="tt-drawer-price-note">' + tt.priceNote + '</div>';
+    }
+    html += '</div>';
+    
+    // 预订方式
+    html += '<div class="tt-drawer-section">';
+    html += '<div class="tt-drawer-label">' + T('bookingMethod') + '</div>';
+    html += '<div class="tt-drawer-value">' + tt.bookingLabel + '</div>';
+    if(tt.phone){
+      html += '<div class="tt-drawer-phone">' + T('phone') + ': ' + tt.phone + '</div>';
+    }
+    html += '</div>';
+    
+    // 描述
+    if(tt.description){
+      html += '<div class="tt-drawer-section">';
+      html += '<div class="tt-drawer-label">' + T('aboutThisTeeTime') + '</div>';
+      html += '<div class="tt-drawer-description">' + tt.description + '</div>';
+      html += '</div>';
+    }
+    
+    // 限制和元信息
+    if(tt.restrictions.length > 0 || tt.meta.length > 0){
+      html += '<div class="tt-drawer-section">';
+      html += '<div class="tt-drawer-label">' + T('notes') + '</div>';
+      if(tt.restrictions.length > 0){
+        html += '<div class="tt-drawer-restrictions">' + tt.restrictions.join(' · ') + '</div>';
+      }
+      if(tt.meta.length > 0){
+        html += '<div class="tt-drawer-meta">' + tt.meta.join(' · ') + '</div>';
+      }
+      html += '</div>';
+    }
+    
+    html += '</div>';
+    
+    // Drawer 底部动作
+    html += '<div class="tt-drawer-footer">';
+    
     // Book 按钮
     var bookDisabled = isFull || tt.bookingMethod === 'display_only';
     var bookClass = bookDisabled ? 'tt-btn-disabled' : 'tt-btn-primary';
-    var bookText = isFull ? T('full') : (tt.bookingMethod === 'phone' ? T('call') : T('book'));
+    var bookText = isFull ? T('full') : (tt.bookingMethod === 'phone' ? T('callToBook') : T('bookNow'));
     html += '<button class="tt-btn ' + bookClass + '" data-action="book" data-tt-id="' + tt.id + '"' + (bookDisabled ? ' disabled' : '') + '>' + bookText + '</button>';
     
     // Start Round 按钮
@@ -507,6 +626,16 @@ const TeeTimesPage = (function(){
       });
     }
 
+    // View Details 按钮
+    var viewDetailsBtns = document.querySelectorAll('[data-action="viewDetails"]');
+    for(var i = 0; i < viewDetailsBtns.length; i++){
+      viewDetailsBtns[i].addEventListener('click', function(){
+        _ui.selectedTeeTime = this.dataset.ttId;
+        _ui.openField = null;
+        render();
+      });
+    }
+
     // Book 按钮
     var bookBtns = document.querySelectorAll('[data-action="book"]');
     for(var i = 0; i < bookBtns.length; i++){
@@ -516,16 +645,18 @@ const TeeTimesPage = (function(){
         if(!tt) return;
         
         if(tt.bookingMethod === 'phone'){
-          alert(T('callToBook') + ': 400-XXX-XXXX');
+          alert(T('callToBook') + ': ' + tt.phone);
         } else if(tt.bookingMethod === 'external_link'){
-          alert(T('externalBooking'));
+          if(tt.bookingUrl) window.open(tt.bookingUrl, '_blank');
+          else alert(T('externalBooking'));
         } else if(tt.bookingMethod === 'member_portal'){
           if(typeof AuthState !== 'undefined' && !AuthState.isLoggedIn()){
             alert(T('pleaseLoginToBook'));
             Router.navigate('/login');
             return;
           }
-          alert(T('redirectToMemberPortal'));
+          if(tt.bookingUrl) window.open(tt.bookingUrl, '_blank');
+          else alert(T('redirectToMemberPortal'));
         }
       });
     }
@@ -538,7 +669,6 @@ const TeeTimesPage = (function(){
         var tt = _teeTimes.find(function(t){ return t.id === ttId; });
         if(!tt) return;
         
-        // 跳转到 New Round 页面，预填参数
         var params = 'teetime=' + encodeURIComponent(ttId) + 
                      '&course=' + encodeURIComponent(tt.courseId) +
                      '&date=' + encodeURIComponent(tt.date) +
@@ -548,7 +678,14 @@ const TeeTimesPage = (function(){
     }
   }
 
+  // 关闭 Drawer
+  function closeDrawer(){
+    _ui.selectedTeeTime = null;
+    render();
+  }
+
   return {
-    render: render
+    render: render,
+    closeDrawer: closeDrawer
   };
 })();

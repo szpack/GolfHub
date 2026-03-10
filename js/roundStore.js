@@ -32,6 +32,10 @@ const RoundStore = (function(){
   var _lastSyncTime = 0;
   var SYNC_THROTTLE_MS = 1000;
 
+  // ── End Round constants ──
+  var AUTO_FINISH_IDLE_MS  = 6 * 60 * 60 * 1000;  // 6 hours idle → auto-finish
+  var GRACE_WINDOW_MS      = 24 * 60 * 60 * 1000;  // 24 hours reopen window
+
   /** Notify RoundIndex when a summary changes. Safe if RoundIndex not yet loaded. */
   function _notifyIndex(roundId){
     if(typeof RoundIndex === 'undefined') return;
@@ -68,9 +72,20 @@ const RoundStore = (function(){
       holesCompleted:  0,
 
       startedAt:       null,
-      finishedAt:      null,
-      abandonedAt:     null,
+      finishedAt:      null,       // [COMPAT] kept for migration reads
+      abandonedAt:     null,       // [COMPAT] kept for migration reads
       abandonReason:   '',
+
+      // ── End Round lifecycle (v24) ──
+      endedAt:         null,       // ISO — when round ended (finish or abandon)
+      endedBy:         null,       // 'manual' | 'auto' | null
+      lockState:       'open',     // 'open' | 'grace' | 'locked'
+      reopenUntil:     null,       // ISO — grace window deadline
+      reopenCount:     0,
+      lastReopenedAt:  null,
+      lastActivityAt:  null,       // ISO — last score/shot write
+      deletedAt:       null,       // ISO — soft delete timestamp
+
       summaryStats:    null,
       createdAt:       now,
       updatedAt:       now
@@ -277,9 +292,17 @@ const RoundStore = (function(){
       if(patch.hasOwnProperty(k)) hole[k] = patch[k];
     }
 
-    data.updatedAt = new Date().toISOString();
+    var now = new Date().toISOString();
+    data.updatedAt = now;
     _dataCache[roundId] = data;
     _markDataDirty(roundId);
+
+    // Track last activity for auto-finish
+    var s = _summaries[roundId];
+    if(s && s.lastActivityAt !== now){
+      s.lastActivityAt = now;
+      // Defer persist — will be written by flushProgress
+    }
   }
 
   /**
@@ -296,9 +319,13 @@ const RoundStore = (function(){
 
     holes[holeIdx] = _newHole();
 
-    data.updatedAt = new Date().toISOString();
+    var now = new Date().toISOString();
+    data.updatedAt = now;
     _dataCache[roundId] = data;
     _markDataDirty(roundId);
+
+    var s = _summaries[roundId];
+    if(s && s.lastActivityAt !== now) s.lastActivityAt = now;
   }
 
   // ── Shot writes ──
@@ -325,9 +352,13 @@ const RoundStore = (function(){
       if(patch.hasOwnProperty(k)) shot[k] = patch[k];
     }
 
-    data.updatedAt = new Date().toISOString();
+    var now = new Date().toISOString();
+    data.updatedAt = now;
     _dataCache[roundId] = data;
     _markDataDirty(roundId);
+
+    var s = _summaries[roundId];
+    if(s && s.lastActivityAt !== now) s.lastActivityAt = now;
   }
 
   // ── Deferred persistence ──
@@ -376,19 +407,46 @@ const RoundStore = (function(){
     for(var rid2 in _progressDirty){
       recomputeProgress(rid2);
     }
+    // 3. Lazy lifecycle checks
+    checkAutoFinish();
+    checkGraceLock();
   }
 
   // ══════════════════════════════════════════
   // WRITE: remove
   // ══════════════════════════════════════════
 
+  /**
+   * Soft-delete a round (sets deletedAt, preserves data).
+   * Use purge() for physical removal.
+   */
   function remove(roundId){
     if(!roundId) return;
-    if(_activeId === roundId) _activeId = null;
+    var s = _summaries[roundId];
+    if(!s) return;
+
+    if(_activeId === roundId){
+      _activeId = null;
+      _persistActive();
+    }
+
+    s.deletedAt = new Date().toISOString();
+    _persistSummaries();
+    _notifyIndex(roundId);
+  }
+
+  /**
+   * Physically delete a round from storage (irreversible).
+   */
+  function purge(roundId){
+    if(!roundId) return;
+    if(_activeId === roundId){
+      _activeId = null;
+      _persistActive();
+    }
     delete _summaries[roundId];
     delete _dataCache[roundId];
     _persistSummaries();
-    _persistActive();
     try { localStorage.removeItem(LS_DATA_PFX + roundId); } catch(e){}
     _notifyIndex(roundId);
   }
@@ -426,6 +484,7 @@ const RoundStore = (function(){
     var arr = [];
     for(var id in _summaries){
       var s = _summaries[id];
+      if(s.deletedAt) continue;  // skip soft-deleted
       if(statusFilter && statusFilter.indexOf(s.status) < 0) continue;
       arr.push(s);
     }
@@ -472,8 +531,8 @@ const RoundStore = (function(){
   var _STATUS_TRANSITIONS = {
     'scheduled':   ['in_progress', 'abandoned'],
     'in_progress': ['finished', 'abandoned'],
-    'finished':    [],
-    'abandoned':   []
+    'finished':    ['in_progress'],   // reopen (grace window)
+    'abandoned':   ['in_progress']    // reopen (store level)
   };
 
   function _validateTransition(from, to){
@@ -510,28 +569,33 @@ const RoundStore = (function(){
 
   /**
    * Finish an in-progress round: in_progress → finished.
-   * Computes derivedStats and sets finishedAt.
-   * Allows holesCompleted < holesPlanned (e.g. 9-hole rounds).
+   * Computes derivedStats, sets endedAt, opens grace window.
    * @param {string} roundId
+   * @param {Object} [opts]
+   * @param {string} [opts.endedBy] - 'manual' | 'auto' (default 'manual')
    * @returns {boolean} success
    */
-  function finishRound(roundId){
+  function finishRound(roundId, opts){
     var s = _summaries[roundId];
     if(!s) return false;
     if(!_validateTransition(s.status, 'finished')) return false;
 
+    opts = opts || {};
     var now = new Date().toISOString();
     var stats = _computeDerivedStats(roundId);
+    var reopenDeadline = new Date(Date.now() + GRACE_WINDOW_MS).toISOString();
 
-    // Summary: lightweight summaryStats only
     putSummary(roundId, {
-      status:     'finished',
-      finishedAt: now,
+      status:         'finished',
+      finishedAt:     now,
+      endedAt:        now,
+      endedBy:        opts.endedBy || 'manual',
+      lockState:      'grace',
+      reopenUntil:    reopenDeadline,
       holesCompleted: stats ? stats.holesCompleted : (s.holesCompleted || 0),
-      summaryStats: _buildSummaryStats(stats)
+      summaryStats:   _buildSummaryStats(stats)
     });
 
-    // RoundData: full derivedStats
     if(stats){
       putData(roundId, { derivedStats: stats });
     }
@@ -544,8 +608,8 @@ const RoundStore = (function(){
   }
 
   /**
-   * Abandon an in-progress round: in_progress → abandoned.
-   * Records abandon reason and timestamp. Clears active if applicable.
+   * Abandon a round: in_progress|scheduled → abandoned.
+   * Records abandon reason, sets lockState=locked immediately.
    * @param {string} roundId
    * @param {string} [reason] - abandon reason
    * @returns {boolean} success
@@ -559,11 +623,15 @@ const RoundStore = (function(){
     var stats = _computeDerivedStats(roundId);
 
     putSummary(roundId, {
-      status:        'abandoned',
-      abandonedAt:   now,
-      abandonReason: reason || '',
+      status:         'abandoned',
+      abandonedAt:    now,
+      abandonReason:  reason || '',
+      endedAt:        now,
+      endedBy:        'manual',
+      lockState:      'locked',
+      reopenUntil:    null,
       holesCompleted: stats ? stats.holesCompleted : (s.holesCompleted || 0),
-      summaryStats:  _buildSummaryStats(stats)
+      summaryStats:   _buildSummaryStats(stats)
     });
 
     if(stats){
@@ -575,6 +643,103 @@ const RoundStore = (function(){
       setActive(null);
     }
     return true;
+  }
+
+  // ══════════════════════════════════════════
+  // LIFECYCLE: reopenRound / checkAutoFinish / checkGraceLock
+  // ══════════════════════════════════════════
+
+  /**
+   * Reopen a finished round (grace window) or abandoned round.
+   * finished + grace → in_progress (endedAt preserved, lockState → open)
+   * abandoned (store-level) → in_progress
+   * @param {string} roundId
+   * @returns {boolean} success
+   */
+  function reopenRound(roundId){
+    var s = _summaries[roundId];
+    if(!s) return false;
+
+    if(s.status === 'finished'){
+      // Must be in grace window
+      if(s.lockState === 'locked'){
+        console.warn('[RoundStore] cannot reopen locked round:', roundId);
+        return false;
+      }
+      if(!_validateTransition(s.status, 'in_progress')) return false;
+
+      var now = new Date().toISOString();
+      putSummary(roundId, {
+        status:          'in_progress',
+        lockState:       'open',
+        reopenCount:     (s.reopenCount || 0) + 1,
+        lastReopenedAt:  now
+        // endedAt preserved — records when it was first ended
+      });
+      return true;
+    }
+
+    if(s.status === 'abandoned'){
+      if(!_validateTransition(s.status, 'in_progress')) return false;
+
+      var now2 = new Date().toISOString();
+      putSummary(roundId, {
+        status:          'in_progress',
+        lockState:       'open',
+        reopenCount:     (s.reopenCount || 0) + 1,
+        lastReopenedAt:  now2
+      });
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Check all in_progress rounds for auto-finish condition.
+   * Skips the currently active round.
+   * Auto-finish if: idle > AUTO_FINISH_IDLE_MS AND holesCompleted >= holesPlanned.
+   */
+  function checkAutoFinish(){
+    var now = Date.now();
+    for(var id in _summaries){
+      var s = _summaries[id];
+      if(s.status !== 'in_progress') continue;
+      if(s.deletedAt) continue;
+      // Skip active round — user is still in session
+      if(id === _activeId) continue;
+
+      // Need enough holes played
+      var hPlanned = s.holesPlanned || 18;
+      var hDone = s.holesCompleted || 0;
+      if(hDone < hPlanned) continue;
+
+      // Check idle time
+      var lastAct = s.lastActivityAt || s.updatedAt || s.createdAt;
+      var idleMs = now - new Date(lastAct).getTime();
+      if(idleMs >= AUTO_FINISH_IDLE_MS){
+        console.log('[RoundStore] auto-finishing idle round:', id, 'idle:', Math.round(idleMs/60000), 'min');
+        finishRound(id, { endedBy: 'auto' });
+      }
+    }
+  }
+
+  /**
+   * Check all grace-window rounds and lock expired ones.
+   */
+  function checkGraceLock(){
+    var now = new Date().toISOString();
+    for(var id in _summaries){
+      var s = _summaries[id];
+      if(s.lockState !== 'grace') continue;
+      if(s.deletedAt) continue;
+      if(!s.reopenUntil) continue;
+
+      if(now >= s.reopenUntil){
+        console.log('[RoundStore] grace expired, locking:', id);
+        putSummary(id, { lockState: 'locked', reopenUntil: null });
+      }
+    }
   }
 
   // ══════════════════════════════════════════
@@ -983,6 +1148,7 @@ const RoundStore = (function(){
     putSummary:          putSummary,
     putData:             putData,
     remove:              remove,
+    purge:               purge,
 
     // Read
     get:                 get,
@@ -1004,6 +1170,9 @@ const RoundStore = (function(){
     startRound:          startRound,
     finishRound:         finishRound,
     abandonRound:        abandonRound,
+    reopenRound:         reopenRound,
+    checkAutoFinish:     checkAutoFinish,
+    checkGraceLock:      checkGraceLock,
 
     // Bridge (Phase A transition)
     syncFromScorecard:   syncFromScorecard,
