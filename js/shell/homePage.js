@@ -57,6 +57,19 @@ const HomePage = (function(){
       html += '</div>';
     }
 
+    // ── Legacy data cleanup notice ──
+    var hasLegacy = active || recent.length > 0;
+    if(hasLegacy){
+      html += '<div class="sh-legacy-notice">';
+      html += '<span class="sh-legacy-icon">&#9888;</span>';
+      html += '<div class="sh-legacy-body">';
+      html += '<div class="sh-legacy-title">Legacy data detected</div>';
+      html += '<div class="sh-legacy-text">These rounds were created before the account system. They are stored locally and not synced to your account.</div>';
+      html += '</div>';
+      html += '<button class="sh-btn-danger-sm" onclick="HomePage.clearLegacyData()">Clear All</button>';
+      html += '</div>';
+    }
+
     // ── 3. Quick Actions ──
     html += '<div class="sh-section">';
     html += '<h2 class="sh-section-title">Quick Actions</h2>';
@@ -179,5 +192,11 @@ const HomePage = (function(){
     return '<button class="sh-mgmt-pill" onclick="Router.navigate(\'' + path + '\')">' + label + '</button>';
   }
 
-  return { render: render };
+  function clearLegacyData(){
+    if(!confirm('This will permanently delete all local rounds and scorecard data. Continue?')) return;
+    if(typeof D !== 'undefined' && D.clearAllRounds) D.clearAllRounds();
+    render();
+  }
+
+  return { render: render, clearLegacyData: clearLegacyData };
 })();

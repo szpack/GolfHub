@@ -4029,6 +4029,56 @@ html.light .ci-row-skip { opacity: 0.4; }
   color: var(--accent-green) !important;
 }
 
+/* Legacy data cleanup notice */
+.sh-legacy-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: rgba(234,179,8,0.08);
+  border: 1px solid rgba(234,179,8,0.2);
+  border-radius: 10px;
+  margin-bottom: 24px;
+}
+
+.sh-legacy-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.sh-legacy-body { flex: 1; min-width: 0; }
+
+.sh-legacy-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #eab308;
+  margin-bottom: 2px;
+}
+
+.sh-legacy-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.sh-btn-danger-sm {
+  flex-shrink: 0;
+  padding: 6px 16px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: #f87171;
+  background: rgba(248,113,113,0.1);
+  border: 1px solid rgba(248,113,113,0.2);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sh-btn-danger-sm:hover {
+  background: rgba(248,113,113,0.2);
+}
+
 /* ── Light theme overrides ── */
 html.light .auth-card { background: #fff; }
 html.light .auth-field input { background: #f9fafb; color: #1a1a1a; }
@@ -4041,3 +4091,5 @@ html.light .sh-btn-outline { color: #374151; border-color: rgba(0,0,0,0.12); }
 html.light .sh-btn-outline:hover { background: rgba(0,0,0,0.03); }
 html.light .sh-welcome { background: #f9fafb; border-color: rgba(0,0,0,0.06); }
 html.light .sh-welcome strong { color: #1a1a1a; }
+html.light .sh-legacy-notice { background: rgba(202,138,4,0.06); border-color: rgba(202,138,4,0.15); }
+html.light .sh-legacy-title { color: #ca8a04; }

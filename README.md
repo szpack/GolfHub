@@ -168,6 +168,11 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 ## Changelog
 
+### v21.3.1 — 2026-03-10
+- **修复版本号**：title 和 Overlay Center header 中 v20.1.3 更新为 v21.3.0，缓存标签统一
+- **Legacy 数据清理**：登录用户首页检测到旧 round 数据时显示黄色提示条，提供一键 "Clear All" 按钮清除所有本地残留 round/scorecard/workspace 数据
+- `D.clearAllRounds()` 新增 API：重置 rounds store + scorecard + workspace
+
 ### v21.3.0 — 2026-03-10
 - **登录/未登录双模式 UI**：根据用户登录状态展示不同界面
 - **Guest 首页**：未登录时显示产品介绍、三大功能卡片和登录/注册引导按钮

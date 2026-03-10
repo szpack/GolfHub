@@ -1324,6 +1324,21 @@ const D = (function(){
     return true;
   }
 
+  /**
+   * Clear all rounds (active + stored) and reset scorecard/workspace.
+   * Used to purge legacy data from before the account system.
+   */
+  function clearAllRounds(){
+    _rounds = defRoundsStore();
+    _sc = defScorecard();
+    _ws = defWorkspace();
+    try {
+      localStorage.setItem(LS_ROUNDS, JSON.stringify(_rounds));
+      localStorage.setItem(LS_SC, JSON.stringify(_sc));
+      localStorage.setItem(LS_WS, JSON.stringify(_ws));
+    } catch(e){}
+  }
+
   // ══════════════════════════════════════════
   // PUBLIC API
   // ══════════════════════════════════════════
@@ -1363,7 +1378,7 @@ const D = (function(){
     // Round store
     getRoundsStore:getRoundsStore, getActiveRoundId:getActiveRoundId,
     getActiveRound:getActiveRound, getRound:getRound,
-    listRoundIds:listRoundIds, putRound:putRound, deleteRound:deleteRound,
+    listRoundIds:listRoundIds, putRound:putRound, deleteRound:deleteRound, clearAllRounds:clearAllRounds,
     // Legacy compat
     syncS:syncS, syncFromS:syncFromS,
     migrateV531:migrateV531,
