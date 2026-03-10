@@ -322,9 +322,12 @@ const NewRoundService = (function(){
     var history = ws.playerHistory || [];
     for(var i = 0; i < players.length; i++){
       var p = players[i];
-      // Remove existing entry with same name
-      history = history.filter(function(h){ return h.name !== p.name; });
-      // Add to front
+      // Remove existing entry with same name (handle both string and object formats)
+      history = history.filter(function(h){
+        var hName = (typeof h === 'string') ? h : (h && h.name || '');
+        return hName !== p.name;
+      });
+      // Add to front as object
       history.unshift({ name: p.name, playerId: p.playerId || null });
     }
     // Keep max 20
@@ -334,13 +337,25 @@ const NewRoundService = (function(){
 
   /**
    * Get recent player names from history.
+   * Normalizes mixed formats: strings (from app.js) and objects (from newRoundService).
    * @param {number} [limit=8]
    * @returns {Array<{name, playerId}>}
    */
   function getRecentPlayers(limit){
     var ws = D.ws();
     var history = ws.playerHistory || [];
-    return history.slice(0, limit || 8);
+    var result = [];
+    for(var i = 0; i < history.length && result.length < (limit || 8); i++){
+      var h = history[i];
+      if(typeof h === 'string'){
+        // Legacy format from app.js addPlayer()
+        if(h.trim()) result.push({ name: h.trim(), playerId: null });
+      } else if(h && h.name){
+        // Object format from _updatePlayerHistory()
+        result.push({ name: h.name, playerId: h.playerId || null });
+      }
+    }
+    return result;
   }
 
   // ══════════════════════════════════════════

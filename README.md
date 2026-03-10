@@ -168,6 +168,11 @@ No build step · No external dependencies · Vanilla JS + Canvas
 
 ## Changelog
 
+### v23.13.1 — 2026-03-10
+- **修复 playerHistory 格式不一致**：app.js 存字符串、newRoundService 存对象，统一为 `{name, playerId}` 格式
+- **getRecentPlayers 兼容两种格式**：新旧格式混存时自动标准化，确保 BuddyPicker 正确展示历史球友
+- **ui.js playerHistory 渲染兼容**：Broadcast 页面球员历史同样处理混合格式
+
 ### v23.13.0 — 2026-03-10
 - **新增 BuddyStore 本地球友存储**：离线优先的 localStorage 球友 CRUD，无需后端即可添加/管理球友
 - **BuddyPicker 显示已有球友**：新建球局选球友时，优先展示本地 BuddyStore 中的球友列表，API 可用时自动同步

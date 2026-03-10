@@ -854,21 +854,36 @@ const STRINGS = {
     landingFeature3Desc: '统计、历史记录和进步洞察。',
     landingCtaTitle: '开始你的第一轮',
     teetimesPlaceholder: '查找并预约各球会开球时间。即将推出。',
-    // TeeTimes page
+    // TeeTimes page (重构版)
     teeTimesTitle: '开球时间',
-    teeTimesSubtitle: '预订您的理想开球时间',
-    selectCourse: '选择球场',
+    teeTimesSubtitle: '查找并预订理想的开球时间',
+    where: '地点',
+    when: '日期',
+    players: '人数',
+    access: '身份',
+    selectLocation: '选择地点',
     selectDate: '选择日期',
-    selectPeriod: '时间段',
+    selectPlayers: '选择人数',
+    selectAccess: '选择身份',
+    areas: '区域',
+    courses: '球场',
+    today: '今天',
+    tomorrow: '明天',
+    thisWeekend: '本周末',
+    pickDate: '选择日期',
+    all: '全部',
+    allAccess: '全部身份',
+    public: '公开',
+    publicOnly: '仅公开',
+    member: '会员',
+    memberOnly: '仅会员',
+    people: '人',
+    teeTimesFound: '个开球时间',
     availableTeeTimes: '可选开球时间',
-    selectPlayers: '打球人数',
     bookingSummary: '预订摘要',
     confirmBooking: '确认预订',
     perPerson: '/人',
-    allPeriods: '全部',
-    morning: '上午',
-    noon: '中午',
-    afternoon: '下午',
+    perPersonShort: '/人',
     noSlotsAvailable: '该时段暂无可选时间',
     priceIncludesTax: '价格已含所有税费',
     pleaseLoginToBook: '请登录后预订',
@@ -2259,7 +2274,12 @@ function addPlayer(name){
   const rpId=newPlayer.roundPlayerId;
   const ws=D.ws();
   if(!ws.playerHistory) ws.playerHistory=[];
-  ws.playerHistory=[name,...ws.playerHistory.filter(n=>n!==name)].slice(0,50);
+  // Store as {name, playerId} objects (consistent with newRoundService)
+  var entry={name:name, playerId: rpId || null};
+  ws.playerHistory=[entry,...ws.playerHistory.filter(function(h){
+    var hName = (typeof h === 'string') ? h : (h && h.name || '');
+    return hName !== name;
+  })].slice(0,50);
   if(isFirst){
     // Migrate session data to this player
     const sessionScores=D.sc().scores[SESSION_ID];

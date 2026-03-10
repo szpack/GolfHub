@@ -155,7 +155,9 @@ function buildPlayerManager(){
     histList.innerHTML='';
     const searchVal=(document.getElementById('pm-hist-search')||{}).value||'';
     const searchLc=searchVal.trim().toLowerCase();
-    const hist=(S.playerHistory||[]).filter(name=>!(S.players||[]).some(p=>p.name===name)&&(!searchLc||name.toLowerCase().includes(searchLc)));
+    // Normalize: playerHistory may contain strings or {name, playerId} objects
+    const rawHist=(S.playerHistory||[]).map(h=>typeof h==='string'?h:(h&&h.name||'')).filter(Boolean);
+    const hist=rawHist.filter(name=>!(S.players||[]).some(p=>p.name===name)&&(!searchLc||name.toLowerCase().includes(searchLc)));
     if(hist.length===0){
       const emp=document.createElement('div');
       emp.style.cssText='font-size:12px;color:var(--t3);padding:4px 0';
